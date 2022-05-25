@@ -1,6 +1,6 @@
 #include "SimpleServer.hpp"
 
-#define BUFF_SIZE 100
+#define BUFF_SIZE 1000
 
 int main() {
   // Create a socket (IPv4, TCP)
