@@ -1,7 +1,11 @@
 //***************************//
 //*Template by pulgamecanica*//
 //***************************//
-
+//****************************************************//
+// Private default constructor and assign operator.   //
+// To restrict their ussage outside this object scope.//
+// (Not implemented, since we don't need them!)       //
+//****************************************************//
 #ifndef __CONFIG_HPP__
 # define __CONFIG_HPP__
 
@@ -45,11 +49,6 @@ class Config {
 		//***************************************************//
 		std::vector<ServerConfig> _serversConfigs;
 
-		//****************************************************//
-		// Private default constructor and assign operator.   //
-		// To restrict their ussage outside this object scope.//
-		// (Not implemented, since we don't need them!)       //
-		//****************************************************//
 		Config();
 		Config & operator= (const Config &);
 	public:

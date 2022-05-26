@@ -16,16 +16,19 @@ Ok lets do it :)!
 
 | Directive | Description | Example |
 | --------- | ----------- | ------- |
-|  auth | auth | auth |
-|  autoindex | autoindex | autoindex  |
+| auth | restrict route to a user | auth user:route |
+| autoindex | directory listing on & off | autoindex off \| on  |
 | cgi | cgi | cgi |
 | cgi-bin | cgi-bin | cgi-bin |
-| error_page | error_page | error_page |
-| listen | listen | listen |
-| location | location | location |
+| client_max_body_size | Limit client body size | client_max_body_size #bytes|
+| error_page | Setup default error pages | error_page code1 [code2] ... path |
+| limit_methods | Define a list of accepted HTTP methods for the route (inside location scope) | limit_methods METHOD |
+| listen | Choose the port and host of each ’server' | listen host:port |
+| location | Setup routes with one or multiple rules/configuration | location route { ... }|
 | root | root | root |
-| server_name | servername | server_name |
+| server_name | Setup the server_names or not | server_name name1 [name2] ...|
 | upload | upload | upload |
+
 	
 
 </details>
