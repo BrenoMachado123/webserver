@@ -11,21 +11,21 @@ Ok lets do it :)!
  some references here....
 
 <details>
-	<summary>Directives</summary>
-	
-	## List of directives
+	<summary><h3>Directives</h3></summary>
 
-	| Directive | Description | Example |
-	| --------- | ----------- | ------- |
-	|  auth | auth | auth |
-	|  autoindex | autoindex | autoindex  |
-	| cgi | cgi | cgi |
-	| cgi-bin | cgi-bin | cgi-bin |
-	| error_page | error_page | error_page |
-	| listen | listen | listen |
-	| location | location | location |
-	| root | root | root |
-	| server_name | servername | server_name |
-	| upload | upload | upload |
+
+| Directive | Description | Example |
+| --------- | ----------- | ------- |
+|  auth | auth | auth |
+|  autoindex | autoindex | autoindex  |
+| cgi | cgi | cgi |
+| cgi-bin | cgi-bin | cgi-bin |
+| error_page | error_page | error_page |
+| listen | listen | listen |
+| location | location | location |
+| root | root | root |
+| server_name | servername | server_name |
+| upload | upload | upload |
+	
 
 </details>
