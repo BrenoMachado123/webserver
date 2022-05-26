@@ -9,3 +9,23 @@ Ok lets do it :)!
 [NGINX webserver configuration file tutorial](https://www.plesk.com/blog/various/nginx-configuration-guide/)
 ### Guide
  some references here....
+
+<details>
+	<summary>Directives</summary>
+	
+	## List of directives
+
+	| Directive | Description | Example |
+	| --------- | ----------- | ------- |
+	|  auth | auth | auth |
+	|  autoindex | autoindex | autoindex  |
+	| cgi | cgi | cgi |
+	| cgi-bin | cgi-bin | cgi-bin |
+	| error_page | error_page | error_page |
+	| listen | listen | listen |
+	| location | location | location |
+	| root | root | root |
+	| server_name | servername | server_name |
+	| upload | upload | upload |
+
+</details>

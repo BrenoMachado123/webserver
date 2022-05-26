@@ -2,6 +2,8 @@
 # define __WEBSERV_HPP__
 
 #include <iostream>
+#include <string>
+#include <map>
 
 
 # define BLACK	"\033[0;30m"

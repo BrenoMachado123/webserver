@@ -3,7 +3,9 @@
 MAKEFLAGS += --silent	# Silence makefile [Commented by default]\n
 NAME	=	webserv
 
-SRC	=	$(wildcard srcs/*.cpp)
+#SRC	=	$(wildcard srcs/*.cpp)
+SRC	=	srcs/main.cpp\
+		srcs/Config.cpp\
 
 CFLAGS	=	-Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 
