@@ -1,11 +1,9 @@
-//***************************//
-//*Template by pulgamecanica*//
-//***************************//
 //****************************************************//
 // Private default constructor and assign operator.   //
 // To restrict their ussage outside this object scope.//
 // (Not implemented, since we don't need them!)       //
 //****************************************************//
+
 #ifndef __CONFIG_HPP__
 # define __CONFIG_HPP__
 
@@ -14,46 +12,85 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <fstream>
 
+
+# define AUTOINDEX			1
+# define CGI				2
+# define CGIBIN				3
+# define CLIENTMAXBODYSIZE	4
+# define ERRORPAGE			5
+# define LIMITMETHODS		6
+# define LISTEN				7
+# define LOCATION			8
+# define ROOT				9
+# define SERVERNAME			10
+# define UPLOAD				11
+# define RETURN_D			12
+
+
+// Config represents the configuration file
 class Config {
+	// ServerConfig represents a server configuration
 	class ServerConfig {
-		enum directive_enum {
-			auth,
-			autoindex,
-			cgi,
-			cgi_bin,
-			error_page,
-			index,
-			listen,
-			location,
-			root,
-			server_name,
-			upload
-		};
-		private:
-			class DirectiveContent {
+		public:
+			class Directive {
 				private:
-					std::string const content;
-					DirectiveContent();
+					int _id;
+					Directive();
 				public:
-					DirectiveContent(directive_enum, std::string content);
-					~DirectiveContent();
+					Directive(std::string const & name, std::string const & content);
+					virtual ~Directive();
 			};
-			std::map<directive_enum , DirectiveContent> directives;
+			class Location: public Directive {
+				std::vector<Directive> _location_directives;
+				public:
+					Location(std::string const &);
+			};
+			class ServerName: public Directive {
+				public:
+					std::vector<std::string> _names;
+			};
+			class ClientMaxBody: public Directive {
+				public:
+					int _max;
+			};
+			class Root: public Directive {
+				public:
+					int _port;
+			};
+			class Listen: public Directive {
+				public:
+					int _port;
+				Listen(std::string const &);
+			};
+			// TO DO, IMPLEMENT ALL THE DIRECTIVES LEFT
+
+			//Directive const & getListen();
+			// Directive const & getAutoIndex();
+			// Directive const & getCGI();
+			// Directive const & getCGIBIN();
+			// Directive const & getListen();
+
+
+		private:
+			std::vector<Directive> _directives;
 	};
 
 	private:
-		//***************************************************//
-		// Attribute member that stores ServerConfig objects //
-		// Each element represents a ServerConfig            //
-		//***************************************************//
-		std::vector<ServerConfig> _serversConfigs;
-
+		std::vector<ServerConfig> _servers;
+		std::ifstream & _config_file;
+		
 		Config();
 		Config & operator= (const Config &);
-	public:
 		Config(const Config &);
+		void	get_server_configuration() throw(InvalidDirectiveException);
+		void	checkScopes() throw(WrongSyntaxException);
+	public:
+		Config(std::ifstream &) throw(InvalidConfigurationFileException);
 		~Config();
+
+	/* MEMBER FUNCTIONS */
 
 	/* EXCEPTIONS */
 

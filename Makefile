@@ -1,9 +1,8 @@
-# Makefile created automatically from script\n
-# C++ webserv [Sat May 21 00:14:15 WEST 2022]\n
-MAKEFLAGS += --silent	# Silence makefile [Commented by default]\n
+# Makefile created automatically from script
+# C++ webserv [Sat May 21 00:14:15 WEST 2022]
+#MAKEFLAGS += --silent	# Silence makefile [Commented by default]\n
 NAME	=	webserv
 
-#SRC	=	$(wildcard srcs/*.cpp)
 SRC	=	srcs/main.cpp\
 		srcs/Config.cpp\
 
@@ -28,6 +27,7 @@ else
 	CFLAGS += -D LINUX
 endif
 
+
 $(OBJS_D)/%.o:srcs/%.cpp
 			@mkdir -p $(OBJS_D)
 			$(CC) $(CFLAGS) $(INC) -o $@ -c $<
@@ -40,7 +40,7 @@ $(NAME):	$(OBJ)
 test:		re
 			@printf "$(C_BLUE)Testing $(C_YELLOW)$(NAME)$(C_END)\n"
 			@printf "\n$(C_BLUE)********************************************$(C_END)\n"
-			@./$(NAME)
+			@./$(NAME) "conf_files/configuration.conf"
 			@printf "\n$(C_BLUE)********************************************$(C_END)\n"
 			@printf "\n$(C_BLUE)Finished Test...$(C_END)\n"
 			@$(MAKE) show

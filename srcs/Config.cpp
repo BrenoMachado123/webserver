@@ -3,9 +3,8 @@
 //  function:
 //    [get_server_configuration]
 //  parameters:
-//    std::ifstream & (Configuration File)
 //  description:
-//    std::map: <key, value> => [directive, content].
+//    std::vector: => [directive, content].
 //    Read the configuration file, parse one 'server' directive scope and return an std::map accordingly.
 //    If there are no more server directives configurations to read it will return 0(ZERO).
 //  example:
@@ -25,29 +24,31 @@
 //        ["listen", "8484"]
 //      ]
 //  errors:
-//    Throw invalid fd exception if File Descriptor is invalid.
 //    Throw unknown directive exception if an unknkown directive is founded.
 //    Throw wrong syntax exception if directive is delared wrongfully.
 //  notes:
-//    Visit [www.github.com/] to see a list and description of the directives.
-//std::map<std::string, >get_server_configuration(ostream &file) {
-	// TODO Parse one server configuration file
-//}
+//    Visit [https://github.com/BrenoMachado123/webserver/blob/main/README.md] to see a list and description of the directives.
 
-Config::Config(const Config& param) {
-	// TODO (copy constructor)
-	(void)param;
+void	Config::get_server_configuration() throw(InvalidDirectiveException) {
+	//TODO Parse one server configuration file
+	ServerConfig s;
+	std::cout << "Configuration File Parsed succesfully!" << std::endl;
+}
+
+// CONSTUCTORS & DESTRUCTORS //
+Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _config_file(file) {
+	if (!file.is_open())
+		throw e_invalid_configuration_file;
+	std::cout << "Config file created!" << std::endl;
+	get_server_configuration();
 }
 
 Config::~Config() {
 	std::cout << "Config" << " destroyed" << std::endl;
-	// TODO (destructor)
 }
 
-std::ostream& operator<<(std::ostream& s, const Config& param) {
-	 s << "Some configuration Text";
-	(void)param;
-	return (s);
+Config::ServerConfig::Directive::~Directive() {
+	std::cout << "DirectiveContent" << " destroyed" << std::endl;
 }
 
 /* EXCEPTIONS */
@@ -63,8 +64,59 @@ const char * Config::InvalidConfigurationFileException::what() const throw() {
 	return ("Invalid File, expecting extention .conf and a valid file with read permission");
 }
 
-/* DirectiveContet */
-/* Class to represent the content of a Directive */
-Config::ServerConfig::DirectiveContent::~DirectiveContent() {
-	std::cout << "DirectiveContent" << " destroyed" << std::endl;
+/* HELPER FUNCTIONS */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+std::ostream& operator<<(std::ostream& s, const Config& param) {
+	 s << "Some configuration Text";
+	(void)param;
+	return (s);
 }
+
+
+/*********26/05/2022*********/
+
+static int checkBrackets(std::string line) {
+    std::string::iterator it = line.begin();
+    for (; it != line.end(); it++) {
+        if (*it == '{' or *it == '}')
+            return (1);
+    }
+    return (0);
+}
+
+void Config::checkScopes() throw(WrongSyntaxException) {
+    std::string line;
+    short brackets_parse = 0;
+    while (std::getline(_config_file, line)) {
+        std::cout << line << std::endl;
+        brackets_parse += checkBrackets(line);
+    }
+    _config_file.close();
+    if (brackets_parse % 2 != 0) 
+    	throw e_wrong_syntax;
+    std::cout << "Status: All brackets closed" << std::endl;
+    return ;
+}
+
+/****************************/

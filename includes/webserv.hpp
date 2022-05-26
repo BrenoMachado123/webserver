@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 #include <map>
-
+#include "Config.hpp"
 
 # define BLACK	"\033[0;30m"
 # define RED	"\033[0;31m"
