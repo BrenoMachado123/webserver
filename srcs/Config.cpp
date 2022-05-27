@@ -1,5 +1,10 @@
 #include "Config.hpp"
 
+/* Initialize static class members */
+const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "autoindex"};
+const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "error_page"};
+
+
 //  function:
 //    [get_server_configuration]
 //  parameters:
@@ -113,7 +118,7 @@ void Config::checkScopes() throw(WrongSyntaxException) {
         brackets_parse += checkBrackets(line);
     }
     _config_file.close();
-    if (brackets_parse % 2 != 0) 
+    if (brackets_parse % 2 != 0)
     	throw e_wrong_syntax;
     std::cout << "Status: All brackets closed" << std::endl;
     return ;

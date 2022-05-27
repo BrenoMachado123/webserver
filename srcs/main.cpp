@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 
 static void help(char *prog_name) {
-	std::cout << RED << "usage ./" << prog_name << " config_file.conf" << std::endl;
+	std::cout << RED << "usage " << prog_name << " config_file.conf" << std::endl;
 	std::cout << YELLOW << "hints: check if configuration file exists." << ENDC << std::endl;
 }
 
@@ -13,8 +13,13 @@ int	main(int ac, char **av)
 		return (1);
 	}
 	std::ifstream file;
-    file.open(av[1], std::ios::in);
-	Config c(file);
+	file.open(av[1], std::ios::in);
+	try {
+		Config c(file);
+	} catch (std::exception & e)
+ 	{
+		std::cout << e.what() << std::endl;
+	}
 	file.close();
 
 	return (0);
