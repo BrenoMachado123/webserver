@@ -21,6 +21,13 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	ServerConfig::Root r("/some_valid/path");
 	s.setRoot(r);
+	/* METHODS TEST */
+	ServerConfig::Methods m("GET POST");
+	std::vector<std::string> methods_list(m.getMethods());
+	std::vector<std::string>::iterator e = methods_list.end();
+	for(std::vector<std::string>::iterator b = methods_list.begin(); b != e; ++b)
+		std::cout << YELLOW << *b << " ";
+	std::cout << ENDC << std::endl;
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
 }
@@ -71,8 +78,7 @@ Config::ServerConfig::Root::~Root() {
 	std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
 
-Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException)
-: Directive(LIMITMETHODS), _name("limit_methods") {
+Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException): Directive(LIMITMETHODS), _name("limit_methods") {
 	/* this constructor takes one string which contains the limit methods
 	   that will be assigned. 
 
@@ -83,14 +89,19 @@ Config::ServerConfig::Methods::Methods(const std::string& content) throw (Invali
 			Methods("GET POST NIHIL") [throw InvalidDirectiveException]
 	*/
 	// possible implemetation:
-	char* str = std::strtok(const_cast<char*>(content.c_str()), " ");
+	char * str = std::strtok(const_cast<char*>(content.c_str()), " ");
 	while (str) {
-		if (_validMethod(std::string(content)))
+		if (!_validMethod(std::string(str)))
 			throw InvalidDirectiveException();
-		_methods.push_back(std::string(content));
-		str = std::strtok(NULL, " ");
-		std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
-	} 
+		std::vector<std::string>::iterator last = _methods.end();
+		std::vector<std::string>::iterator tmp = _methods.begin();
+		for (; tmp != last; ++tmp)
+			if (*tmp == str)
+				throw InvalidDirectiveException(); // EVEN BETTER IF WE CREATE A "DUPLICATE EXCEPTION"
+		_methods.push_back(std::string(str));
+		str = std::strtok(NULL, " ");	
+	}
+	std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Methods::~Methods() {
