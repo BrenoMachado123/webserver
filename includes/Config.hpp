@@ -2,6 +2,7 @@
 # define __CONFIG_HPP__
 
 #include "colors.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <exception>
 #include <map>
@@ -10,7 +11,6 @@
 #include <fstream>
 #include <cstring>
 #include <ctype.h>
-
 
 # define SERVER_CONTEXT_DIRECTIVES 2
 # define LISTEN_CONTEXT_DIRECTIVES 2
@@ -62,17 +62,30 @@ class Config {
 					private:
 						const std::string & _path;
 						const std::string _name;
+						bool _validPath(const std::string&);
 						Root();
 					public:
 						Root(const std::string &) throw (InvalidDirectiveException);
-						bool _validPath(const std::string&);
 						~Root();
+						virtual const std::string & getName() const;
+						const std::string & getPath() const;
+				};
+
+				class Listen: public Directive {
+					private:
+						const std::string _address;
+						const std::string _name;
+						short int _port;
+						Listen();
+					public:
+						Listen(const std::string &) throw (InvalidDirectiveException);
 						virtual const std::string & getName() const;
 						const std::string & getPath() const;
 				};
 
 				class Methods : public Directive {
 					public:
+						static const std::string _valid_methods[3];
 						Methods(const std::string&) throw (InvalidDirectiveException);
 						~Methods();
 						std::vector<std::string> getMethods() const;

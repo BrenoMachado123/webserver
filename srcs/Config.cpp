@@ -3,7 +3,7 @@
 /* Initialize static class members */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
 const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
-
+const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
 /* Exceptions */
 const char * Config::InvalidDirectiveException::what() const throw() {
 	return ("Directive is invalid");
@@ -68,7 +68,6 @@ Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiv
 		Root("/etc trash wrong") [throw InvalidDirectiveException]
 		Root("") [throw InvalidDirectiveException]
 	*/
-	//possible implementation:
 	if (!str.size() or !_validPath(str))
 		throw InvalidDirectiveException();
 	std::cout << WHITE << "Root created" << ENDC << std::endl;
@@ -79,16 +78,14 @@ Config::ServerConfig::Root::~Root() {
 }
 
 Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException): Directive(LIMITMETHODS), _name("limit_methods") {
-	/* this constructor takes one string which contains the limit methods
-	   that will be assigned. 
-
+	/* this constructor takes one string which contains the limit methods that will be assigned. 
 	   Ex:
 			Methods("GET POST DELETE") [VALID]
 			Methods("GET") [VALID]
 			Methods("GIT") [throw InvalidDirectiveException]
+			Methods("GET GET") [throw InvalidDirectiveException]
 			Methods("GET POST NIHIL") [throw InvalidDirectiveException]
 	*/
-	// possible implemetation:
 	char * str = std::strtok(const_cast<char*>(content.c_str()), " ");
 	while (str) {
 		if (!_validMethod(std::string(str)))
@@ -106,6 +103,37 @@ Config::ServerConfig::Methods::Methods(const std::string& content) throw (Invali
 
 Config::ServerConfig::Methods::~Methods() {
 	std::cout << RED << "Limit Methods Directive destroyed!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Listen::Listen(const std::string& content) throw (InvalidDirectiveException): Directive(LISTEN), _address("127.0.0.1"), _name("listen"), _port(80) {
+	/*
+	This constructor takes one string that contains the address and port of the server, separated by a colorn
+	The constructor can take either the port only or the address only
+	If one is not porvided the default settings are:
+	//We should check if its just a port or address
+	   Ex:
+			Listen("SOME VALID EXAMPLE") [VALID]
+			Methods("SOME INVALID EXAMPLE") [throw InvalidDirectiveException]
+	*/
+	(void)content;
+	
+	//TODO psleziak
+
+    // std::string temp;
+    // std::stringstream stoi_converter;
+    // if (line.find(':') != std::string::npos) {
+    //     char *cstr = new char[line.length() + 1];
+    //     std::strcpy(cstr, line.c_str());
+    //     char *tokens = std::strtok(cstr, ":");
+    //     temp = *tokens + 1;
+    //     delete[] cstr;
+    // } else{
+    //     temp = line;
+    // }
+    // stoi_converter << temp;
+    // stoi_converter >> _port;
+    // if (_port > PORT_MAX || _port < PORT_MIN)
+    //     throw InvalidDirectiveException();
 }
 
 /* ServerConfig Member Functions */
@@ -127,14 +155,20 @@ std::vector<std::string>& Config::ServerConfig::getMethods() {
 }
 
 /* ServerConfig Private Member Functions */
+// TODO
 
-bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
-	std::string valid_methods[3] = {"GET", "POST", "DELETE"};
-	for(size_t i = 0; i < 3; i++) {
-		if (method == valid_methods[i])
-			return true;
-	}
-	return false;
+/* Directives Member Functions */
+
+int Config::ServerConfig::Directive::getId() const {
+	return (_id);
+}
+
+const std::string &	Config::ServerConfig::Root::getName() const {
+	return (_name);
+}
+
+const std::string & Config::ServerConfig::Root::getPath() const{
+	return _path;
 }
 
 bool Config::ServerConfig::Root::_validPath(const std::string& path) {
@@ -146,20 +180,6 @@ bool Config::ServerConfig::Root::_validPath(const std::string& path) {
 	return true;
 }
 
-/* Directives Member Functions */
-
-int Config::ServerConfig::Directive::getId() const {
-	return (_id);
-}
-
-const std::string & Config::ServerConfig::Root::getName() const {
-	return (_name);
-}
-
-const std::string & Config::ServerConfig::Root::getPath() const{
-	return _path;
-}
-
 std::vector<std::string> Config::ServerConfig::Methods::getMethods() const {
 	return _methods;
 }
@@ -168,16 +188,30 @@ const std::string& Config::ServerConfig::Methods::getName() const {
 	return _name;
 }
 
+bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
+	for(size_t i = 0; i < 3; i++) {
+		if (method == _valid_methods[i])
+			return true;
+	}
+	return false;
+}
+
+const std::string& Config::ServerConfig::Listen::getName() const {
+	return _name;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 /* HELPER FUNCTIONS */
-
-
-
-
-
-
-
-
 
 
 std::ostream& operator<<(std::ostream& s, const Config& param) {
