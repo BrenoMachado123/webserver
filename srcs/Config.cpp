@@ -1,8 +1,8 @@
 #include "Config.hpp"
 
 /* Initialize static class members */
-const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "autoindex"};
-const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "error_page"};
+const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
+const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
 
 
 //  function:
@@ -44,7 +44,7 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _config_file(file) {
 	if (!file.is_open())
 		throw e_invalid_configuration_file;
-	std::cout << "Config file created!" << std::endl;
+	std::cout << "Config created!" << std::endl;
 	get_server_configuration();
 }
 
@@ -52,9 +52,18 @@ Config::~Config() {
 	std::cout << "Config" << " destroyed" << std::endl;
 }
 
+Config::ServerConfig::ServerConfig(): port(80), address("127.0.0.1"), root ("/etc/www") {
+	std::cout << "ServerConfig created!" << std::endl;
+}
+
+Config::ServerConfig::~ServerConfig() {
+	std::cout << "ServerConfig destroyed" << std::endl;
+}
+
 Config::ServerConfig::Directive::~Directive() {
 	std::cout << "DirectiveContent" << " destroyed" << std::endl;
 }
+
 
 /* EXCEPTIONS */
 const char * Config::InvalidDirectiveException::what() const throw() {

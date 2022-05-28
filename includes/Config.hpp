@@ -59,7 +59,7 @@ class Config {
 						virtual int getId() = 0;
 						virtual ~Directive();
 				};
-				class Location: public Directive {
+/*				class Location: public Directive {
 					std::vector<Directive> _location_directives;
 					public:
 						Location(std::string const &);
@@ -70,24 +70,32 @@ class Config {
 						std::vector<std::string> _names;
 						virtual int getId();
 				};
-
 				class ClientMaxBody: public Directive {
 					public:
 						int _max;
 						virtual int getId();
-				};
+				};*/
 				class Root: public Directive {
 					public:
 						int _port;
 						virtual int getId();
 				};
 				class Listen: public Directive {
-					public:
+					private:
 						int _port;
+					public:
+						Listen(std::string const &);
+						int getPort() const;
 						virtual int getId();
-					Listen(std::string const &);
 				};
-
+				class Index: public Directive {
+					private:
+						std::vector<std::string> index_list;
+					public:
+						Index(std::string &) throw (InvalidDirectiveException);
+				};
+				ServerConfig();
+				~ServerConfig();
 			// TO DO, IMPLEMENT ALL THE DIRECTIVES LEFT
 
 			//Directive const & getListen();
@@ -95,16 +103,20 @@ class Config {
 			// Directive const & getCGI();
 			// Directive const & getCGIBIN();
 			// Directive const & getListen();
-
-
 			private:
+				ServerConfig(const ServerConfig &);
+				ServerConfig & operator=(const ServerConfig &);
+				int port;
+				std::string address;
+				std::string root;
 				std::vector<Directive> _directives;
 		};
+
 		std::vector<ServerConfig> _servers;
 		std::ifstream & _config_file;
 
 		Config();
-		Config & operator= (const Config &);
+		Config & operator=(const Config &);
 		Config(const Config &);
 		void	get_server_configuration() throw(InvalidDirectiveException);
 		void	checkScopes() throw(WrongSyntaxException);
