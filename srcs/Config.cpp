@@ -4,93 +4,97 @@
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
 const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
 
+/* Exceptions */
+const char * Config::InvalidDirectiveException::what() const throw() {
+	return ("Directive is invalid");
+}
+const char * Config::WrongSyntaxException::what() const throw() {
+	return ("Wrong Directive Syntax");
+}
+const char * Config::InvalidConfigurationFileException::what() const throw() {
+	return ("Invalid File, make sure you have permissions, that the file exists and the extension is .conf");
+}
 
-//  function:
-//    [get_server_configuration]
-//  parameters:
-//  description:
-//    std::vector: => [directive, content].
-//    Read the configuration file, parse one 'server' directive scope and return an std::map accordingly.
-//    If there are no more server directives configurations to read it will return 0(ZERO).
-//  example:
-//    server {
-//    	...	<-- reading and parsing this...
-//    	...	<-- reading and parsing this ...
-//    	...	<-- reading and parsing this ...
-//    }
-//    1.- Read line untill 'server' directive is found, else return 0.
-//    2.- Parse all the content inside the 'server' scope.
-//    3.-
-//
-//
-//    Return Example:
-//      map_list = [
-//        ["server_name", "www.ggg.com ggg.com"],
-//        ["listen", "8484"]
-//      ]
-//  errors:
-//    Throw unknown directive exception if an unknkown directive is founded.
-//    Throw wrong syntax exception if directive is delared wrongfully.
-//  notes:
-//    Visit [https://github.com/BrenoMachado123/webserver/blob/main/README.md] to see a list and description of the directives.
-
+//TODO Parse one server configuration file
 void	Config::get_server_configuration() throw(InvalidDirectiveException) {
-	//TODO Parse one server configuration file
 	ServerConfig s;
-	std::cout << "Configuration File Parsed succesfully!" << std::endl;
+	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
+	ServerConfig::Root r("/some_valid/path");
+	s.setRoot(r);
+	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
+	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
 }
 
 // CONSTUCTORS & DESTRUCTORS //
 Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _config_file(file) {
 	if (!file.is_open())
 		throw e_invalid_configuration_file;
-	std::cout << "Config created!" << std::endl;
+	std::cout << WHITE << "Config created" << ENDC << std::endl;
 	get_server_configuration();
 }
 
 Config::~Config() {
-	std::cout << "Config" << " destroyed" << std::endl;
+	std::cout << RED << "Config" << " destroyed" << ENDC << std::endl;
 }
 
-Config::ServerConfig::ServerConfig(): port(80), address("127.0.0.1"), root ("/etc/www") {
-	std::cout << "ServerConfig created!" << std::endl;
+Config::ServerConfig::ServerConfig(): _port(80), _address("127.0.0.1"), _root("html/") {
+	std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::~ServerConfig() {
-	std::cout << "ServerConfig destroyed" << std::endl;
+	std::cout << RED << "ServerConfig destroyed" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Directive::Directive(int id): _id(id) {
+	std::cout << WHITE << "Directive(" << id <<") created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Directive::~Directive() {
-	std::cout << "DirectiveContent" << " destroyed" << std::endl;
+	std::cout << RED << "Directive" << " destroyed" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiveException): Directive(ROOT), _path(str), _name("root") {
+	/*
+	This constructor takes only one string which should be a valid path
+	Ex:
+		Root("/etc/www/root") [VALID]
+		Root("/etc trash wrong") [throw InvalidDirectiveException]
+		Root("") [throw InvalidDirectiveException]
+	*/
+	std::cout << WHITE << "Root created" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Root::~Root() {
+	std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
 
 
-/* EXCEPTIONS */
-const char * Config::InvalidDirectiveException::what() const throw() {
-	return ("Directive is invalid");
+/* ServerConfig Member Functions */
+
+void Config::ServerConfig::setRoot(const Root & root) {
+	_root = root.getPath();
 }
 
-const char * Config::WrongSyntaxException::what() const throw() {
-	return ("Wrong Directive Syntax");
+std::string & Config::ServerConfig::getRoot() {
+	return _root;
 }
 
-const char * Config::InvalidConfigurationFileException::what() const throw() {
-	return ("Invalid File, expecting extention .conf and a valid file with read permission");
+/* Directives Member Functions */
+
+int Config::ServerConfig::Directive::getId() const {
+	return (_id);
 }
+
+const std::string & Config::ServerConfig::Root::getName() const {
+	return (_name);
+}
+
+const std::string & Config::ServerConfig::Root::getPath() const{
+	return _path;
+}
+
 
 /* HELPER FUNCTIONS */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

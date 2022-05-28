@@ -1,12 +1,7 @@
-//****************************************************//
-// Private default constructor and assign operator.   //
-// To restrict their ussage outside this object scope.//
-// (Not implemented, since we don't need them!)       //
-//****************************************************//
-
 #ifndef __CONFIG_HPP__
 # define __CONFIG_HPP__
 
+#include "colors.hpp"
 #include <iostream>
 #include <exception>
 #include <map>
@@ -56,59 +51,34 @@ class Config {
 						Directive();
 					public:
 						Directive(int);
-						virtual int getId() = 0;
+						int getId() const;
+						virtual const std::string & getName() const = 0;
 						virtual ~Directive();
 				};
-/*				class Location: public Directive {
-					std::vector<Directive> _location_directives;
-					public:
-						Location(std::string const &);
-						virtual int getId();
-				};
-				class ServerName: public Directive {
-					public:
-						std::vector<std::string> _names;
-						virtual int getId();
-				};
-				class ClientMaxBody: public Directive {
-					public:
-						int _max;
-						virtual int getId();
-				};*/
+
 				class Root: public Directive {
-					public:
-						int _port;
-						virtual int getId();
-				};
-				class Listen: public Directive {
 					private:
-						int _port;
+						const std::string & _path;
+						const std::string _name;
+						Root();
 					public:
-						Listen(std::string const &);
-						int getPort() const;
-						virtual int getId();
+						Root(const std::string &) throw (InvalidDirectiveException);
+						~Root();
+						virtual const std::string & getName() const;
+						const std::string & getPath() const;
 				};
-				class Index: public Directive {
-					private:
-						std::vector<std::string> index_list;
-					public:
-						Index(std::string &) throw (InvalidDirectiveException);
-				};
+
 				ServerConfig();
 				~ServerConfig();
-			// TO DO, IMPLEMENT ALL THE DIRECTIVES LEFT
 
-			//Directive const & getListen();
-			// Directive const & getAutoIndex();
-			// Directive const & getCGI();
-			// Directive const & getCGIBIN();
-			// Directive const & getListen();
+				void setRoot(const Root &);
+				std::string & getRoot();
 			private:
 				ServerConfig(const ServerConfig &);
 				ServerConfig & operator=(const ServerConfig &);
-				int port;
-				std::string address;
-				std::string root;
+				int _port;
+				std::string _address;
+				std::string _root;
 				std::vector<Directive> _directives;
 		};
 
