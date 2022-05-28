@@ -21,6 +21,13 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	ServerConfig::Root r("/some_valid/path");
 	s.setRoot(r);
+	/* METHODS TEST */
+	ServerConfig::Methods m("GET POST");
+	std::vector<std::string> methods_list(m.getMethods());
+	std::vector<std::string>::iterator e = methods_list.end();
+	for(std::vector<std::string>::iterator b = methods_list.begin(); b != e; ++b)
+		std::cout << YELLOW << *b << " ";
+	std::cout << ENDC << std::endl;
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
 }
@@ -61,6 +68,9 @@ Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiv
 		Root("/etc trash wrong") [throw InvalidDirectiveException]
 		Root("") [throw InvalidDirectiveException]
 	*/
+	//possible implementation:
+	if (!str.size() or !_validPath(str))
+		throw InvalidDirectiveException();
 	std::cout << WHITE << "Root created" << ENDC << std::endl;
 }
 
@@ -68,6 +78,35 @@ Config::ServerConfig::Root::~Root() {
 	std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
 
+Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException): Directive(LIMITMETHODS), _name("limit_methods") {
+	/* this constructor takes one string which contains the limit methods
+	   that will be assigned. 
+
+	   Ex:
+			Methods("GET POST DELETE") [VALID]
+			Methods("GET") [VALID]
+			Methods("GIT") [throw InvalidDirectiveException]
+			Methods("GET POST NIHIL") [throw InvalidDirectiveException]
+	*/
+	// possible implemetation:
+	char * str = std::strtok(const_cast<char*>(content.c_str()), " ");
+	while (str) {
+		if (!_validMethod(std::string(str)))
+			throw InvalidDirectiveException();
+		std::vector<std::string>::iterator last = _methods.end();
+		std::vector<std::string>::iterator tmp = _methods.begin();
+		for (; tmp != last; ++tmp)
+			if (*tmp == str)
+				throw InvalidDirectiveException(); // EVEN BETTER IF WE CREATE A "DUPLICATE EXCEPTION"
+		_methods.push_back(std::string(str));
+		str = std::strtok(NULL, " ");	
+	}
+	std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Methods::~Methods() {
+	std::cout << RED << "Limit Methods Directive destroyed!" << ENDC << std::endl;
+}
 
 /* ServerConfig Member Functions */
 
@@ -77,6 +116,34 @@ void Config::ServerConfig::setRoot(const Root & root) {
 
 std::string & Config::ServerConfig::getRoot() {
 	return _root;
+}
+
+void Config::ServerConfig::setMethods(const Methods& methods) {
+	_methods = methods.getMethods();
+}
+
+std::vector<std::string>& Config::ServerConfig::getMethods() {
+	return _methods;
+}
+
+/* ServerConfig Private Member Functions */
+
+bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
+	std::string valid_methods[3] = {"GET", "POST", "DELETE"};
+	for(size_t i = 0; i < 3; i++) {
+		if (method == valid_methods[i])
+			return true;
+	}
+	return false;
+}
+
+bool Config::ServerConfig::Root::_validPath(const std::string& path) {
+	std::string::const_iterator itr = path.begin();
+	for (; itr != path.end(); itr++) {
+		if (isspace(*itr))
+			return false; 
+	}
+	return true;
 }
 
 /* Directives Member Functions */
@@ -91,6 +158,14 @@ const std::string & Config::ServerConfig::Root::getName() const {
 
 const std::string & Config::ServerConfig::Root::getPath() const{
 	return _path;
+}
+
+std::vector<std::string> Config::ServerConfig::Methods::getMethods() const {
+	return _methods;
+}
+
+const std::string& Config::ServerConfig::Methods::getName() const {
+	return _name;
 }
 
 

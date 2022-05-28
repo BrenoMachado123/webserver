@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <cstring>
+#include <ctype.h>
 
 
 # define SERVER_CONTEXT_DIRECTIVES 2
@@ -63,22 +65,39 @@ class Config {
 						Root();
 					public:
 						Root(const std::string &) throw (InvalidDirectiveException);
+						bool _validPath(const std::string&);
 						~Root();
 						virtual const std::string & getName() const;
 						const std::string & getPath() const;
+				};
+
+				class Methods : public Directive {
+					public:
+						Methods(const std::string&) throw (InvalidDirectiveException);
+						~Methods();
+						std::vector<std::string> getMethods() const;
+						virtual const std::string& getName() const;
+					private:
+						Methods();
+						bool _validMethod(const std::string&);
+						const std::string _name;
+						std::vector<std::string> _methods;
 				};
 
 				ServerConfig();
 				~ServerConfig();
 
 				void setRoot(const Root &);
+				void setMethods(const Methods&);
 				std::string & getRoot();
+				std::vector<std::string>& getMethods();
 			private:
 				ServerConfig(const ServerConfig &);
 				ServerConfig & operator=(const ServerConfig &);
 				int _port;
 				std::string _address;
 				std::string _root;
+				std::vector<std::string> _methods;
 				std::vector<Directive> _directives;
 		};
 
