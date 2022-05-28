@@ -18,9 +18,9 @@ const char * Config::InvalidConfigurationFileException::what() const throw() {
 //TODO Parse one server configuration file
 void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	ServerConfig s;
+	/* ROOT TEST */
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	ServerConfig::Root r("/some_valid/path");
-	s.setRoot(r);
 	/* METHODS TEST */
 	ServerConfig::Methods m("GET POST");
 	std::vector<std::string> methods_list(m.getMethods());
@@ -28,6 +28,15 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	for(std::vector<std::string>::iterator b = methods_list.begin(); b != e; ++b)
 		std::cout << YELLOW << *b << " ";
 	std::cout << ENDC << std::endl;
+	/* LISTEN TEST */
+	try {
+		ServerConfig::Listen l("122.22.22.0:8040");
+		std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+	} catch (InvalidDirectiveException & e)
+	{
+		std::cout << RED << e.what() << std::endl;
+	}
+
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
 }
@@ -44,7 +53,7 @@ Config::~Config() {
 	std::cout << RED << "Config" << " destroyed" << ENDC << std::endl;
 }
 
-Config::ServerConfig::ServerConfig(): _port(80), _address("127.0.0.1"), _root("html/") {
+Config::ServerConfig::ServerConfig(): _address("127.0.0.1"), _root("html/"), _port(80) {
 	std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
 }
 
@@ -80,8 +89,7 @@ Config::ServerConfig::Root::~Root() {
 
 //===========================LISTEN===============================//
 
-Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDirectiveException)
-    : Directive(LISTEN), _name("listen"), _ip("127.0.0.1"), _port(80) {
+Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDirectiveException): Directive(LISTEN), _name("listen"), _ip("127.0.0.1"), _port(80) {
     /*
 	This constructor takes only one string which should be a valid path
 	Ex:
@@ -110,6 +118,7 @@ Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDi
     stoi_converter >> _port;
     if (_port > PORT_MAX || _port <= PORT_MIN)
         throw InvalidDirectiveException();
+	std::cout << WHITE << "Listen created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Listen::~Listen() {
@@ -182,7 +191,7 @@ std::vector<std::string>& Config::ServerConfig::getMethods() {
 
 bool Config::ServerConfig::Listen::isValid(const std::string & content) {
     std::string::const_iterator it = content.begin();
-    while (it != content.end())
+    for (; it != content.end(); ++it)
         if (isspace(*it))
             return false;
     return true;
