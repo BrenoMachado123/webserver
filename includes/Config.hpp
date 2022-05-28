@@ -10,6 +10,7 @@
 #include <fstream>
 #include <cstring>
 #include <ctype.h>
+#include <sstream>
 
 
 # define SERVER_CONTEXT_DIRECTIVES 2
@@ -26,6 +27,9 @@
 # define SERVERNAME		10
 # define UPLOAD			11
 # define RETURN_D		12
+
+# define PORT_MAX       65535
+# define PORT_MIN       1023
 
 
 // Config represents the configuration file
@@ -71,6 +75,25 @@ class Config {
 						const std::string & getPath() const;
 				};
 
+                class Listen: public Directive {
+                private:
+                    const std::string _name;
+                    std::string _ip;
+                    int _port;
+                    Listen();
+                public:
+                    Listen(const std::string &) throw (InvalidDirectiveException);
+                    ~Listen();
+
+                    bool isValid(const std::string &);
+
+                    const std::string &getName() const;
+                    const int &getPort() const;
+                    const std::string &getIp() const;
+
+
+                };
+
 				class Methods : public Directive {
 					public:
 						Methods(const std::string&) throw (InvalidDirectiveException);
@@ -88,17 +111,21 @@ class Config {
 				~ServerConfig();
 
 				void setRoot(const Root &);
-				void setMethods(const Methods&);
+                void setListen(const Listen&);
+                void setMethods(const Methods&);
 				std::string & getRoot();
+                int & getListenPort();
+                std::string & getListenIp();
 				std::vector<std::string>& getMethods();
 			private:
 				ServerConfig(const ServerConfig &);
 				ServerConfig & operator=(const ServerConfig &);
-				int _port;
-				std::string _address;
-				std::string _root;
-				std::vector<std::string> _methods;
-				std::vector<Directive> _directives;
+				std::string                 _address;
+				std::string                 _root;
+                std::string                 _ip;
+                int                         _port;
+				std::vector<std::string>    _methods;
+				std::vector<Directive>      _directives;
 		};
 
 		std::vector<ServerConfig> _servers;

@@ -78,7 +78,46 @@ Config::ServerConfig::Root::~Root() {
 	std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
 
-Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException): Directive(LIMITMETHODS), _name("limit_methods") {
+//===========================LISTEN===============================//
+
+Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDirectiveException)
+    : Directive(LISTEN), _name("listen"), _ip("127.0.0.1"), _port(80) {
+    /*
+	This constructor takes only one string which should be a valid path
+	Ex:
+		Listen("/4242") [VALID]
+		Listen("42 42") [throw InvalidDirectiveException]
+		Listen("123090") [throw InvalidDirectiveException]
+        Listen("12") [throw InvalidDirectiveException]
+		Listen("") [throw InvalidDirectiveException]
+	*/
+    //possible implementation:
+    if (!isValid(content))
+        throw InvalidDirectiveException();
+    std::string temp;
+    std::stringstream stoi_converter;
+//Checking if port was provided as address:port or just port
+    if (content.find(':') != std::string::npos) {
+        char *cstr = new char[content.length() + 1];
+        std::strcpy(cstr, content.c_str());
+        char *tokens = std::strtok(cstr, ":");
+        _ip = *tokens;
+        temp = *tokens + 1;
+        delete[] cstr;
+    } else
+        temp = content;
+    stoi_converter << temp;
+    stoi_converter >> _port;
+    if (_port > PORT_MAX || _port <= PORT_MIN)
+        throw InvalidDirectiveException();
+}
+
+Config::ServerConfig::Listen::~Listen() {
+    std::cout << RED << "Listen Directive destroyed" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException):
+    Directive(LIMITMETHODS), _name("limit_methods") {
 	/* this constructor takes one string which contains the limit methods
 	   that will be assigned. 
 
@@ -118,6 +157,19 @@ std::string & Config::ServerConfig::getRoot() {
 	return _root;
 }
 
+void Config::ServerConfig::setListen(const Listen & listen) {
+    _port = listen.getPort();
+    _ip = listen.getIp();
+}
+
+int &Config::ServerConfig::getListenPort() {
+    return _port;
+}
+
+std::string &Config::ServerConfig::getListenIp() {
+    return _ip;
+}
+
 void Config::ServerConfig::setMethods(const Methods& methods) {
 	_methods = methods.getMethods();
 }
@@ -127,6 +179,15 @@ std::vector<std::string>& Config::ServerConfig::getMethods() {
 }
 
 /* ServerConfig Private Member Functions */
+
+bool Config::ServerConfig::Listen::isValid(const std::string & content) {
+    std::string::const_iterator it = content.begin();
+    while (it != content.end())
+        if (isspace(*it))
+            return false;
+    return true;
+}
+
 
 bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
 	std::string valid_methods[3] = {"GET", "POST", "DELETE"};
@@ -158,6 +219,18 @@ const std::string & Config::ServerConfig::Root::getName() const {
 
 const std::string & Config::ServerConfig::Root::getPath() const{
 	return _path;
+}
+
+const std::string &Config::ServerConfig::Listen::getName() const{
+    return _name;
+}
+
+const std::string &Config::ServerConfig::Listen::getIp() const {
+    return _ip;
+}
+
+const int &Config::ServerConfig::Listen::getPort() const {
+    return _port;
 }
 
 std::vector<std::string> Config::ServerConfig::Methods::getMethods() const {
