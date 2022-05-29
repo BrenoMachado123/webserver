@@ -1,6 +1,6 @@
 # Makefile created automatically from script
 # C++ webserv [Sat May 21 00:14:15 WEST 2022]
-MAKEFLAGS += --silent	# Silence makefile [Commented by default]\n
+# MAKEFLAGS += --silent	# Silence makefile [Commented by default]\n
 NAME	=	webserv
 
 SRC	=	srcs/main.cpp\

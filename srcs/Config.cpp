@@ -146,7 +146,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
                             "125.10.20.40:190", "localhost:80", "127.12.0.1.",
                             "4242"};
             invalid_inputs{"500000", "42 42",
-                            "0.0.0.2", "127.256.0.1", "127,0.4.5"};
+                            "0.0.0.2", "127.256.0.1", "127,0.4.5", "126:256.0.1", "127:256.0.1:80"};
                 [throw InvalidDirectiveException]
         */
         //possible implementation:
