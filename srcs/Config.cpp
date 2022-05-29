@@ -89,7 +89,8 @@ Config::ServerConfig::Root::~Root() {
 
 //===========================LISTEN===============================//
 
-Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDirectiveException): Directive(LISTEN), _name("listen"), _ip("127.0.0.1"), _port(80) {
+Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDirectiveException):
+    Directive(LISTEN), _name("listen"), _ip("127.0.0.1"), _port(80) {
     /*
 	This constructor takes only one string which should be a valid path
 	Ex:
@@ -139,19 +140,10 @@ Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDi
         temp = token;
         delete[] token;
     }
-        // JESLI NIE MA : TO TRZEBA SPRAWDZIC CZY TO PORT CZY IP!!
     else {
         temp = content;
         if (isIpValid(_ip))
             exit(EXIT_SUCCESS);
-    }
-    stoi_converter << temp;
-    stoi_converter >> _port;
-    if (_port > PORT_MAX || _port <= PORT_MIN)
-        throw InvalidDirectiveException();
-
-    }
-
     }
     stoi_converter << temp;
     stoi_converter >> _port;
@@ -238,17 +230,19 @@ bool Config::ServerConfig::Listen::isValid(const std::string & content) {
 
 bool Config::ServerConfig::Listen::isIpValid(const std::string & ip) {
     std::stringstream _ip(ip);
-    int part;
+    int part1, rest;
     char ch;
-    while(!_ip.rdbuf()->in_avail()) {
-        _ip >> part >> ch;
-        if (part < 0 || part > 255)
+    _ip >> part1 >> ch;
+    if (part1 < 1 || part1 > 255 || ch != '.')
+        return false;
+    while(_ip.rdbuf()->in_avail() != 0) {
+        _ip >> rest >> ch;
+        if (rest < 0 || rest > 255)
             return false;
         if (ch != '.')
             return false;
     }
     return true;
-
 }
 
 
