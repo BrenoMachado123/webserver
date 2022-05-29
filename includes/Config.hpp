@@ -11,6 +11,8 @@
 #include <cstring>
 #include <ctype.h>
 #include <sstream>
+#include <iterator>
+#include <stdlib.h>
 
 
 # define SERVER_CONTEXT_DIRECTIVES 2
@@ -56,6 +58,7 @@ class Config {
 				class Directive {
 					private:
 						int _id;
+                        //maybe add the string of all codes here?
 						Directive();
 					public:
 						Directive(int);
@@ -77,6 +80,23 @@ class Config {
 						const std::string & getPath() const;
 				};
 
+                class ErrorCodePage: public Directive {
+                private:
+                    ErrorCodePage();
+
+                    std::string                             _name;
+                    std::map<std::vector<int>, std::string> _errorCodePage;
+                public:
+                    ErrorCodePage(std::string & content) throw (InvalidDirectiveException);
+                    ~ErrorCodePage();
+
+                    const std::string & getName() const;
+                    const std::map<std::vector<int>, std::string> & getErrorCodePage() const;
+
+                    bool isCodeValid(const int &);
+                    bool isStringValid(const std::string &);
+                };
+
                 class Listen: public Directive {
                 private:
                     const std::string _name;
@@ -87,7 +107,7 @@ class Config {
                     Listen(const std::string &) throw (InvalidDirectiveException);
                     ~Listen();
 
-                    bool isValid(const std::string &);
+                    bool isStringValid(const std::string &);
                     bool isIpValid(const std::string &);
                     const std::string &getName() const;
                     const int &getPort() const;
@@ -113,9 +133,11 @@ class Config {
 				~ServerConfig();
 
 				void setRoot(const Root &);
+                void setErrorCodePage(const ErrorCodePage &);
                 void setListen(const Listen&);
                 void setMethods(const Methods&);
 				std::string & getRoot();
+                std::map<std::vector<int>, std::string> & getErrorCodePage();
                 int & getListenPort();
                 std::string & getListenIp();
 				std::vector<std::string>& getMethods();
@@ -124,6 +146,7 @@ class Config {
 				ServerConfig & operator=(const ServerConfig &);
 				std::string                 _address;
 				std::string                 _root;
+                std::map<std::vector<int>, std::string> _errorCodePage;
                 std::string                 _ip;
                 int                         _port;
 				std::vector<std::string>    _methods;
