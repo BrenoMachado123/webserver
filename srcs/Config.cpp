@@ -93,27 +93,66 @@ Config::ServerConfig::Listen::Listen(const std::string &content) throw(InvalidDi
     /*
 	This constructor takes only one string which should be a valid path
 	Ex:
-		Listen("/4242") [VALID]
+        Listen("127.0.0.1") [VALID]
+        Listen("127.0.0.1:80") [VALID]
+        Listen("*:80") [VALID]
+		Listen("4242") [VALID]
 		Listen("42 42") [throw InvalidDirectiveException]
 		Listen("123090") [throw InvalidDirectiveException]
         Listen("12") [throw InvalidDirectiveException]
 		Listen("") [throw InvalidDirectiveException]
 	*/
     //possible implementation:
+//WHAT HAS TO BE DONE:
+//. check if IP address is valid.
+//. make it work only for the IP (port set to 80)
+//. make it work for *.
+//. make it work for addess and ip.
+//. check how strtok works!
+
+//. trzeba sprawdzić czy jest sam adres, lub czy jest sam port...
+//. nie mozna powiedziec ze jest zle ip jesli zostal podany sam port...
+//. jak sprawdzic kiedy token doszedl do konca?
+
     if (!isValid(content))
         throw InvalidDirectiveException();
     std::string temp;
     std::stringstream stoi_converter;
 //Checking if port was provided as address:port or just port
+// if : is present both must be present!
     if (content.find(':') != std::string::npos) {
-        char *cstr = new char[content.length() + 1];
-        std::strcpy(cstr, content.c_str());
-        char *tokens = std::strtok(cstr, ":");
-        _ip = *tokens;
-        temp = *tokens + 1;
-        delete[] cstr;
-    } else
+        char *token = std::strtok(const_cast<char*>(content.c_str()), ":");
+        if (token == "*")
+            _ip = "0.0.0.0";
+        else if (static_cast<std::string>(token).compare("localhost"))
+            _ip = "127.0.0.1";
+        else {
+            if (!isIpValid(_ip))
+                throw InvalidDirectiveException();
+            _ip = token;
+        }
+        if ((token = std::strtok(NULL, " ")) == 0) {
+            _port = 80;
+            delete[] token;
+            exit(EXIT_SUCCESS);
+        }
+        temp = token;
+        delete[] token;
+    }
+        // JESLI NIE MA : TO TRZEBA SPRAWDZIC CZY TO PORT CZY IP!!
+    else {
         temp = content;
+        if (isIpValid(_ip))
+            exit(EXIT_SUCCESS);
+    }
+    stoi_converter << temp;
+    stoi_converter >> _port;
+    if (_port > PORT_MAX || _port <= PORT_MIN)
+        throw InvalidDirectiveException();
+
+    }
+
+    }
     stoi_converter << temp;
     stoi_converter >> _port;
     if (_port > PORT_MAX || _port <= PORT_MIN)
@@ -195,6 +234,21 @@ bool Config::ServerConfig::Listen::isValid(const std::string & content) {
         if (isspace(*it))
             return false;
     return true;
+}
+
+bool Config::ServerConfig::Listen::isIpValid(const std::string & ip) {
+    std::stringstream _ip(ip);
+    int part;
+    char ch;
+    while(!_ip.rdbuf()->in_avail()) {
+        _ip >> part >> ch;
+        if (part < 0 || part > 255)
+            return false;
+        if (ch != '.')
+            return false;
+    }
+    return true;
+
 }
 
 

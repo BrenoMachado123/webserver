@@ -29,7 +29,9 @@
 # define RETURN_D		12
 
 # define PORT_MAX       65535
-# define PORT_MIN       1023
+# define PORT_MIN       1
+
+# define EXIT_SUCCESS   0
 
 
 // Config represents the configuration file
@@ -86,7 +88,7 @@ class Config {
                     ~Listen();
 
                     bool isValid(const std::string &);
-
+                    bool isIpValid(const std::string &);
                     const std::string &getName() const;
                     const int &getPort() const;
                     const std::string &getIp() const;
