@@ -84,31 +84,39 @@ class Config {
                 private:
                     ErrorCodePage();
 
-                    std::string                             _name;
-                    std::map<std::vector<int>, std::string> _errorCodePage;
-                public:
-                    ErrorCodePage(std::string & content) throw (InvalidDirectiveException);
-                    ~ErrorCodePage();
-
-                    const std::string & getName() const;
-                    const std::map<std::vector<int>, std::string> & getErrorCodePage() const;
-
                     bool isCodeValid(const int &);
                     bool isStringValid(const std::string &);
+
+//Check how to initialize it with codes
+//                  static std::vector<int> _allErrorCodes;
+
+                    std::string         _name;
+                    std::vector<int>    _errorCodes;
+                    std::string         _errorPath;
+                public:
+                    ErrorCodePage(const std::string & content) throw (InvalidDirectiveException);
+
+                    ~ErrorCodePage();
+                    const std::string & getName() const;
+                    const std::string & getErrorPath() const;
+                    const std::vector<int> & getErrorCodes() const;
                 };
 
                 class Listen: public Directive {
                 private:
-                    const std::string _name;
-                    std::string _ip;
-                    int _port;
                     Listen();
-                public:
-                    Listen(const std::string &) throw (InvalidDirectiveException);
-                    ~Listen();
 
                     bool isStringValid(const std::string &);
                     bool isIpValid(const std::string &);
+
+                    const std::string   _name;
+                    std::string         _ip;
+                    int                 _port;
+
+                public:
+                    Listen(const std::string &) throw (InvalidDirectiveException);
+
+                    ~Listen();
                     const std::string &getName() const;
                     const int &getPort() const;
                     const std::string &getIp() const;
@@ -137,7 +145,8 @@ class Config {
                 void setListen(const Listen&);
                 void setMethods(const Methods&);
 				std::string & getRoot();
-                std::map<std::vector<int>, std::string> & getErrorCodePage();
+                std::vector<int> & getErrorCodes();
+                std::string & getErrorPath();
                 int & getListenPort();
                 std::string & getListenIp();
 				std::vector<std::string>& getMethods();
@@ -146,11 +155,12 @@ class Config {
 				ServerConfig & operator=(const ServerConfig &);
 				std::string                 _address;
 				std::string                 _root;
-                std::map<std::vector<int>, std::string> _errorCodePage;
+                std::vector<int>            _errorCodes;
+                std::string                 _errorPath;
                 std::string                 _ip;
                 int                         _port;
 				std::vector<std::string>    _methods;
-				std::vector<Directive>      _directives;
+//std::vector<Directive>      _directives;
 		};
 
 		std::vector<ServerConfig> _servers;

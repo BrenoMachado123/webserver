@@ -89,43 +89,53 @@ Config::ServerConfig::Root::~Root() {
 }
 
 //===========================ERROR_PAGES===============================//
-Config::ServerConfig::ErrorCodePage::ErrorCodePage(std::string & content) throw(InvalidDirectiveException):
+Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(InvalidDirectiveException):
     Directive(ERRORPAGE), _name("errorCodePage") {
     /*
     This constructor takes only one string which should be valid error code/s
     and URI (page to display in case given error event occures)
     Ex:
-        ErrorPage("404 505 ./response.html") [VALID]
-        ErrorPage("404 505") [throw InvalidDirectiveException]
-        ErrorPage("./response.html) [throw InvalidDirectiveException]
-        ErrorPage("1XX 2XX ./response.html") [throw InvalidDirectiveException]
-        ErrorPage("") [throw InvalidDirectiveException]
+        valid_inputs{"404 405 ./response.html",
+                        "500 ./500.html"};
+
+        invalid_inputs{"404",
+                        "404 405",
+                        "404 405 ./response.html ./elo.html"
+                        "404, 405 ./response.html",
+                        "399 ./399.html",
+                        "100 ./100.html",
+                        "./response.html",
+                        "./response.html 404"
+    }; throw InvalidDirectiveExeption
     */
     //possible implementation:
+
+    int converted_number = 0;
     std::stringstream stoi_converter;
-    char *token = strtok(const_cast<char*>(content.c_str()), " \t\n\v\f\r");
-    std::vector<int> tempKeys;
+    char *token = std::strtok(const_cast<char*>(content.c_str()), " \t\n\v\f\r");
     while (token != 0) {
         if (*token >= 48 && *token <= 57) {
-            int converted_number = 0;
+            stoi_converter.clear();
             stoi_converter << token;
             stoi_converter >> converted_number;
-            if (!isCodeValid(converted_number)) //write it! and change token to int!
+            if (!isCodeValid(converted_number))
                 throw InvalidDirectiveException();
-            tempKeys.push_back(converted_number);
+            _errorCodes.push_back(converted_number);
         }
         else {
             if (!isStringValid(token))
                 throw InvalidDirectiveException();
-            if (!tempKeys.empty()) {
-                _errorCodePage.insert(std::make_pair(tempKeys, static_cast<std::string>(token)));
-                tempKeys.clear();
+            if (!_errorCodes.empty() && _errorPath.empty()) {
+                _errorPath = token;
             }
             else
                 throw InvalidDirectiveException();
         }
-        strtok(NULL, " \t\n\v\f\r");
+        token = std::strtok(NULL, " \t\n\v\f\r");
     }
+    if (_errorPath.empty())
+        throw InvalidDirectiveException();
+    std::cout << WHITE <<"ErrorCodePage directive Created" << std::endl;
 }
 
 Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
@@ -247,12 +257,16 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     }
 
     void Config::ServerConfig::setErrorCodePage(const ErrorCodePage &errorCodePage) {
-        _errorCodePage = errorCodePage.getErrorCodePage();
+        _errorCodes = errorCodePage.getErrorCodes();
+        _errorPath = errorCodePage.getErrorPath();
     }
 
+    std::vector<int> &Config::ServerConfig::getErrorCodes() {
+        return _errorCodes;
+    }
 
-    std::map<std::vector<int>, std::string> &Config::ServerConfig::getErrorCodePage() {
-        return _errorCodePage;
+    std::string &Config::ServerConfig::getErrorPath() {
+        return _errorPath;
     }
 
     void Config::ServerConfig::setListen(const Listen &listen) {
@@ -321,8 +335,12 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         return _name;
     }
 
-    const std::map<std::vector<int>, std::string> &Config::ServerConfig::ErrorCodePage::getErrorCodePage() const {
-        return _errorCodePage;
+    const std::string &Config::ServerConfig::ErrorCodePage::getErrorPath() const {
+        return _errorPath;
+    }
+
+    const std::vector<int> &Config::ServerConfig::ErrorCodePage::getErrorCodes() const {
+        return _errorCodes;
     }
 
     bool Config::ServerConfig::ErrorCodePage::isCodeValid(const int &code) {
