@@ -1,8 +1,8 @@
 #include "Config.hpp"
 
 /* Initialize static class members */
-const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
-const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
+const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location"};
+const std::string Config::_listen_directives[LISTEN_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page"};
 const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
 /* Exceptions */
 const char * Config::InvalidDirectiveException::what() const throw() {
@@ -14,30 +14,12 @@ const char * Config::WrongSyntaxException::what() const throw() {
 const char * Config::InvalidConfigurationFileException::what() const throw() {
 	return ("Invalid File, make sure you have permissions, that the file exists and the extension is .conf");
 }
-
-//TODO Parse one server configuration file
-void	Config::get_server_configuration() throw(InvalidDirectiveException) {
-	ServerConfig s;
-	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
-	ServerConfig::Root r("/some_valid/path");
-	s.setRoot(r);
-	/* METHODS TEST */
-	ServerConfig::Methods m("GET POST");
-	std::vector<std::string> methods_list(m.getMethods());
-	std::vector<std::string>::iterator e = methods_list.end();
-	for(std::vector<std::string>::iterator b = methods_list.begin(); b != e; ++b)
-		std::cout << YELLOW << *b << " ";
-	std::cout << ENDC << std::endl;
-	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
-	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
-}
-
 // CONSTUCTORS & DESTRUCTORS //
 Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _config_file(file) {
 	if (!file.is_open())
 		throw e_invalid_configuration_file;
 	std::cout << WHITE << "Config created" << ENDC << std::endl;
-	get_server_configuration();
+	parseConfiguration();
 }
 
 Config::~Config() {
@@ -116,28 +98,53 @@ Config::ServerConfig::Listen::Listen(const std::string& content) throw (InvalidD
 			Methods("SOME INVALID EXAMPLE") [throw InvalidDirectiveException]
 	*/
 	(void)content;
-	
-	//TODO psleziak
-
-    // std::string temp;
-    // std::stringstream stoi_converter;
-    // if (line.find(':') != std::string::npos) {
-    //     char *cstr = new char[line.length() + 1];
-    //     std::strcpy(cstr, line.c_str());
-    //     char *tokens = std::strtok(cstr, ":");
-    //     temp = *tokens + 1;
-    //     delete[] cstr;
-    // } else{
-    //     temp = line;
-    // }
-    // stoi_converter << temp;
-    // stoi_converter >> _port;
-    // if (_port > PORT_MAX || _port < PORT_MIN)
-    //     throw InvalidDirectiveException();
 }
-
+bool	Config::validDirective(const std::string & str, const std::string * list, int len) const {
+	int i(0);
+	while (i < len)
+		if (list[i++] == str)
+			return (true);
+	return (false);
+}
+/* Config Member Functions*/
+void	Config::parseConfiguration() throw(InvalidDirectiveException) {
+	ServerConfig s;
+	{	
+		std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
+		ServerConfig::Root r("/some_valid/path");
+		s.setRoot(r);
+		std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
+	}
+	{
+		ServerConfig::Methods m("GET POST");
+		std::vector<std::string> methods_list(m.getMethods());
+		std::vector<std::string>::iterator e = methods_list.end();
+		for(std::vector<std::string>::iterator b = methods_list.begin(); b != e; ++b)
+			std::cout << YELLOW << *b << " ";
+		std::cout << ENDC << std::endl;
+	}
+	{
+		std::string line;
+		std::cout << WHITE;
+	    while (std::getline(_config_file, line)) {
+			line = strtrim(line);
+	    	if (!line.length() || line[0] == '#')
+	    		continue;
+	    	std::string directive_str(line.substr(0, line.find_first_of(SEPARATORS)));
+	    	std::string content_str(line.substr(line.find_first_of(SEPARATORS) + 1, line.length()));
+	    	content_str = strtrim(content_str);
+	        std::cout << "[" << directive_str << "]" << " - [" << content_str << "]";
+	        if (validDirective(directive_str, _server_directives, SERVER_CONTEXT_DIRECTIVES))
+	        	std::cout << GREEN << "[OK]";
+	        else
+	        	std::cout << RED << "[INVALID DIRECTIVE]";
+	        std::cout << WHITE << std::endl;
+	    }
+		std::cout << ENDC;
+	}
+	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
+}
 /* ServerConfig Member Functions */
-
 void Config::ServerConfig::setRoot(const Root & root) {
 	_root = root.getPath();
 }
@@ -199,30 +206,13 @@ bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
 const std::string& Config::ServerConfig::Listen::getName() const {
 	return _name;
 }
-
-
-
-
-
-
-
-
-
-
-
-
 /* HELPER FUNCTIONS */
-
-
 std::ostream& operator<<(std::ostream& s, const Config& param) {
 	 s << "Some configuration Text";
 	(void)param;
 	return (s);
 }
-
-
 /*********26/05/2022*********/
-
 static int checkBrackets(std::string line) {
     std::string::iterator it = line.begin();
     for (; it != line.end(); it++) {
@@ -239,11 +229,9 @@ void Config::checkScopes() throw(WrongSyntaxException) {
         std::cout << line << std::endl;
         brackets_parse += checkBrackets(line);
     }
-    _config_file.close();
     if (brackets_parse % 2 != 0)
     	throw e_wrong_syntax;
     std::cout << "Status: All brackets closed" << std::endl;
     return ;
 }
-
 /****************************/

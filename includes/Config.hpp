@@ -12,8 +12,8 @@
 #include <cstring>
 #include <ctype.h>
 
-# define SERVER_CONTEXT_DIRECTIVES 2
-# define LISTEN_CONTEXT_DIRECTIVES 2
+# define SERVER_CONTEXT_DIRECTIVES 6
+# define LISTEN_CONTEXT_DIRECTIVES 5
 # define AUTOINDEX		1
 # define CGI			2
 # define CGIBIN			3
@@ -120,8 +120,11 @@ class Config {
 		Config();
 		Config & operator=(const Config &);
 		Config(const Config &);
-		void	get_server_configuration() throw(InvalidDirectiveException);
+		void	parseConfiguration() throw(InvalidDirectiveException);
 		void	checkScopes() throw(WrongSyntaxException);
+		// bool	findServerContext(const std::string &) const;
+		// bool	contextEnd(const std::string &) const;
+		bool	validDirective(const std::string &, const std::string *, int len) const;
 	public:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
 		static const std::string _listen_directives[LISTEN_CONTEXT_DIRECTIVES];
