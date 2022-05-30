@@ -17,6 +17,9 @@
 
 # define SERVER_CONTEXT_DIRECTIVES 2
 # define LISTEN_CONTEXT_DIRECTIVES 2
+
+# define ALL_ERROR_CODES    40
+
 # define AUTOINDEX		1
 # define CGI			2
 # define CGIBIN			3
@@ -88,7 +91,7 @@ class Config {
                     bool isStringValid(const std::string &);
 
 //Check how to initialize it with codes
-//                  static std::vector<int> _allErrorCodes;
+                    static const int _allErrorCodes[ALL_ERROR_CODES];
 
                     std::string         _name;
                     std::vector<int>    _errorCodes;

@@ -3,7 +3,13 @@
 /* Initialize static class members */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
 const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
-
+const int _allErrorCodes[ALL_ERROR_CODES] = {400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
+                                              410, 411, 412, 413, 414, 415, 416, 417, 418,
+                                              421, 422, 423, 424, 425, 426, 428, 429,
+                                              431,
+                                              451,
+                                              500, 501, 502, 503, 504, 505, 506, 507, 508,
+                                              510, 511};
 /* Exceptions */
 const char * Config::InvalidDirectiveException::what() const throw() {
 	return ("Directive is invalid");
@@ -151,8 +157,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         /*
         This constructor takes only one string which should be a valid path
         Ex:
-            valid_inputs{"*:80",
-                            "0.0.0.0:80", "0.0.0.0", "124.10.20.30",
+            valid_inputs{"*:80", "0.0.0.0:80", "0.0.0.0", "124.10.20.30",
                             "125.10.20.40:190", "localhost:80", "127.12.0.1.",
                             "4242"};
             invalid_inputs{"500000", "42 42",
@@ -166,8 +171,6 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         int test_port;
         std::string temp;
         std::stringstream stoi_converter;
-//Checking if port was provided as address:port or just port
-// if : is present both must be present!
         if (content.find(':') != std::string::npos) {
             char *token = std::strtok(const_cast<char *>(content.c_str()), ":");
             if (*token == '*' || !static_cast<std::string>(token).compare("0.0.0.0"))
@@ -344,15 +347,8 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     }
 
     bool Config::ServerConfig::ErrorCodePage::isCodeValid(const int &code) {
-        int errorCodes[] = {400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
-                             410, 411, 412, 413, 414, 415, 416, 417, 418,
-                             421, 422, 423, 424, 425, 426, 428, 429,
-                             431,
-                             451,
-                             500, 501, 502, 503, 504, 505, 506, 507, 508,
-                             510, 511};
-        for (int i = 0 ; i < 40 ; i++)
-            if (code == errorCodes[i])
+        for (int i = 0 ; i < ALL_ERROR_CODES ; i++)
+            if (code == _allErrorCodes[i])
                 return true;
         return false;
     }
