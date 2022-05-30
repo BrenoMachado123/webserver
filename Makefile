@@ -6,7 +6,7 @@ NAME	=	webserv
 SRC	=	srcs/main.cpp\
 		srcs/Config.cpp\
 
-CFLAGS	=	-Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
+CFLAGS	=	-g -Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 
 INC	=	-I includes
 

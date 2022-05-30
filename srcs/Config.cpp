@@ -3,13 +3,14 @@
 /* Initialize static class members */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
 const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
-const int _allErrorCodes[ALL_ERROR_CODES] = {400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
-                                              410, 411, 412, 413, 414, 415, 416, 417, 418,
-                                              421, 422, 423, 424, 425, 426, 428, 429,
-                                              431,
-                                              451,
-                                              500, 501, 502, 503, 504, 505, 506, 507, 508,
-                                              510, 511};
+const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] =
+        {400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
+          410, 411, 412, 413, 414, 415, 416, 417, 418,
+          421, 422, 423, 424, 425, 426, 428, 429,
+          431,
+          451,
+          500, 501, 502, 503, 504, 505, 506, 507, 508,
+          510, 511};
 /* Exceptions */
 const char * Config::InvalidDirectiveException::what() const throw() {
 	return ("Directive is invalid");
@@ -37,11 +38,31 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	/* LISTEN TEST */
 	try {
 		ServerConfig::Listen l("122.22.22.0:8040");
-		std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+        ServerConfig::Listen l1("*:8040");
+        ServerConfig::Listen l2("0.0.0.0:10");
+//        ServerConfig::Listen l3("localhost");
+        ServerConfig::Listen l4("localhost:80");
+        std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
+//        std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
 	} catch (InvalidDirectiveException & e)
 	{
 		std::cout << RED << e.what() << std::endl;
 	}
+
+    /* ERROR CODE PAGE */
+    try {
+        ServerConfig::ErrorCodePage ecp("404 505 ./response.html");
+        std::vector<int>::const_iterator it = ecp.getErrorCodes().begin();
+        std::cout << YELLOW << "Error Code(s): ";
+        for (; it != ecp.getErrorCodes().end() ; it++)
+            std::cout << *it << " ";
+        std::cout << ", Path: " << ecp.getErrorPath() << ENDC << std::endl;
+    } catch (InvalidDirectiveException &e) {
+        std::cout  << RED << e.what() << std::endl;
+    }
 
 	std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
 	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
