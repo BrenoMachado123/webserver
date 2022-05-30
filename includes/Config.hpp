@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 # define SERVER_CONTEXT_DIRECTIVES 6
-# define LISTEN_CONTEXT_DIRECTIVES 5
+# define LOCATION_CONTEXT_DIRECTIVES 5
 # define AUTOINDEX		1
 # define CGI			2
 # define CGIBIN			3
@@ -127,7 +127,7 @@ class Config {
 		bool	validDirective(const std::string &, const std::string *, int len) const;
 	public:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
-		static const std::string _listen_directives[LISTEN_CONTEXT_DIRECTIVES];
+		static const std::string _location_directives[LOCATION_CONTEXT_DIRECTIVES];
 
 		Config(std::ifstream &) throw(InvalidConfigurationFileException);
 		~Config();

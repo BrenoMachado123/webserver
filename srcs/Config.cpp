@@ -2,7 +2,7 @@
 
 /* Initialize static class members */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location"};
-const std::string Config::_listen_directives[LISTEN_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page"};
+const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page"};
 const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
 /* Exceptions */
 const char * Config::InvalidDirectiveException::what() const throw() {
@@ -21,7 +21,6 @@ Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _
 	std::cout << WHITE << "Config created" << ENDC << std::endl;
 	parseConfiguration();
 }
-
 Config::~Config() {
 	std::cout << RED << "Config" << " destroyed" << ENDC << std::endl;
 }
@@ -29,7 +28,6 @@ Config::~Config() {
 Config::ServerConfig::ServerConfig(): _port(80), _address("127.0.0.1"), _root("html/") {
 	std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
 }
-
 Config::ServerConfig::~ServerConfig() {
 	std::cout << RED << "ServerConfig destroyed" << ENDC << std::endl;
 }
@@ -37,7 +35,6 @@ Config::ServerConfig::~ServerConfig() {
 Config::ServerConfig::Directive::Directive(int id): _id(id) {
 	std::cout << WHITE << "Directive(" << id <<") created" << ENDC << std::endl;
 }
-
 Config::ServerConfig::Directive::~Directive() {
 	std::cout << RED << "Directive" << " destroyed" << ENDC << std::endl;
 }
@@ -54,7 +51,6 @@ Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiv
 		throw InvalidDirectiveException();
 	std::cout << WHITE << "Root created" << ENDC << std::endl;
 }
-
 Config::ServerConfig::Root::~Root() {
 	std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
@@ -82,7 +78,6 @@ Config::ServerConfig::Methods::Methods(const std::string& content) throw (Invali
 	}
 	std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
 }
-
 Config::ServerConfig::Methods::~Methods() {
 	std::cout << RED << "Limit Methods Directive destroyed!" << ENDC << std::endl;
 }
@@ -99,6 +94,9 @@ Config::ServerConfig::Listen::Listen(const std::string& content) throw (InvalidD
 	*/
 	(void)content;
 }
+
+
+/* Config Member Functions*/
 bool	Config::validDirective(const std::string & str, const std::string * list, int len) const {
 	int i(0);
 	while (i < len)
@@ -106,43 +104,62 @@ bool	Config::validDirective(const std::string & str, const std::string * list, i
 			return (true);
 	return (false);
 }
-/* Config Member Functions*/
+
 void	Config::parseConfiguration() throw(InvalidDirectiveException) {
-	ServerConfig s;
-	{	
-		std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
-		ServerConfig::Root r("/some_valid/path");
-		s.setRoot(r);
-		std::cout << YELLOW << "Server Root Configuration: " << s.getRoot() << ENDC << std::endl;
-	}
-	{
-		ServerConfig::Methods m("GET POST");
-		std::vector<std::string> methods_list(m.getMethods());
-		std::vector<std::string>::iterator e = methods_list.end();
-		for(std::vector<std::string>::iterator b = methods_list.begin(); b != e; ++b)
-			std::cout << YELLOW << *b << " ";
-		std::cout << ENDC << std::endl;
-	}
-	{
-		std::string line;
-		std::cout << WHITE;
-	    while (std::getline(_config_file, line)) {
-			line = strtrim(line);
-	    	if (!line.length() || line[0] == '#')
-	    		continue;
-	    	std::string directive_str(line.substr(0, line.find_first_of(SEPARATORS)));
-	    	std::string content_str(line.substr(line.find_first_of(SEPARATORS) + 1, line.length()));
-	    	content_str = strtrim(content_str);
-	        std::cout << "[" << directive_str << "]" << " - [" << content_str << "]";
-	        if (validDirective(directive_str, _server_directives, SERVER_CONTEXT_DIRECTIVES))
-	        	std::cout << GREEN << "[OK]";
-	        else
-	        	std::cout << RED << "[INVALID DIRECTIVE]";
-	        std::cout << WHITE << std::endl;
-	    }
-		std::cout << ENDC;
-	}
-	std::cout << YELLOW << "Configuration File Parsed succesfully!" << ENDC << std::endl;
+	short int context(0);
+	std::string line;
+    while (std::getline(_config_file, line)) {
+		line = strtrim(line);
+    	if (!line.length() || line[0] == '#')
+    		continue;
+    	std::string directive(line.substr(0, line.find_first_of(SEPARATORS)));
+    	std::string tmp(line.substr(line.find_first_of(SEPARATORS) + 1, line.length()));
+    	std::string directive_content(strtrim(tmp));
+        if (directive == "}") {
+        	if (--context < 0)
+				throw e_invalid_directive;
+			continue ;
+        }
+        std::cout << BLUE << std::left << std::setw(8) << (context == 2 ? "Location" : "Server") << " context: " << YELLOW;
+        std::cout << "[" << directive << "]" << " - [" << directive_content << "]";
+        switch (context) {
+        	case 0:
+        		if (directive == "server" && directive_content == "{")
+        			context++;
+        		else
+			 		throw e_invalid_directive;
+        		break;
+			case 1:
+		        if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES))
+		        {
+		        	// CREATE SERVER DIRECTIVE
+		        	std::cout << GREEN << "[OK]";
+					if (directive == "location")
+		        		context++;
+		        }
+		        else
+		        {
+		        	std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
+					throw e_invalid_directive;
+		        }
+				break;
+			case 2:
+				if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
+				{
+					// CREATE LOCATION DIRECTIVE
+		        	std::cout << GREEN << "[OK]";
+				}
+		        else {
+					std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
+					throw e_invalid_directive;
+				}
+				break;
+			default:
+				std::cout << ENDC;
+				throw e_invalid_directive;
+        }
+        std::cout << std::endl;
+    }
 }
 /* ServerConfig Member Functions */
 void Config::ServerConfig::setRoot(const Root & root) {
@@ -206,6 +223,7 @@ bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
 const std::string& Config::ServerConfig::Listen::getName() const {
 	return _name;
 }
+
 /* HELPER FUNCTIONS */
 std::ostream& operator<<(std::ostream& s, const Config& param) {
 	 s << "Some configuration Text";
