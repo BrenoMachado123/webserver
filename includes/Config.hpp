@@ -11,9 +11,15 @@
 #include <fstream>
 #include <cstring>
 #include <ctype.h>
+#include <sstream>
 
 # define SERVER_CONTEXT_DIRECTIVES 6
 # define LOCATION_CONTEXT_DIRECTIVES 5
+# define ALL_ERROR_CODES    40
+
+# define PORT_MAX       65535
+# define PORT_MIN       1
+
 # define AUTOINDEX		1
 # define CGI			2
 # define CGIBIN			3
@@ -26,6 +32,7 @@
 # define SERVERNAME		10
 # define UPLOAD			11
 # define RETURN_D		12
+
 
 
 // Config represents the configuration file
@@ -53,9 +60,9 @@ class Config {
 						Directive();
 					public:
 						Directive(int);
-						int getId() const;
-						virtual const std::string & getName() const = 0;
 						virtual ~Directive();
+						virtual const std::string & getName() const = 0;
+						int getId() const;
 				};
 
 				class Root: public Directive {
@@ -72,16 +79,38 @@ class Config {
 				};
 
 				class Listen: public Directive {
-					private:
-						const std::string _address;
-						const std::string _name;
-						short int _port;
-						Listen();
-					public:
-						Listen(const std::string &) throw (InvalidDirectiveException);
-						virtual const std::string & getName() const;
-						const std::string & getPath() const;
-				};
+                private:
+                    const std::string   _name;
+                    std::string         _ip;
+                    int                 _port;
+                    bool isStringValid(const std::string &);
+                    bool isIpValid(const std::string &);
+                    Listen();
+                public:
+                    Listen(const std::string &) throw (InvalidDirectiveException);
+                    ~Listen();
+                    const std::string &getName() const;
+                    int getPort() const;
+                    const std::string &getIp() const;
+                };
+
+
+				class ErrorCodePage: public Directive {
+                private:
+                	static const int _allErrorCodes[ALL_ERROR_CODES];
+                    std::string         _name;
+                    std::vector<int>    _errorCodes;
+                    std::string         _errorPath;
+					bool isCodeValid(const int &);
+                    bool isStringValid(const std::string &);
+					ErrorCodePage();
+                public:
+                    ErrorCodePage(const std::string & content) throw (InvalidDirectiveException);
+                    ~ErrorCodePage();
+                    const std::string & getName() const;
+                    const std::string & getErrorPath() const;
+                    const std::vector<int> & getErrorCodes() const;
+                };
 
 				class Methods : public Directive {
 					public:
