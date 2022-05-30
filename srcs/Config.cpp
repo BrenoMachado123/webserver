@@ -37,16 +37,16 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	std::cout << ENDC << std::endl;
 	/* LISTEN TEST */
 	try {
-		ServerConfig::Listen l("122.22.22.0:8040");
-        ServerConfig::Listen l1("*:8040");
-        ServerConfig::Listen l2("0.0.0.0:10");
-//        ServerConfig::Listen l3("localhost");
-        ServerConfig::Listen l4("localhost:80");
-        std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
-        std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
-        std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
-//        std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
-        std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
+//		ServerConfig::Listen l("122.22.22.0:8040");
+//        ServerConfig::Listen l1("*:8040");
+//        ServerConfig::Listen l2("0.0.0.0:10");
+        ServerConfig::Listen l3("localhost");
+//        ServerConfig::Listen l4("localhost:80");
+//        std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+//        std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
+//        std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
+//        std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
 	} catch (InvalidDirectiveException & e)
 	{
 		std::cout << RED << e.what() << std::endl;
@@ -189,7 +189,6 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
 
         if (!isStringValid(content))
             throw InvalidDirectiveException();
-        int test_port;
         std::string temp;
         std::stringstream stoi_converter;
         if (content.find(':') != std::string::npos) {
@@ -213,16 +212,17 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
             if (isIpValid(temp)) {
                 _port = 80;
                 _ip = temp;
+                if (!temp.compare("localhost"))
+                    _ip = "127.0.0.1";
                 exit(EXIT_SUCCESS);
             }
             if (temp.find('.') != std::string::npos)
                 throw InvalidDirectiveException();
         }
         stoi_converter << temp;
-        stoi_converter >> test_port;
-        if (test_port > PORT_MAX || test_port <= PORT_MIN)
+        stoi_converter >> _port;
+        if (_port > PORT_MAX || _port <= PORT_MIN)
             throw InvalidDirectiveException();
-        _port = test_port;
         std::cout << WHITE << "Listen created" << ENDC << std::endl;
     }
 
@@ -404,7 +404,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     }
 
     bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
-        if (!ip.compare("0.0.0.0"))
+        if (!ip.compare("0.0.0.0") || !ip.compare("localhost"))
             return true;
 //Verifies if number of dots in IP is = 3;
         int counter = 0;
