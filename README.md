@@ -10,10 +10,9 @@ Ok lets do it :)!
 ### Guide
  Good Things to Read related with epool:
  .documentation <br>
- .https://copyconstruct.medium.com/the-method-to-epolls-madness-d9d2d6378642
- .https://www.youtube.com/watch?v=O-yMs3T0APU
- .https://www.youtube.com/watch?v=dEHZb9JsmOU
- </br>
+ .https://copyconstruct.medium.com/the-method-to-epolls-madness-d9d2d6378642 <br>
+ .https://www.youtube.com/watch?v=O-yMs3T0APU <br>
+ .https://www.youtube.com/watch?v=dEHZb9JsmOU <br>
 
 <details>
 	<summary><h3>Directives</h3></summary>
