@@ -8,7 +8,11 @@ Ok lets do it :)!
 [Simple-webserver-from-scratch](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
 [NGINX webserver configuration file tutorial](https://www.plesk.com/blog/various/nginx-configuration-guide/)
 ### Guide
- some references here....
+ Good Things to Read related with epool:
+ .documentation
+ .https://copyconstruct.medium.com/the-method-to-epolls-madness-d9d2d6378642
+ .https://www.youtube.com/watch?v=O-yMs3T0APU
+ .https://www.youtube.com/watch?v=dEHZb9JsmOU
 
 <details>
 	<summary><h3>Directives</h3></summary>
