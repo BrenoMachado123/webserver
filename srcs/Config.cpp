@@ -2,7 +2,7 @@
 
 /* Initialize static class members */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "lsiten"};
-const std::string Config::_listen_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
+const std::string Config::_location_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "index"};
 const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] =
         {400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
           410, 411, 412, 413, 414, 415, 416, 417, 418,
@@ -37,16 +37,16 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
 	std::cout << ENDC << std::endl;
 	/* LISTEN TEST */
 	try {
-//		ServerConfig::Listen l("122.22.22.0:8040");
-//        ServerConfig::Listen l1("*:8040");
-//        ServerConfig::Listen l2("0.0.0.0:10");
+		ServerConfig::Listen l("122.22.22.0:8040");
+        ServerConfig::Listen l1("*:8040");
+        ServerConfig::Listen l2("0.0.0.0:10");
         ServerConfig::Listen l3("localhost");
-//        ServerConfig::Listen l4("localhost:80");
-//        std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
-//        std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
-//        std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
+        ServerConfig::Listen l4("localhost:80");
+        std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
         std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
-//        std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
+        std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
 	} catch (InvalidDirectiveException & e)
 	{
 		std::cout << RED << e.what() << std::endl;
@@ -55,11 +55,16 @@ void	Config::get_server_configuration() throw(InvalidDirectiveException) {
     /* ERROR CODE PAGE */
     try {
         ServerConfig::ErrorCodePage ecp("404 505 ./response.html");
+    //EXAMPLE OF INVALID INPUTS. DIRECTIVE FAILS TO BE CREATED
+        //ServerConfig::ErrorCodePage ecp("404 399 ./response.html");
+        //ServerConfig::ErrorCodePage ecp("/response.html");
+        //ServerConfig::ErrorCodePage ecp("");
+
         std::vector<int>::const_iterator it = ecp.getErrorCodes().begin();
         std::cout << YELLOW << "Error Code(s): ";
         for (; it != ecp.getErrorCodes().end() ; it++)
             std::cout << *it << " ";
-        std::cout << ", Path: " << ecp.getErrorPath() << ENDC << std::endl;
+        std::cout << "Path: " << ecp.getErrorPath() << ENDC << std::endl;
     } catch (InvalidDirectiveException &e) {
         std::cout  << RED << e.what() << std::endl;
     }
@@ -136,32 +141,22 @@ Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) 
     }; throw InvalidDirectiveExeption
     */
     //possible implementation:
+    std::string codes;
+    int found;
 
-    int converted_number = 0;
-    std::stringstream stoi_converter;
-    char *token = std::strtok(const_cast<char*>(content.c_str()), " \t\n\v\f\r");
-    while (token != 0) {
-        if (*token >= 48 && *token <= 57) {
-            stoi_converter.clear();
-            stoi_converter << token;
-            stoi_converter >> converted_number;
-            if (!isCodeValid(converted_number))
-                throw InvalidDirectiveException();
-            _errorCodes.push_back(converted_number);
-        }
-        else {
-            if (!isStringValid(token))
-                throw InvalidDirectiveException();
-            if (!_errorCodes.empty() && _errorPath.empty()) {
-                _errorPath = token;
-            }
-            else
-                throw InvalidDirectiveException();
-        }
-        token = std::strtok(NULL, " \t\n\v\f\r");
-    }
-    if (_errorPath.empty())
+    if (content.empty())
         throw InvalidDirectiveException();
+
+    found = content.find_last_of(WHITESPACES);
+    if (found == -1)
+        throw InvalidDirectiveException();
+
+    codes = content.substr(0, found);
+    if (!isCodeValid(codes))
+        throw InvalidDirectiveException();
+
+    _errorPath = content.substr(found + 1);
+
     std::cout << WHITE <<"ErrorCodePage directive Created" << std::endl;
 }
 
@@ -172,8 +167,8 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
 
 //=============================LISTEN==================================//
 
-    Config::ServerConfig::Listen::Listen(
-    const std::string &content) throw (InvalidDirectiveException):
+    Config::ServerConfig::Listen::Listen(const std::string &content)
+        throw (InvalidDirectiveException):
     Directive(LISTEN), _name("listen"), _ip("127.0.0.1"), _port(80) {
         /*
         This constructor takes only one string which should be a valid path
@@ -186,7 +181,8 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
                 [throw InvalidDirectiveException]
         */
         //possible implementation:
-
+        if (content.empty())
+            throw InvalidDirectiveException();
         if (!isStringValid(content))
             throw InvalidDirectiveException();
         std::string temp;
@@ -204,7 +200,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
             }
             if ((token = std::strtok(NULL, " ")) == 0) {
                 _port = 80;
-                exit(EXIT_SUCCESS);
+                return ;
             }
             temp = token;
         } else {
@@ -214,7 +210,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
                 _ip = temp;
                 if (!temp.compare("localhost"))
                     _ip = "127.0.0.1";
-                exit(EXIT_SUCCESS);
+                return ;
             }
             if (temp.find('.') != std::string::npos)
                 throw InvalidDirectiveException();
@@ -367,10 +363,26 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         return _errorCodes;
     }
 
-    bool Config::ServerConfig::ErrorCodePage::isCodeValid(const int &code) {
-        for (int i = 0 ; i < ALL_ERROR_CODES ; i++)
-            if (code == _allErrorCodes[i])
-                return true;
+    bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content) {
+        std::stringstream stoi_converter;
+        int converted_number;
+        int loop_counter = 0;
+        char *token = std::strtok(const_cast<char*>(content.c_str()), WHITESPACES);
+        while (token != 0) {
+            loop_counter++;
+            stoi_converter.clear();
+            stoi_converter << token;
+            stoi_converter >> converted_number;
+            for (int i = 0; i < 40; i++) {
+                if (converted_number == _allErrorCodes[i]) {
+                    _errorCodes.push_back(converted_number);
+                    loop_counter--;
+                }
+            }
+            token = std::strtok(NULL, WHITESPACES);
+        }
+        if (!loop_counter)
+            return true;
         return false;
     }
 
@@ -391,7 +403,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         return _ip;
     }
 
-    const int &Config::ServerConfig::Listen::getPort() const {
+    int Config::ServerConfig::Listen::getPort() const {
         return _port;
     }
 

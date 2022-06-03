@@ -16,7 +16,9 @@
 
 
 # define SERVER_CONTEXT_DIRECTIVES 2
-# define LISTEN_CONTEXT_DIRECTIVES 2
+# define LOCATION_CONTEXT_DIRECTIVES 2
+
+# define WHITESPACES " \t\r\v\f\r"
 
 # define ALL_ERROR_CODES    40
 
@@ -67,7 +69,8 @@ class Config {
 						Directive(int);
 						int getId() const;
 						virtual const std::string & getName() const = 0;
-						virtual ~Directive();
+						//virtual bool operator<(const Directive &other) const = 0;
+                        virtual ~Directive();
 				};
 
 				class Root: public Directive {
@@ -87,13 +90,13 @@ class Config {
                 private:
                     ErrorCodePage();
 
-                    bool isCodeValid(const int &);
+                    bool isCodeValid(const std::string &);
                     bool isStringValid(const std::string &);
 
 //Check how to initialize it with codes
                     static const int _allErrorCodes[ALL_ERROR_CODES];
 
-                    std::string         _name;
+                    const std::string         _name;
                     std::vector<int>    _errorCodes;
                     std::string         _errorPath;
                 public:
@@ -121,10 +124,8 @@ class Config {
 
                     ~Listen();
                     const std::string &getName() const;
-                    const int &getPort() const;
+                    int getPort() const;
                     const std::string &getIp() const;
-
-
                 };
 
 				class Methods : public Directive {
@@ -158,14 +159,24 @@ class Config {
 				ServerConfig & operator=(const ServerConfig &);
 				std::string                 _address;
 				std::string                 _root;
+                int                         _port;
+                std::string                 _name;
                 std::vector<int>            _errorCodes;
                 std::string                 _errorPath;
                 std::string                 _ip;
-                int                         _port;
 				std::vector<std::string>    _methods;
-//std::vector<Directive>      _directives;
+// how directive will access this vector if its outside its scope?
+// s.get_directives()*.push_back(new _directive(string)**) ?
+// * get method on public
+// ** parsed directive from the file
+//              std::vector<Directive>      _directives;
 		};
 
+// how server will access private variable of config?!
+// we need to instantiate config object in get_server_configuration ?
+// then from this position we will be able to access all the data
+// for each server config via functions specified in public part of
+// ServerConfig?
 		std::vector<ServerConfig> _servers;
 		std::ifstream & _config_file;
 
@@ -176,7 +187,7 @@ class Config {
 		void	checkScopes() throw(WrongSyntaxException);
 	public:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
-		static const std::string _listen_directives[LISTEN_CONTEXT_DIRECTIVES];
+		static const std::string _location_directives[LOCATION_CONTEXT_DIRECTIVES];
 
 		Config(std::ifstream &) throw(InvalidConfigurationFileException);
 		~Config();
