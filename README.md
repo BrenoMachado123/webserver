@@ -9,10 +9,11 @@ Ok lets do it :)!
 [NGINX webserver configuration file tutorial](https://www.plesk.com/blog/various/nginx-configuration-guide/)
 ### Guide
  Good Things to Read related with epool:
- .documentation
+ .documentation <br>
  .https://copyconstruct.medium.com/the-method-to-epolls-madness-d9d2d6378642
  .https://www.youtube.com/watch?v=O-yMs3T0APU
  .https://www.youtube.com/watch?v=dEHZb9JsmOU
+ </br>
 
 <details>
 	<summary><h3>Directives</h3></summary>
