@@ -11,6 +11,8 @@ Ok lets do it :)!
  HTML / POST / DELETE <br>
  https://www.youtube.com/watch?v=nMGlaiNBbNU&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b&index=4 <br>
 https://www.youtube.com/watch?v=eesqK59rhGA <br>
+MIME <br>
+https://www.youtube.com/watch?v=FBkZ2TJZZUY <br>
 <details>
 	<summary><h3>Directives</h3></summary>
 
