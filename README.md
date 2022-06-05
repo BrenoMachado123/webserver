@@ -8,9 +8,9 @@ Ok lets do it :)!
 [Simple-webserver-from-scratch](https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa)
 [NGINX webserver configuration file tutorial](https://www.plesk.com/blog/various/nginx-configuration-guide/)
 ### Guide
- HTML / POST / DELETE
- https://www.youtube.com/watch?v=nMGlaiNBbNU&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b&index=4
-https://www.youtube.com/watch?v=eesqK59rhGA
+ HTML / POST / DELETE <br>
+ https://www.youtube.com/watch?v=nMGlaiNBbNU&list=PL6n9fhu94yhW7yoUOGNOfHurUE6bpOO2b&index=4 <br>
+https://www.youtube.com/watch?v=eesqK59rhGA <br>
 <details>
 	<summary><h3>Directives</h3></summary>
 
