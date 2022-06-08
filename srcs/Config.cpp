@@ -183,7 +183,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         //possible implementation:
         if (content.empty())
             throw InvalidDirectiveException();
-        if (!isStringValid(content))
+        if (content.find_first_of(   WHITESPACES) != std::string::npos)
             throw InvalidDirectiveException();
         std::string temp;
         std::stringstream stoi_converter;
@@ -405,14 +405,6 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
 
     int Config::ServerConfig::Listen::getPort() const {
         return _port;
-    }
-
-    bool Config::ServerConfig::Listen::isStringValid(const std::string &content) {
-        std::string::const_iterator it = content.begin();
-        for (; it != content.end(); ++it)
-            if (isspace(*it))
-                return false;
-        return true;
     }
 
     bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {

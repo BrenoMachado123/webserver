@@ -13,6 +13,7 @@
 #include <sstream>
 #include <iterator>
 #include <stdlib.h>
+#include <algorithm>
 
 
 # define SERVER_CONTEXT_DIRECTIVES 2
@@ -112,7 +113,6 @@ class Config {
                 private:
                     Listen();
 
-                    bool isStringValid(const std::string &);
                     bool isIpValid(const std::string &);
 
                     const std::string   _name;
