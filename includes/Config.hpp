@@ -12,13 +12,9 @@
 #include <cstring>
 #include <ctype.h>
 #include <sstream>
-
-# define SERVER_CONTEXT_DIRECTIVES 6
-# define LOCATION_CONTEXT_DIRECTIVES 5
-# define ALL_ERROR_CODES    40
-
-# define PORT_MAX       65535
-# define PORT_MIN       1
+#include <iterator>
+#include <stdlib.h>
+#include <algorithm>
 
 # define AUTOINDEX		1
 # define CGI			2
@@ -33,7 +29,12 @@
 # define UPLOAD			11
 # define RETURN_D		12
 
+# define SERVER_CONTEXT_DIRECTIVES 6
+# define LOCATION_CONTEXT_DIRECTIVES 5
+# define ALL_ERROR_CODES    40
 
+# define PORT_MAX       65535
+# define PORT_MIN       1
 
 // Config represents the configuration file
 class Config {
@@ -57,6 +58,7 @@ class Config {
 				class Directive {
 					private:
 						int _id;
+                        //maybe add the string of all codes here?
 						Directive();
 					public:
 						Directive(int);
@@ -78,38 +80,37 @@ class Config {
 						const std::string & getPath() const;
 				};
 
-				class Listen: public Directive {
-                private:
-                    const std::string   _name;
-                    std::string         _ip;
-                    int                 _port;
-                    bool isStringValid(const std::string &);
-                    bool isIpValid(const std::string &);
-                    Listen();
-                public:
-                    Listen(const std::string &) throw (InvalidDirectiveException);
-                    ~Listen();
-                    const std::string &getName() const;
-                    int getPort() const;
-                    const std::string &getIp() const;
+                class ErrorCodePage: public Directive {
+	                private:
+	                	static const int _allErrorCodes[ALL_ERROR_CODES];
+	                    const std::string         _name;
+	                    std::vector<int>    _errorCodes;
+	                    std::string         _errorPath;
+	                    ErrorCodePage();
+	                    bool isCodeValid(const std::string &);
+	                    bool isStringValid(const std::string &);
+
+	                public:
+	                    ErrorCodePage(const std::string & content) throw (InvalidDirectiveException);
+	                    ~ErrorCodePage();
+	                    const std::string & getName() const;
+	                    const std::string & getErrorPath() const;
+	                    const std::vector<int> & getErrorCodes() const;
                 };
 
-
-				class ErrorCodePage: public Directive {
-                private:
-                	static const int _allErrorCodes[ALL_ERROR_CODES];
-                    std::string         _name;
-                    std::vector<int>    _errorCodes;
-                    std::string         _errorPath;
-					bool isCodeValid(const int &);
-                    bool isStringValid(const std::string &);
-					ErrorCodePage();
-                public:
-                    ErrorCodePage(const std::string & content) throw (InvalidDirectiveException);
-                    ~ErrorCodePage();
-                    const std::string & getName() const;
-                    const std::string & getErrorPath() const;
-                    const std::vector<int> & getErrorCodes() const;
+                class Listen: public Directive {
+	                private:
+	                    const std::string   _name;
+	                    std::string         _ip;
+	                    int                 _port;
+						Listen();
+	                    bool isIpValid(const std::string &);
+	                public:
+	                    Listen(const std::string &) throw (InvalidDirectiveException);
+	                    ~Listen();
+	                    const std::string &getName() const;
+	                    int getPort() const;
+	                    const std::string &getIp() const;
                 };
 
 				class Methods : public Directive {
@@ -129,20 +130,38 @@ class Config {
 				ServerConfig();
 				~ServerConfig();
 
-				void setRoot(const Root &);
-				void setMethods(const Methods&);
-				std::string & getRoot();
-				std::vector<std::string>& getMethods();
+				// void setRoot(const Root &);
+    //             void setErrorCodePage(const ErrorCodePage &);
+    //             void setListen(const Listen&);
+    //             void setMethods(const Methods&);
+				// std::string & getRoot();
+    //             std::vector<int> & getErrorCodes();
+    //             std::string & getErrorPath();
+    //             int & getListenPort();
+    //             std::string & getListenIp();
+				// std::vector<std::string>& getMethods();
 			private:
 				ServerConfig(const ServerConfig &);
 				ServerConfig & operator=(const ServerConfig &);
-				int _port;
-				std::string _address;
-				std::string _root;
-				std::vector<std::string> _methods;
-				std::vector<Directive> _directives;
+				std::string                 _address;
+				std::string                 _root;
+                int                         _port;
+                std::string                 _name;
+                std::vector<int>            _errorCodes;
+                std::string                 _errorPath;
+                std::string                 _ip;
+				std::vector<std::string>    _methods;
+// how directive will access this vector if its outside its scope?
+// s.get_directives()*.push_back(new _directive(string)**) ?
+// * get method on public
+// ** parsed directive from the file
+//              std::vector<Directive>      _directives;
 		};
-
+// how server will access private variable of config?!
+// we need to instantiate config object in get_server_configuration ?
+// then from this position we will be able to access all the data
+// for each server config via functions specified in public part of
+// ServerConfig?
 		std::vector<ServerConfig> _servers;
 		std::ifstream & _config_file;
 
