@@ -27,6 +27,22 @@ Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _
 		// ServerConfig::ErrorCodePage ep2("401 505 yes.txt");
 		// ServerConfig::ErrorCodePage ep3("401 400 401 uppps.txt");// FAILING THIS TEST
 	}
+    {
+        try {
+            ServerConfig::Listen l("122.22.22.0:8040");
+            ServerConfig::Listen l1("*:8040");
+            ServerConfig::Listen l2("0.0.0.0:10");
+            ServerConfig::Listen l3("localhost");
+            ServerConfig::Listen l4("localhost:80");
+            std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+            std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
+            std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
+            std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
+            std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
+        } catch (std::exception & e) {
+           std::cout << BLUE << e.what() << std::endl;
+        }
+    }
 }
 
 Config::~Config() {
@@ -145,42 +161,38 @@ Config::ServerConfig::Listen::Listen(const std::string &content)
     std::string temp;
     std::stringstream stoi_converter;
     if (content.find(':') != std::string::npos) {
-        char *token = std::strtok(const_cast<char *>(content.c_str()), ":");
-        if (*token == '*' || !static_cast<std::string>(token).compare("0.0.0.0"))
-            _ip = "0.0.0.0";
-        else if (!static_cast<std::string>(token).compare("localhost"))
-            _ip = "127.0.0.1";
-        else {
-            if (!isIpValid(token))
+        std::string ip_str = content.substr(0, content.find(':'));
+        std::string port_str = content.substr(content.find(':') + 1);
+        if (!isIpValid(ip_str) || port_str.empty())
                 throw InvalidDirectiveException();
-            _ip = token;
-        }
-        if ((token = std::strtok(NULL, " ")) == 0) {
-            _port = 80;
-            return ;
-        }
-        temp = token;
-    } else {
+        else if (ip_str == "*")
+            _ip = "0.0.0.0";
+        else if (ip_str == "localhost")
+            _ip = "127.0.0.1";
+        else
+            _ip = ip_str;
+        temp = port_str;
+    }
+    else if (isIpValid(content)) {
         temp = content;
-        if (isIpValid(temp)) {
-            _port = 80;
+        _port = 80;
+        if (!temp.compare("localhost"))
+            _ip = "127.0.0.1";
+        else if (!temp.compare("*"))
+            _ip = "0.0.0.0";
+        else
             _ip = temp;
-            if (!temp.compare("localhost"))
-                _ip = "127.0.0.1";
-            return ;
-        }
-        if (temp.find('.') != std::string::npos)
+    }
+    else {
+        stoi_converter << content;
+        stoi_converter >> _port;
+        if (_port > PORT_MAX || _port <= PORT_MIN)
             throw InvalidDirectiveException();
     }
-    stoi_converter << temp;
-    stoi_converter >> _port;
-    if (_port > PORT_MAX || _port <= PORT_MIN)
-        throw InvalidDirectiveException();
     std::cout << WHITE << "Listen created" << ENDC << std::endl;
 }
 
-Config::ServerConfig::Listen::~Listen()
-{
+Config::ServerConfig::Listen::~Listen() {
     std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
 }
 
@@ -265,24 +277,22 @@ void Config::parseConfiguration() throw(InvalidDirectiveException) {
     }
 }
 /* ServerConfig Member Functions */
-// void Config::ServerConfig::setRoot(const Root & root) {_root = root.getPath();}
-// std::string & Config::ServerConfig::getRoot() {return _root;}
-// void Config::ServerConfig::setMethods(const Methods& methods) {_methods = methods.getMethods();}
-// std::vector<std::string>& Config::ServerConfig::getMethods() {return _methods;}
-// void Config::ServerConfig::setErrorCodePage(const ErrorCodePage &errorCodePage) {
-//     _errorCodes = errorCodePage.getErrorCodes();
-//     _errorPath = errorCodePage.getErrorPath();
-// }
-// std::vector<int> &Config::ServerConfig::getErrorCodes() {return _errorCodes;}
-// std::string &Config::ServerConfig::getErrorPath() {return _errorPath;}
-// void Config::ServerConfig::setListen(const Listen &listen) {
-//     _port = listen.getPort();
-//     _ip = listen.getIp();
-// }
-// int &Config::ServerConfig::getListenPort() {return _port;}
-// std::string &Config::ServerConfig::getListenIp() {return _ip;}
-// void Config::ServerConfig::setMethods(const Methods &methods) {_methods = methods.getMethods();}
-// std::vector<std::string> &Config::ServerConfig::getMethods() {return _methods;}
+void Config::ServerConfig::setRoot(const Root & root) {_root = root.getPath();}
+std::string & Config::ServerConfig::getRoot() {return _root;}
+void Config::ServerConfig::setMethods(const Methods& methods) {_methods = methods.getMethods();}
+std::vector<std::string>& Config::ServerConfig::getMethods() {return _methods;}
+void Config::ServerConfig::setErrorCodePage(const ErrorCodePage &errorCodePage) {
+    _errorCodes = errorCodePage.getErrorCodes();
+    _errorPath = errorCodePage.getErrorPath();
+}
+std::vector<int> &Config::ServerConfig::getErrorCodes() {return _errorCodes;}
+std::string &Config::ServerConfig::getErrorPath() {return _errorPath;}
+void Config::ServerConfig::setListen(const Listen &listen) {
+    _port = listen.getPort();
+    _ip = listen.getIp();
+}
+int &Config::ServerConfig::getListenPort() {return _port;}
+std::string &Config::ServerConfig::getListenIp() {return _ip;}
 
 /* Directives Member Functions */
 
@@ -351,7 +361,7 @@ const std::string &Config::ServerConfig::Listen::getIp() const {return _ip;}
 int Config::ServerConfig::Listen::getPort() const {return _port;}
 
 bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
-    if (!ip.compare("0.0.0.0") || !ip.compare("localhost"))
+    if (!ip.compare("0.0.0.0") || !ip.compare("localhost") || !ip.compare("*"))
         return true;
 //Verifies if number of dots in IP is = 3;
     int counter = 0;

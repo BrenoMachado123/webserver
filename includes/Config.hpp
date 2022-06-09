@@ -130,16 +130,16 @@ class Config {
 				ServerConfig();
 				~ServerConfig();
 
-				// void setRoot(const Root &);
-    //             void setErrorCodePage(const ErrorCodePage &);
-    //             void setListen(const Listen&);
-    //             void setMethods(const Methods&);
-				// std::string & getRoot();
-    //             std::vector<int> & getErrorCodes();
-    //             std::string & getErrorPath();
-    //             int & getListenPort();
-    //             std::string & getListenIp();
-				// std::vector<std::string>& getMethods();
+				void setRoot(const Root &);
+                void setErrorCodePage(const ErrorCodePage &);
+                void setListen(const Listen&);
+                void setMethods(const Methods&);
+				std::string & getRoot();
+                std::vector<int> & getErrorCodes();
+                std::string & getErrorPath();
+                int & getListenPort();
+                std::string & getListenIp();
+				std::vector<std::string>& getMethods();
 			private:
 				ServerConfig(const ServerConfig &);
 				ServerConfig & operator=(const ServerConfig &);
@@ -162,7 +162,7 @@ class Config {
 // then from this position we will be able to access all the data
 // for each server config via functions specified in public part of
 // ServerConfig?
-		std::vector<ServerConfig> _servers;
+		// std::vector<ServerConfig> _servers;
 		std::ifstream & _config_file;
 
 		Config();
