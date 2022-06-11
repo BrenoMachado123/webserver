@@ -21,7 +21,7 @@ Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _
 		throw e_invalid_configuration_file;
 	std::cout << WHITE << "Config created" << ENDC << std::endl;
 	parseConfiguration();
-	{
+	/*{
 		// TESTING 
 		// ServerConfig::ErrorCodePage ep1("401 nice.txt");
 		// ServerConfig::ErrorCodePage ep2("401 505 yes.txt");
@@ -42,7 +42,7 @@ Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _
         } catch (std::exception & e) {
            std::cout << BLUE << e.what() << std::endl;
         }
-    }
+    }*/
 }
 
 Config::~Config() {
@@ -51,6 +51,24 @@ Config::~Config() {
 
 Config::ServerConfig::ServerConfig(): _address("127.0.0.1"), _root("html/"), _port(80) {
 	std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
+}
+
+Config::ServerConfig::ServerConfig(const ServerConfig &copy) {
+    *this = copy;
+}
+
+Config::ServerConfig &Config::ServerConfig::operator=(const ServerConfig &other) {
+    if (this == &other)
+        return *this;
+    this->_address = other._address;
+    this->_root = other._root;
+    this->_port = other._port;
+    this->_name = other._name;
+    this->_errorCodes = other._errorCodes;
+    this->_errorPath = other._errorPath;
+    this->_ip = other._ip;
+    this->_methods = other._methods;
+    return *this;
 }
 
 Config::ServerConfig::~ServerConfig() {
@@ -156,6 +174,7 @@ Config::ServerConfig::Listen::Listen(const std::string &content)
         Listen("0.0.0.2")       [throw InvalidDirectiveException]
         Listen("127,0.4.5")     [throw InvalidDirectiveException]
     */
+
     if (content.empty() || content.find_first_of(SEPARATORS) != std::string::npos)
         throw InvalidDirectiveException();
     std::string temp;
@@ -189,6 +208,8 @@ Config::ServerConfig::Listen::Listen(const std::string &content)
         if (_port > PORT_MAX || _port <= PORT_MIN)
             throw InvalidDirectiveException();
     }
+    //IT IS ALL GOOD HERE
+    //std::cout << "IP: " << _ip << "PORT" << _port;
     std::cout << WHITE << "Listen created" << ENDC << std::endl;
 }
 
@@ -204,6 +225,35 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 		if (list[i++] == str)
 			return (true);
 	return (false);
+}
+
+void Config::createDirective(const std::string &dir, const std::string &cont) {
+    if (dir == "listen") {
+        std::cout << "\nCREATING LISTEN" << std::endl;
+        //Config::ServerConfig::Listen listen(cont);
+        //_servers.back().getDirective().push_back(listen);
+        Config::ServerConfig::Listen *l = new Config::ServerConfig::Listen(cont);
+        _servers.back().setListen(*l);
+        //std::cout << _servers.back().getListenPort() << ": PORT | IP: " << _servers.back().getListenIp() << std::endl;
+        std::cout << l->getPort() << ": PORT | IP: " << l->getIp() << std::endl;
+        std::cout << "IS LISTEN DESTRYED?" << std::endl;
+    }
+    /*else if (dir == "server_name")
+        Config::ServerConfig::ServerName serverName(cont);
+    else if (dir == "error_page")
+        Config::ServerConfig::ErrorCodePage errorCodePage(cont);
+    else if (dir == "root")
+        Config::ServerConfig::Root root(cont);
+    else if (dir == "client_max_body_size")
+        Config::ServerConfig::ClientMBS clientMBS(cont);
+    else if (dir == "location")
+        Config::ServerConfig::Location location(cont);
+    else if (dir == "index")
+        Config::ServerConfig::Index index(cont);
+    else if (dir == "limit_methods")
+        Config::ServerConfig::limit_methods limitMethods(cont);
+    else if (dir == "autoindex")
+        Config::ServerConfig::autoindex autoindex(cont);*/
 }
 
 void Config::parseConfiguration() throw(InvalidDirectiveException) {
@@ -227,7 +277,10 @@ void Config::parseConfiguration() throw(InvalidDirectiveException) {
         	case 0:
         		std::cout << std::endl;
         		if (directive == "server" && directive_content == "{") {
-                    // servers.push(ServerConfig s);
+                    // create a server object and push it to the vector
+                    Config::ServerConfig s;
+                    std::cout << RED << "ERROR IS HERE?" << std::endl;
+                    _servers.push_back(s);
         			context++;
         		}
         		else
@@ -244,6 +297,10 @@ void Config::parseConfiguration() throw(InvalidDirectiveException) {
                         /*
                         //servers.locations.addLocation(content)
                         */
+                    }
+                    else {
+                        createDirective(directive, directive_content);
+                        //_servers.back().getDirective().at(LISTEN);
                     }
                     /*
                     //servers.last().push_back(directive)
@@ -276,6 +333,16 @@ void Config::parseConfiguration() throw(InvalidDirectiveException) {
         std::cout << std::endl;
     }
 }
+
+/* Config Member Functions */
+std::vector<Config::ServerConfig> Config::getServer() {
+    return _servers;
+}
+
+std::vector<std::string> Config::getResponse() {
+    return _responses;
+}
+
 /* ServerConfig Member Functions */
 void Config::ServerConfig::setRoot(const Root & root) {_root = root.getPath();}
 std::string & Config::ServerConfig::getRoot() {return _root;}
@@ -291,8 +358,22 @@ void Config::ServerConfig::setListen(const Listen &listen) {
     _port = listen.getPort();
     _ip = listen.getIp();
 }
-int &Config::ServerConfig::getListenPort() {return _port;}
+int &Config::ServerConfig::getListenPort() {
+    return _port;
+}
 std::string &Config::ServerConfig::getListenIp() {return _ip;}
+
+//std::vector<Config::ServerConfig::Directive> Config::ServerConfig::getDirective() {
+//    return _directives;
+//}
+
+//std::vector<Config::ServerConfig::Directive> Config::ServerConfig::findDirective(int dirnum) {
+//    std::vector<Config::ServerConfig::Directive>::iterator it = _directives.begin();
+//    for (; it != _directives.end() ; it++)
+//        if (dirnum == it->getId())
+//            return _directives.at(*it);
+//    return ;
+//}
 
 /* Directives Member Functions */
 
@@ -301,6 +382,7 @@ int Config::ServerConfig::Directive::getId() const {return (_id);}
 const std::string &	Config::ServerConfig::Root::getName() const {return (_name);}
 
 const std::string & Config::ServerConfig::Root::getPath() const{return _path;}
+
 
 // SHould change this.... (remove) 
 // TODO

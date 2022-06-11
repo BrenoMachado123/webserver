@@ -6,6 +6,8 @@ NAME	=	webserv
 SRC	=	srcs/main.cpp\
 		srcs/Config.cpp\
 		srcs/utils.cpp\
+		srcs/Server.cpp\
+		srcs/Epoll.cpp\
 
 CFLAGS	=	-g -Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 

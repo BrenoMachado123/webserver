@@ -2,8 +2,9 @@
 # define __CONFIG_HPP__
 
 #include "colors.hpp"
-#include "utils.hpp"
+#include <unistd.h>
 #include <iostream>
+#include <iomanip>
 #include <exception>
 #include <map>
 #include <vector>
@@ -15,6 +16,14 @@
 #include <iterator>
 #include <stdlib.h>
 #include <algorithm>
+
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/epoll.h>
 
 # define AUTOINDEX		1
 # define CGI			2
@@ -35,6 +44,12 @@
 
 # define PORT_MAX       65535
 # define PORT_MIN       1
+
+# define MAX_EVENTS     10
+
+#include "/home/przemek/42/webserver/includes/Server.hpp"
+#include "/home/przemek/42/webserver/includes/Epoll.hpp"
+#include "/home/przemek/42/webserver/includes/utils.hpp"
 
 // Config represents the configuration file
 class Config {
@@ -63,7 +78,8 @@ class Config {
 					public:
 						Directive(int);
 						virtual ~Directive();
-						virtual const std::string & getName() const = 0;
+                        //It is impossible to create getDirective if its virtual
+						//virtual const std::string & getName() const = 0;
 						int getId() const;
 				};
 
@@ -129,8 +145,9 @@ class Config {
 
 				ServerConfig();
 				~ServerConfig();
-
-				void setRoot(const Root &);
+                ServerConfig(const ServerConfig &);
+                ServerConfig & operator=(const ServerConfig &);
+                void setRoot(const Root &);
                 void setErrorCodePage(const ErrorCodePage &);
                 void setListen(const Listen&);
                 void setMethods(const Methods&);
@@ -140,9 +157,11 @@ class Config {
                 int & getListenPort();
                 std::string & getListenIp();
 				std::vector<std::string>& getMethods();
-			private:
-				ServerConfig(const ServerConfig &);
-				ServerConfig & operator=(const ServerConfig &);
+
+                //std::vector<Directive> getDirective();
+                //std::vector<Directive> findDirective(int);
+
+        private:
 				std::string                 _address;
 				std::string                 _root;
                 int                         _port;
@@ -151,18 +170,14 @@ class Config {
                 std::string                 _errorPath;
                 std::string                 _ip;
 				std::vector<std::string>    _methods;
-// how directive will access this vector if its outside its scope?
-// s.get_directives()*.push_back(new _directive(string)**) ?
-// * get method on public
-// ** parsed directive from the file
-//              std::vector<Directive>      _directives;
 		};
 // how server will access private variable of config?!
 // we need to instantiate config object in get_server_configuration ?
 // then from this position we will be able to access all the data
 // for each server config via functions specified in public part of
 // ServerConfig?
-		// std::vector<ServerConfig> _servers;
+		std::vector<ServerConfig> _servers;
+        std::vector<std::string> _responses;
 		std::ifstream & _config_file;
 
 		Config();
@@ -173,12 +188,16 @@ class Config {
 		// bool	findServerContext(const std::string &) const;
 		// bool	contextEnd(const std::string &) const;
 		bool	validDirective(const std::string &, const std::string *, int len) const;
-	public:
+	    void    createDirective(const std::string &, const std::string &);
+    public:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
 		static const std::string _location_directives[LOCATION_CONTEXT_DIRECTIVES];
 
 		Config(std::ifstream &) throw(InvalidConfigurationFileException);
 		~Config();
+
+        std::vector<std::string>  getResponse();
+        std::vector<ServerConfig> getServer();
 
 	/* MEMBER FUNCTIONS */
 
