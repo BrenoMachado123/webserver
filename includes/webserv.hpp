@@ -4,8 +4,10 @@
 #include "colors.hpp"
 #include <iostream>
 #include <string>
-#include <map>
-// #include "Config.hpp"
-//#include "/home/przemek/42/webserver/includes/utils.hpp"
+
+#include "Server.hpp"
+#include "Config.hpp"
+#include "Epoll.hpp"
+#include "utils.hpp"
 
 #endif

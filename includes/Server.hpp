@@ -1,13 +1,14 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <exception>
+#include <string>
 #include <iostream>
-#include <sys/socket.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdio.h>
+#include <fcntl.h>
 
 class Server {
 private:

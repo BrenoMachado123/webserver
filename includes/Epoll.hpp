@@ -1,14 +1,14 @@
 #ifndef EPOLL_HPP
 # define EPOLL_HPP
 
-#include "webserv.hpp"
-#include "Server.hpp"
-
 #include <vector>
 #include <exception>
-#include <sys/epoll.h>
 
-# define MAX_EVENTS 10
+#include <sys/epoll.h>
+#include <unistd.h>
+
+#include "Config.hpp"
+#include "Server.hpp"
 
 class Epoll {
 private:

@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "Epoll.hpp"
 
 std::string & strtrim(std::string & str, const char * separators) {
     str.erase(str.find_last_not_of(separators) + 1);

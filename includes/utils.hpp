@@ -1,9 +1,11 @@
 #ifndef __UTILS_HPP__
 # define __UTILS_HPP__
 
-#include "webserv.hpp"
+#include <iostream>
+#include <string>
+
 #include "Config.hpp"
-#include "Epoll.hpp"
+class Epoll;
 
 std::string & strtrim(std::string & str, const char * separators = SEPARATORS);
 

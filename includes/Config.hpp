@@ -1,22 +1,16 @@
 #ifndef __CONFIG_HPP__
 # define __CONFIG_HPP__
 
-#include <unistd.h>
-#include <iostream>
-#include <iomanip>
-#include <exception>
-#include <map>
 #include <vector>
 #include <string>
+#include <iostream>
 #include <fstream>
 #include <cstring>
-#include <ctype.h>
+#include <iomanip>
 #include <sstream>
-#include <iterator>
-#include <stdlib.h>
-#include <algorithm>
+#include <exception>
 
-#include "colors.hpp"
+#include <stdlib.h>
 
 # define AUTOINDEX		1
 # define CGI			2
@@ -38,11 +32,11 @@
 # define PORT_MAX       65535
 # define PORT_MIN       1
 
-// # define MAX_EVENTS     10
-
 # define SEPARATORS " \t\v\n\r\f"
+# define MAX_EVENTS 10
 
 #include "utils.hpp"
+#include "colors.hpp"
 
 // Config represents the configuration file
 class Config {

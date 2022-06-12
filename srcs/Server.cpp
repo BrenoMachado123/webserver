@@ -4,7 +4,6 @@ const char * Server::ServerFailedToCreate::what() const throw() {
     return ("Server Failed");
 }
 
-
 Server::Server() {
     std::cout << "Server Created" << std::endl;
 }
