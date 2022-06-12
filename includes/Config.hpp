@@ -1,7 +1,6 @@
 #ifndef __CONFIG_HPP__
 # define __CONFIG_HPP__
 
-#include "colors.hpp"
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>
@@ -17,13 +16,7 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/epoll.h>
+#include "colors.hpp"
 
 # define AUTOINDEX		1
 # define CGI			2
@@ -45,11 +38,11 @@
 # define PORT_MAX       65535
 # define PORT_MIN       1
 
-# define MAX_EVENTS     10
+// # define MAX_EVENTS     10
 
-#include "/home/przemek/42/webserver/includes/Server.hpp"
-#include "/home/przemek/42/webserver/includes/Epoll.hpp"
-#include "/home/przemek/42/webserver/includes/utils.hpp"
+# define SEPARATORS " \t\v\n\r\f"
+
+#include "utils.hpp"
 
 // Config represents the configuration file
 class Config {

@@ -1,4 +1,4 @@
-#include "/home/przemek/42/webserver/includes/Server.hpp"
+#include "Server.hpp"
 
 const char * Server::ServerFailedToCreate::what() const throw() {
     return ("Server Failed");
@@ -43,7 +43,7 @@ void Server::accept() throw(ServerFailedToCreate) {
     _new_connection = (::accept(_socketfd,
                               (struct sockaddr*)&(_addr),
                               (socklen_t*)&(_addrlen)));
-    if (_new_connection < 0) {
+   if (_new_connection < 0) {
         perror("ACCEPT: ");
         throw e_server_failed;
     }

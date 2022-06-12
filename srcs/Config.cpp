@@ -230,12 +230,12 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 void Config::createDirective(const std::string &dir, const std::string &cont) {
     if (dir == "listen") {
         std::cout << "\nCREATING LISTEN" << std::endl;
-        //Config::ServerConfig::Listen listen(cont);
+        Config::ServerConfig::Listen listen(cont);
         //_servers.back().getDirective().push_back(listen);
-        Config::ServerConfig::Listen *l = new Config::ServerConfig::Listen(cont);
-        _servers.back().setListen(*l);
-        //std::cout << _servers.back().getListenPort() << ": PORT | IP: " << _servers.back().getListenIp() << std::endl;
-        std::cout << l->getPort() << ": PORT | IP: " << l->getIp() << std::endl;
+        //Config::ServerConfig::Listen *l = new Config::ServerConfig::Listen(cont);
+        _servers.back().setListen(listen);
+        std::cout << _servers.back().getListenPort() << ": PORT | IP: " << _servers.back().getListenIp() << std::endl;
+        //std::cout << l->getPort() << ": PORT | IP: " << l->getIp() << std::endl;
         std::cout << "IS LISTEN DESTRYED?" << std::endl;
     }
     /*else if (dir == "server_name")

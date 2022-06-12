@@ -1,4 +1,4 @@
-#include "/home/przemek/42/webserver/includes/utils.hpp"
+#include "utils.hpp"
 
 std::string & strtrim(std::string & str, const char * separators) {
     str.erase(str.find_last_not_of(separators) + 1);
@@ -8,8 +8,10 @@ std::string & strtrim(std::string & str, const char * separators) {
 
 int whatServer(Epoll & ep, int const n) {
     for (unsigned int i = 0 ; i < ep.getServerSocket().size() ; i++)
-        if (ep.getServerSocket().at(i).getSocket() == ep.getEpollEvent(n).data.fd)
+        if (ep.getEpollEvent(n).data.fd == ep.getServerSocket().at(i).getSocket()) {
+            std::cout << "SERVER SOCKET: " << ep.getServerSocket().at(i).getSocket() << "pos: " << i << std::endl;
             return i;
+        }
     return -1;
 }
 

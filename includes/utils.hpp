@@ -1,9 +1,9 @@
 #ifndef __UTILS_HPP__
 # define __UTILS_HPP__
 
-#include "/home/przemek/42/webserver/includes/webserv.hpp"
-
-# define SEPARATORS " \t\v\n\r\f"
+#include "webserv.hpp"
+#include "Config.hpp"
+#include "Epoll.hpp"
 
 std::string & strtrim(std::string & str, const char * separators = SEPARATORS);
 

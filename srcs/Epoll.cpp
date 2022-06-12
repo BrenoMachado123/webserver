@@ -1,4 +1,4 @@
-#include "/home/przemek/42/webserver/includes/Epoll.hpp"
+#include "Epoll.hpp"
 
 const char * Epoll::EpollFailed::what() const throw() {
     return ("Epoll Failed");
@@ -41,6 +41,7 @@ void Epoll::epollWait() throw(class Epoll::EpollFailed) {
         perror("WAIT: ");
         throw e_epoll_failed;
     }
+    std::cout << "NFDS: " << _nfds << std::endl;
 }
 
 int Epoll::getnfds() {

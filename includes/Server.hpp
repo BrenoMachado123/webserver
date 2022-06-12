@@ -1,12 +1,13 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-#include "/home/przemek/42/webserver/includes/Config.hpp"
-#include <arpa/inet.h>
-#include <exception>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <iostream>
-
-//# define MAX_EVENTS     5
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 class Server {
 private:
@@ -14,6 +15,7 @@ private:
     public:
         virtual const char * what() const throw();
     }	e_server_failed;
+
 private:
     int _socketfd;
     int _new_connection;
