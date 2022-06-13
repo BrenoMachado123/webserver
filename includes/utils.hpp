@@ -2,7 +2,7 @@
 # define __UTILS_HPP__
 
 #include <iostream>
-# define SEPARATORS " \t\v\n\r\f"
+#include "Config.hpp"
 
 std::string & strtrim(std::string & str, const char * separators = SEPARATORS);
 

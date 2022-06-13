@@ -1,45 +1,44 @@
 #ifndef __CONFIG_HPP__
 # define __CONFIG_HPP__
 
+# define AUTOINDEX			1
+# define CGI				2
+# define CGIBIN				3
+# define CLIENTMAXBODYSIZE	4
+# define ERRORPAGE			5
+# define LIMITMETHODS		6
+# define LISTEN				7
+# define LOCATION			8
+# define ROOT				9
+# define SERVERNAME			10
+# define UPLOAD				11
+# define RETURN_D			12
+
+# define SERVER_CONTEXT_DIRECTIVES		6
+# define LOCATION_CONTEXT_DIRECTIVES	5
+# define ALL_ERROR_CODES				40
+
+# define PORT_MAX 65535
+# define PORT_MIN 1
+
+# define SEPARATORS " \t\v\n\r\f"
+
 #include "colors.hpp"
-#include "utils.hpp"
-#include <iostream>
-#include <exception>
-#include <map>
 #include <vector>
-#include <string>
 #include <fstream>
 #include <cstring>
-#include <ctype.h>
 #include <sstream>
-#include <iterator>
 #include <stdlib.h>
-#include <algorithm>
 
-# define AUTOINDEX		1
-# define CGI			2
-# define CGIBIN			3
-# define CLIENTMAXBODYSIZE	4
-# define ERRORPAGE		5
-# define LIMITMETHODS		6
-# define LISTEN			7
-# define LOCATION		8
-# define ROOT			9
-# define SERVERNAME		10
-# define UPLOAD			11
-# define RETURN_D		12
-
-# define SERVER_CONTEXT_DIRECTIVES 6
-# define LOCATION_CONTEXT_DIRECTIVES 5
-# define ALL_ERROR_CODES    40
-
-# define PORT_MAX       65535
-# define PORT_MIN       1
-
-// Config represents the configuration file
+// Config represents the whole configuration file //
 class Config {
 	private:
-		/* CONFIG EXCEPTIONS */
+		
+		/**********Config custom exceptions**********/
+		/* - File is invalid                        */
+		/* - Configuration file syntax is invalid   */
+		/* - Wrong Directive / Wrong Scope          */
+		/********************************************/
 		class	InvalidDirectiveException: public std::exception {
 			public:
 				virtual const char * what() const throw();
@@ -52,13 +51,23 @@ class Config {
 			public:
 				virtual const char * what() const throw();
 		}	e_invalid_configuration_file;
-		/* ServerConfig is an object to represent the configuration file */
+
+		/*************************ServerConfig***************************/
+		/* ServerConfig is an object to represent the server Directive  */
+		/* We decided not to represent this as a directive but as       */
+		/* a parent to all directives inside it's scope                 */
+		/****************************************************************/
 		class ServerConfig {
 			public:
+
+				/*********Directive**********/
+				/* AbstractClass directive  */
+				/* Identify, name directive */
+				/* Polymorphism             */
+				/****************************/
 				class Directive {
 					private:
 						int _id;
-                        //maybe add the string of all codes here?
 						Directive();
 					public:
 						Directive(int);
@@ -83,15 +92,13 @@ class Config {
                 class ErrorCodePage: public Directive {
 	                private:
 	                	static const int _allErrorCodes[ALL_ERROR_CODES];
-	                    const std::string         _name;
-	                    std::vector<int>    _errorCodes;
-	                    std::string         _errorPath;
-	                    ErrorCodePage();
+	                    const std::string _name;
+	                    std::vector<int> _errorCodes;
+	                    std::string _errorPath;
 	                    bool isCodeValid(const std::string &);
-	                    bool isStringValid(const std::string &);
-
+	                    ErrorCodePage();
 	                public:
-	                    ErrorCodePage(const std::string & content) throw (InvalidDirectiveException);
+	                    ErrorCodePage(const std::string &) throw (InvalidDirectiveException);
 	                    ~ErrorCodePage();
 	                    const std::string & getName() const;
 	                    const std::string & getErrorPath() const;
@@ -100,36 +107,35 @@ class Config {
 
                 class Listen: public Directive {
 	                private:
-	                    const std::string   _name;
-	                    std::string         _ip;
-	                    int                 _port;
-						Listen();
+	                    const std::string _name;
+	                    std::string _ip;
+	                    int _port;
 	                    bool isIpValid(const std::string &);
+						Listen();
 	                public:
 	                    Listen(const std::string &) throw (InvalidDirectiveException);
 	                    ~Listen();
-	                    const std::string &getName() const;
+	                    const std::string & getName() const;
+	                    const std::string & getIp() const;
 	                    int getPort() const;
-	                    const std::string &getIp() const;
                 };
 
 				class Methods : public Directive {
-					public:
-						static const std::string _valid_methods[3];
-						Methods(const std::string&) throw (InvalidDirectiveException);
-						~Methods();
-						std::vector<std::string> getMethods() const;
-						virtual const std::string& getName() const;
 					private:
-						Methods();
-						bool _validMethod(const std::string&);
-						const std::string _name;
 						std::vector<std::string> _methods;
+						const std::string _name;
+						bool _validMethod(const std::string &);
+						Methods();
+					public:
+						Methods(const std::string &) throw (InvalidDirectiveException);
+						~Methods();
+						static const std::string _valid_methods[3];
+						std::vector<std::string> getMethods() const;
+						virtual const std::string & getName() const;
 				};
 
 				ServerConfig();
 				~ServerConfig();
-
 				void setRoot(const Root &);
                 void setErrorCodePage(const ErrorCodePage &);
                 void setListen(const Listen&);
@@ -151,40 +157,21 @@ class Config {
                 std::string                 _errorPath;
                 std::string                 _ip;
 				std::vector<std::string>    _methods;
-// how directive will access this vector if its outside its scope?
-// s.get_directives()*.push_back(new _directive(string)**) ?
-// * get method on public
-// ** parsed directive from the file
-//              std::vector<Directive>      _directives;
 		};
-// how server will access private variable of config?!
-// we need to instantiate config object in get_server_configuration ?
-// then from this position we will be able to access all the data
-// for each server config via functions specified in public part of
-// ServerConfig?
-		// std::vector<ServerConfig> _servers;
-		std::ifstream & _config_file;
 
-		Config();
-		Config & operator=(const Config &);
-		Config(const Config &);
-		void	parseConfiguration() throw(InvalidDirectiveException);
-		void	checkScopes() throw(WrongSyntaxException);
-		// bool	findServerContext(const std::string &) const;
-		// bool	contextEnd(const std::string &) const;
-		bool	validDirective(const std::string &, const std::string *, int len) const;
-	public:
+		std::ifstream & _config_file;
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
 		static const std::string _location_directives[LOCATION_CONTEXT_DIRECTIVES];
+		bool	validDirective(const std::string &, const std::string *, int len) const;
+		Config & operator=(const Config &);
+		Config();
+		Config(const Config &);
+	public:
 
-		Config(std::ifstream &) throw(InvalidConfigurationFileException);
+		Config(std::ifstream &) throw(std::exception);
 		~Config();
-
-	/* MEMBER FUNCTIONS */
-
 };
 
 std::ostream&	operator<<(std::ostream&, const Config&);
 
 #endif
-

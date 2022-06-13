@@ -1,4 +1,5 @@
 #include "Config.hpp"
+#include "utils.hpp"
 
 /* Initialize static class members */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location"};
@@ -14,20 +15,85 @@ const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] =
 const char * Config::InvalidConfigurationFileException::what() const throw() {return ("Invalid File, make sure you have permissions, that the file exists and the extension is .conf");}
 const char * Config::InvalidDirectiveException::what() const throw() {return ("Directive is invalid");}
 const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong Directive Syntax");}
-
 // CONSTUCTORS & DESTRUCTORS //
-Config::Config(std::ifstream & file) throw(InvalidConfigurationFileException): _config_file(file) {
+Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
 	if (!file.is_open())
 		throw e_invalid_configuration_file;
+    short int context(0);
+    std::string line;
+    while (std::getline(_config_file, line)) {
+        line = strtrim(line);
+        if (!line.length() || line[0] == '#')
+            continue;
+        std::string directive(line.substr(0, line.find_first_of(SEPARATORS)));
+        std::string tmp(line.substr(line.find_first_of(SEPARATORS) + 1, line.length()));
+        std::string directive_content(strtrim(tmp));
+        if (directive == "}") {
+            if (--context < 0)
+                throw e_invalid_directive;
+            continue ;
+        }
+        std::cout << BLUE << std::left << (context == 2 ? "Location" : "Server") << " context: " << YELLOW;
+        std::cout << "[" << directive << "]" << " - [" << directive_content << "]";
+        switch (context) {
+            case 0:
+                std::cout << std::endl;
+                if (directive == "server" && directive_content == "{") {
+                    // servers.push(ServerConfig s);
+                    context++;
+                }
+                else
+                    throw e_invalid_directive;
+                continue ;
+            case 1:
+                if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES))
+                {
+                    // TODO CREATE SERVER DIRECTIV
+                    std::cout << GREEN << "[OK]";
+                    if (directive == "location")
+                    {
+                        context++;
+                        /*
+                        //servers.locations.addLocation(content)
+                        */
+                    }
+                    /*
+                    //servers.last().push_back(directive)
+                    */
+                }
+                else
+                {
+                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
+                    throw e_invalid_directive;
+                }
+                break;
+            case 2:
+                if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
+                {
+                    // TODO CREATE LOCATION DIRECTIVE
+                    /*
+                    // servers.last().locations.last().addDirective(directive)
+                    */
+                    std::cout << GREEN << "[OK]";
+                }
+                else {
+                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
+                    throw e_invalid_directive;
+                }
+                break;
+            default:
+                std::cout << ENDC;
+                throw e_invalid_directive;
+        }
+        std::cout << std::endl;
+    }
 	std::cout << WHITE << "Config created" << ENDC << std::endl;
-	parseConfiguration();
-	{
-		// TESTING 
-		// ServerConfig::ErrorCodePage ep1("401 nice.txt");
-		// ServerConfig::ErrorCodePage ep2("401 505 yes.txt");
-		// ServerConfig::ErrorCodePage ep3("401 400 401 uppps.txt");// FAILING THIS TEST
-	}
+
     {
+        // TESTING
+        // ServerConfig::ErrorCodePage ep1("401 nice.txt");
+        // ServerConfig::ErrorCodePage ep2("401 505 yes.txt");
+        // ServerConfig::ErrorCodePage ep3("401 400 401 uppps.txt");// FAILING THIS TEST
         try {
             ServerConfig::Listen l("122.22.22.0:8040");
             ServerConfig::Listen l1("*:8040");
@@ -206,76 +272,6 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 	return (false);
 }
 
-void Config::parseConfiguration() throw(InvalidDirectiveException) {
-	short int context(0);
-	std::string line;
-    while (std::getline(_config_file, line)) {
-		line = strtrim(line);
-    	if (!line.length() || line[0] == '#')
-    		continue;
-    	std::string directive(line.substr(0, line.find_first_of(SEPARATORS)));
-    	std::string tmp(line.substr(line.find_first_of(SEPARATORS) + 1, line.length()));
-    	std::string directive_content(strtrim(tmp));
-        if (directive == "}") {
-        	if (--context < 0)
-				throw e_invalid_directive;
-			continue ;
-        }
-        std::cout << BLUE << std::left << std::setw(8) << (context == 2 ? "Location" : "Server") << " context: " << YELLOW;
-        std::cout << "[" << directive << "]" << " - [" << directive_content << "]";
-        switch (context) {
-        	case 0:
-        		std::cout << std::endl;
-        		if (directive == "server" && directive_content == "{") {
-                    // servers.push(ServerConfig s);
-        			context++;
-        		}
-        		else
-			 		throw e_invalid_directive;
-			 	continue ;
-			case 1:
-		        if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES))
-		        {
-		        	// TODO CREATE SERVER DIRECTIV
-		        	std::cout << GREEN << "[OK]";
-					if (directive == "location")
-                    {
-		        		context++;
-                        /*
-                        //servers.locations.addLocation(content)
-                        */
-                    }
-                    /*
-                    //servers.last().push_back(directive)
-                    */
-		        }
-		        else
-		        {
-		        	std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
-					throw e_invalid_directive;
-		        }
-				break;
-			case 2:
-				if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
-				{
-					// TODO CREATE LOCATION DIRECTIVE
-                    /*
-                    // servers.last().locations.last().addDirective(directive)
-                    */
-		        	std::cout << GREEN << "[OK]";
-				}
-		        else {
-					std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
-					throw e_invalid_directive;
-				}
-				break;
-			default:
-				std::cout << ENDC;
-				throw e_invalid_directive;
-        }
-        std::cout << std::endl;
-    }
-}
 /* ServerConfig Member Functions */
 void Config::ServerConfig::setRoot(const Root & root) {_root = root.getPath();}
 std::string & Config::ServerConfig::getRoot() {return _root;}
@@ -395,28 +391,3 @@ std::ostream& operator<<(std::ostream& s, const Config& param) {
 	(void)param;
 	return (s);
 }
-
-/*********26/05/2022*********/
-static int checkBrackets(std::string line) {
-    std::string::iterator it = line.begin();
-    for (; it != line.end(); it++) {
-        if (*it == '{' or *it == '}')
-            return (1);
-    }
-    return (0);
-}
-
-void Config::checkScopes() throw(WrongSyntaxException) {
-    std::string line;
-    short brackets_parse = 0;
-    while (std::getline(_config_file, line)) {
-        std::cout << line << std::endl;
-        brackets_parse += checkBrackets(line);
-    }
-    _config_file.close();
-    if (brackets_parse % 2 != 0)
-        throw e_wrong_syntax;
-    std::cout << "Status: All brackets closed" << std::endl;
-    return;
-}
-/****************************/
