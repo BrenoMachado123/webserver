@@ -12,6 +12,9 @@
 
 #include <stdlib.h>
 
+
+#include <memory>
+
 # define AUTOINDEX		1
 # define CGI			2
 # define CGIBIN			3
@@ -91,7 +94,7 @@ class Config {
 	                    std::string         _errorPath;
 	                    ErrorCodePage();
 	                    bool isCodeValid(const std::string &);
-	                    bool isStringValid(const std::string &);
+	                    //bool isStringValid(const std::string &);
 
 	                public:
 	                    ErrorCodePage(const std::string & content) throw (InvalidDirectiveException);
@@ -100,6 +103,9 @@ class Config {
 	                    const std::string & getErrorPath() const;
 	                    const std::vector<int> & getErrorCodes() const;
                 };
+
+				//class Index -> all directivea are stored in ServerConfig. Then setters and
+				//	getters are going to assing values
 
                 class Listen: public Directive {
 	                private:
@@ -130,6 +136,47 @@ class Config {
 						std::vector<std::string> _methods;
 				};
 
+				// class Index;
+
+				class Location : public Directive {
+					public:
+						Location (std::string const &) throw (InvalidDirectiveException);
+						~Location();
+						Location(const Location &);
+                		Location & operator=(const Location &);
+
+					public:
+						// void setLocation()
+						std::string const & getLocation() const;
+
+						void l_setAutoindex(bool);
+						bool & l_getAutoindex();
+
+						void l_setRoot(const Root &);
+						std::string l_getRoot() const;
+						void l_setErrorCodePage(const ErrorCodePage &);
+						std::vector<int> & l_getErrorCodes();
+						std::string & l_getErrorPath();
+						void l_setMethods(const Methods&);
+						std::vector<std::string>& l_getMethods();
+
+					private:
+						Location();
+						Location(Location &);
+						Location &operator=(Location &);
+					private:
+						std::string					_location;
+						std::string					_name;
+						bool						_autoindex;
+
+						std::vector<std::string>    _l_index;
+						std::string                 _l_root;
+						std::vector<int>            _l_errorCodes;
+						std::string                 _l_errorPath;
+						std::vector<std::string>    _l_methods;
+				};
+
+			//TO IMPLEMENT!!
 				ServerConfig();
 				~ServerConfig();
                 ServerConfig(const ServerConfig &);
@@ -138,12 +185,16 @@ class Config {
                 void setErrorCodePage(const ErrorCodePage &);
                 void setListen(const Listen&);
                 void setMethods(const Methods&);
+				void setLocation(const Location&);
 				std::string & getRoot();
                 std::vector<int> & getErrorCodes();
                 std::string & getErrorPath();
                 int & getListenPort();
                 std::string & getListenIp();
 				std::vector<std::string>& getMethods();
+				std::string	& getLocation();
+				//std::unique_ptr<Config::ServerConfig::Location> *getLocationPtr();
+				std::vector<Location> & getLocations();
 
                 //std::vector<Directive> getDirective();
                 //std::vector<Directive> findDirective(int);
@@ -157,6 +208,10 @@ class Config {
                 std::string                 _errorPath;
                 std::string                 _ip;
 				std::vector<std::string>    _methods;
+				std::string					_location;
+				
+				std::vector<Location>		_locations;
+				//std::unique_ptr<Config::ServerConfig::Location>	_location;
 		};
 // how server will access private variable of config?!
 // we need to instantiate config object in get_server_configuration ?
@@ -176,6 +231,7 @@ class Config {
 		// bool	contextEnd(const std::string &) const;
 		bool	validDirective(const std::string &, const std::string *, int len) const;
 	    void    createDirective(const std::string &, const std::string &);
+		void	createLocationDirective(const std::string &, const std::string &);
     public:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
 		static const std::string _location_directives[LOCATION_CONTEXT_DIRECTIVES];
