@@ -3,11 +3,10 @@
 Socket::Socket(const std::string & ip, int port) {
 	_port = port;
 	_ip_address = ip;
-	if ((_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+	if ((_socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0) {
         perror("Socket");
         exit(EXIT_FAILURE);
     }
-    fcntl(_socket_fd, F_SETFL, O_NONBLOCK);
     _address.sin_family = AF_INET;
     _address.sin_addr.s_addr = inet_addr(_ip_address.c_str());
     if (_address.sin_addr.s_addr == INADDR_NONE) {
@@ -38,6 +37,7 @@ Socket::Socket(const Socket & s) {
     _port = s._port;
     _ip_address = s._ip_address;
     _address = s._address;
+    std::cout << WHITE << "Copy Socket created" << ENDC << std::endl;
 }
 
 int Socket::getPort() const {
@@ -59,6 +59,7 @@ struct sockaddr_in Socket::getAddress() const {
 
 int Socket::acceptConnection() {
 	return (accept(_socket_fd, (struct sockaddr *) & _address, (socklen_t *)& _addrlen));
+    //fcntl(conn_sock, F_SETFL, O_NONBLOCK);
 }
 
 std::ostream& operator<<(std::ostream& s, const Socket& param) {

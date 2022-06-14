@@ -26,7 +26,7 @@ class Socket {
     	struct sockaddr_in _address;
 		Socket();
 	public:
-		Socket(const std::string &, int port);
+		Socket(const std::string &, int);
 		~Socket();
 		Socket(const Socket &);
 		int getPort() const;

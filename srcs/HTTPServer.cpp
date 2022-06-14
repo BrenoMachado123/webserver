@@ -49,7 +49,6 @@ void HTTPServer::acceptConnectionAt(int fd) {
 			   perror("accept");
 			   exit(EXIT_FAILURE);
 			}
-			fcntl(conn_sock, F_SETFL, O_NONBLOCK);
 			ev.events = EPOLLIN | EPOLLET;
 			ev.data.fd = conn_sock;
 			if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, conn_sock, &ev) == -1) {
@@ -71,6 +70,7 @@ void HTTPServer::run() {
 	for (it = _sockets.begin(); it != end; it++) {
 		std::cout << *it << std::endl;
 	}
+	
 	for (;;) {
 		std::cout << "Epoll Waiting . . ." << std::endl;
 		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, -1);

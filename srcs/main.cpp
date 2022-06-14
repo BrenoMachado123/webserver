@@ -16,13 +16,14 @@ int	main(int ac, char **av)
 	}
 	std::cout << GREEN << "TESTING" << ENDC << std::endl;
 	HTTPServer s;
-	Socket s1("127.0.0.98", 4242);
-	Socket s2("127.0.0.98", 8000);
-	Socket s3("127.0.0.100", 4242);
-	s.addSocket(s1);
-	s.addSocket(s2);
-	s.addSocket(s3);
-
+	{
+		Socket s1("127.0.0.98", 4242);
+		Socket s2("127.0.0.98", 8000);
+		Socket s3("127.0.0.100", 4242);
+		s.addSocket(s1);
+		s.addSocket(s2);
+		s.addSocket(s3);
+	}
 	s.run();
 	
 	std::cout << GREEN << "FINISHED" << ENDC << std::endl;
