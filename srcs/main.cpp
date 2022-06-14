@@ -1,4 +1,5 @@
 #include "webserv.hpp"
+#include "Socket.hpp"
 
 static void help(char *prog_name) {
 	std::cout << RED << "usage " << prog_name << " config_file.conf" << std::endl;
@@ -11,10 +12,11 @@ static void help(char *prog_name) {
 #include <unistd.h>
 #include <stdlib.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 #include <fcntl.h>
 
-#define MY_SOCK_PATH "/somepath"
+
 #define LISTEN_BACKLOG 50
 #define MAX_EVENTS 10
 #define handle_error(msg) do { perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -39,34 +41,12 @@ void do_use_fd(int fd) {
 void run() {
 	struct epoll_event ev, events[MAX_EVENTS];
 	int listen_sock, conn_sock, nfds, epollfd, n;
-	/* Code to set up one listening socket, 'listen_sock',
-	  (socket(), bind(), listen()) omitted. */
-	int server_fd; 
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
+	
 
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-        perror("In socket");
-        exit(EXIT_FAILURE);
-    }
-    //fcntl(server_fd, F_SETFL, O_NONBLOCK);
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( PORT );
-    
-    memset(address.sin_zero, '\0', sizeof address.sin_zero);
-    //bzero(address.sin_zero, sizeof(address.sin_zero));
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) {
-        perror("In bind");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(server_fd, 10) < 0) {
-        perror("In listen");
-        exit(EXIT_FAILURE);
-    }
-	/* end of socket setup */
+	Socket s1("127.0.0.98", 4242);
+	std::cout << s1 << std::endl;
     /* SETUP VALUES FROM SERVER TO USE ON EPOLL */
-    listen_sock = server_fd;
+    listen_sock = s1.getSocketFd();
 
 	epollfd = epoll_create(10);
 	if (epollfd == -1) {
@@ -93,8 +73,7 @@ void run() {
 	   		std::cout << BLUE << "[" << n << "] " << ENDC;
 	       if (events[n].data.fd == listen_sock) {
 	       	   std::cout << "Accepting Connection" << std::endl;
-	           conn_sock = accept(listen_sock,
-	                              (struct sockaddr *) &address, (socklen_t*)&addrlen);
+	           conn_sock = s1.acceptConnection();
 	           if (conn_sock == -1) {
 	               perror("accept");
 	               exit(EXIT_FAILURE);
