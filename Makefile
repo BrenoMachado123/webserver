@@ -7,6 +7,7 @@ SRC	=	srcs/main.cpp\
 		srcs/Config.cpp\
 		srcs/utils.cpp\
 		srcs/Socket.cpp\
+		srcs/HTTPServer.cpp\
 
 CFLAGS	=	-g -Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 

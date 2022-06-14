@@ -1,15 +1,16 @@
-//***************************//
-//*Template by pulgamecanica*//
-//***************************//
-
 #ifndef __HTTPSERVER_HPP__
 # define __HTTPSERVER_HPP__
 
+#define MAX_EVENTS 10
+
 #include <iostream>
+#include <vector>
 
+#include <sys/epoll.h>
 
+#include "Config.hpp"
 #include "Socket.hpp"
-
+#include "colors.hpp"
 /*************************HTTPServer****************************/
 /* The Engine of the project                                   */
 /* This object represents a webserver                          */
@@ -23,15 +24,18 @@
 class HTTPServer {
 	private:
 		int _epollfd;
-		std::map<int, Socket> _sockets_map;
+		std::vector<Socket> _sockets;
+		bool isSocketFd(int);
+		void acceptConnectionAt(int); 
 		HTTPServer(const HTTPServer&);
 	public:
-		HTTPServer(const Config &);
+		HTTPServer();
 		~HTTPServer();
+		void addSocket(Socket &);
+		void run();
 		int getEpollFd() const;
+		int numSockets() const;
 };
-
 std::ostream&	operator<<(std::ostream&, const HTTPServer&);
 
 #endif
-

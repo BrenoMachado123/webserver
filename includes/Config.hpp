@@ -23,17 +23,18 @@
 
 # define SEPARATORS " \t\v\n\r\f"
 
-#include "colors.hpp"
 #include <vector>
 #include <fstream>
 #include <cstring>
 #include <sstream>
+
 #include <stdlib.h>
+
+#include "colors.hpp"
 
 // Config represents the whole configuration file //
 class Config {
 	private:
-		
 		/**********Config custom exceptions**********/
 		/* - File is invalid                        */
 		/* - Configuration file syntax is invalid   */
@@ -51,7 +52,6 @@ class Config {
 			public:
 				virtual const char * what() const throw();
 		}	e_invalid_configuration_file;
-
 		/*************************ServerConfig***************************/
 		/* ServerConfig is an object to represent the server Directive  */
 		/* We decided not to represent this as a directive but as       */
@@ -59,7 +59,6 @@ class Config {
 		/****************************************************************/
 		class ServerConfig {
 			public:
-
 				/*********Directive**********/
 				/* AbstractClass directive  */
 				/* Identify, name directive */
@@ -171,7 +170,6 @@ class Config {
 		Config(std::ifstream &) throw(std::exception);
 		~Config();
 };
-
 std::ostream&	operator<<(std::ostream&, const Config&);
 
 #endif

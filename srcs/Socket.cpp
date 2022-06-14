@@ -7,6 +7,7 @@ Socket::Socket(const std::string & ip, int port) {
         perror("Socket");
         exit(EXIT_FAILURE);
     }
+    fcntl(_socket_fd, F_SETFL, O_NONBLOCK);
     _address.sin_family = AF_INET;
     _address.sin_addr.s_addr = inet_addr(_ip_address.c_str());
     if (_address.sin_addr.s_addr == INADDR_NONE) {
@@ -29,6 +30,14 @@ Socket::Socket(const std::string & ip, int port) {
 
 Socket::~Socket() {
 	std::cout << RED << "Socket [" << _ip_address << ":" << _port <<"] destroyed" << ENDC << std::endl;
+}
+
+Socket::Socket(const Socket & s) {
+    _socket_fd = s._socket_fd;
+    _addrlen = s._addrlen;
+    _port = s._port;
+    _ip_address = s._ip_address;
+    _address = s._address;
 }
 
 int Socket::getPort() const {
