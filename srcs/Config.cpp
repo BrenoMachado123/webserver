@@ -340,14 +340,18 @@ void Config::parseConfiguration() throw(InvalidDirectiveException) {
 		        {
 		        	// TODO CREATE SERVER DIRECTIV
 		        	std::cout << GREEN << "[OK]";
-					if (directive == "location")
+					if (directive == "location" && (directive_content.find_last_of('{') != std::string::npos))
                     {
+    	                std::string tmp(line.substr(directive_content.find_first_of(SEPARATORS) + 1, directive_content.length()));
+    	                std::string directive_content(strtrim(tmp));
                         Config::ServerConfig::Location location(directive_content);
                         // *_servers.back().getLocationPtr() = std::make_unique<location>;
                         _servers.back().getLocations().push_back(location);
                         _servers.back().setLocation(location);
 		        		context++;
                     }
+                    else if (directive == "location" && (directive_content.find_last_of('{') == std::string::npos))
+                        throw e_invalid_directive;
                     else {
                         createDirective(directive, directive_content);
                         //_servers.back().getDirective().at(LISTEN);

@@ -35,7 +35,7 @@
 # define PORT_MAX       65535
 # define PORT_MIN       1
 
-# define SEPARATORS " \t\v\n\r\f"
+# define SEPARATORS " ;\t\v\n\r\f"
 # define MAX_EVENTS 10
 
 #include "utils.hpp"
@@ -142,7 +142,7 @@ class Config {
 					public:
 						Location (std::string const &) throw (InvalidDirectiveException);
 						~Location();
-						Location(const Location &);
+						//Location(const Location &);
                 		Location & operator=(const Location &);
 
 					public:
@@ -162,8 +162,8 @@ class Config {
 
 					private:
 						Location();
-						Location(Location &);
-						Location &operator=(Location &);
+						// Location(Location &);
+						// Location &operator=(Location &);
 					private:
 						std::string					_location;
 						std::string					_name;
