@@ -14,29 +14,25 @@ int	main(int ac, char **av)
 		help(av[0]);
 		return (1);
 	}
+	
 	std::cout << GREEN << "TESTING" << ENDC << std::endl;
-	HTTPServer s;
-	{
-		Socket s1("127.0.0.98", 4242);
-		Socket s2("127.0.0.98", 8000);
-		Socket s3("127.0.0.100", 4242);
-		s.addSocket(s1);
-		s.addSocket(s2);
-		s.addSocket(s3);
+
+	try {
+		HTTPServer s(av[1]);
+		// {
+		// 	Socket s1("127.0.0.1", 4242);
+		// 	Socket s2("127.0.0.1", 4243);
+		// 	Socket s3("127.0.0.1", 4244);
+		// 	s.addSocket(s1);
+		// 	s.addSocket(s2);
+		// 	s.addSocket(s3);
+		// }
+		s.run();
+	} catch (std::exception & e) {
+		std::cout << e.what() << std::endl;
 	}
-	s.run();
 	
 	std::cout << GREEN << "FINISHED" << ENDC << std::endl;
-	/*
-	try {
-		std::ifstream file;
-		file.open(av[1], std::ios::in);
-		Config c(file);
-		file.close();
-	} catch (std::exception & e)
- 	{
-		std::cout << e.what() << std::endl;
-	}*/
 
 	return (0);
 }

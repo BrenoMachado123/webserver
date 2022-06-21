@@ -1,11 +1,16 @@
 #include "HTTPServer.hpp"
 
-//HTTPServer::HTTPServer(const Config & conf) {
-HTTPServer::HTTPServer() {
+HTTPServer::HTTPServer(std::string const & file): _config(file) {
 	_epollfd = epoll_create(10);
 	if (_epollfd == -1) {
 	   perror("epoll_create");
 	   exit(EXIT_FAILURE);
+	}
+	std::vector<Config::ServerConfig> servers = _config._servers;
+	std::vector<Config::ServerConfig>::iterator it;
+	for (it = servers.begin(); it != servers.end(); ++it) {
+		Socket s(it->getIp(), it->getPort());
+		addSocket(s);
 	}
 	std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;
 }

@@ -25,11 +25,12 @@ class HTTPServer {
 	private:
 		int _epollfd;
 		std::vector<Socket> _sockets;
+		Config _config;
 		bool isSocketFd(int);
 		void acceptConnectionAt(int); 
 		HTTPServer(const HTTPServer&);
 	public:
-		HTTPServer();
+		HTTPServer(std::string const &);
 		~HTTPServer();
 		void addSocket(Socket &);
 		void run();

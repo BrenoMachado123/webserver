@@ -16,12 +16,14 @@ const char * Config::InvalidConfigurationFileException::what() const throw() {re
 const char * Config::InvalidDirectiveException::what() const throw() {return ("Directive is invalid");}
 const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong Directive Syntax");}
 // CONSTUCTORS & DESTRUCTORS //
-Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
+Config::Config(std::string const & file_str) throw(std::exception) {
+    std::ifstream file;
+    file.open(file_str.c_str(), std::ios::in);
 	if (!file.is_open())
 		throw e_invalid_configuration_file;
     short int context(0);
     std::string line;
-    while (std::getline(_config_file, line)) {
+    while (std::getline(file, line)) {
         line = strtrim(line);
         if (!line.length() || line[0] == '#')
             continue;
@@ -39,7 +41,8 @@ Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
             case 0:
                 std::cout << std::endl;
                 if (directive == "server" && directive_content == "{") {
-                    // servers.push(ServerConfig s);
+                    ServerConfig s;
+                    _servers.push_back(s);
                     context++;
                 }
                 else
@@ -48,22 +51,29 @@ Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
             case 1:
                 if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES))
                 {
-                    // TODO CREATE SERVER DIRECTIV
-                    std::cout << GREEN << "[OK]";
-                    if (directive == "location")
+                    std::cout << GREEN << "[OK]" << std::endl;
+                    ServerConfig::Directive * _directive;
+                    _directive = createDirective(directive, directive_content);
+                    if (_directive != 0)
                     {
-                        context++;
-                        /*
-                        //servers.locations.addLocation(content)
-                        */
+                        _directive->setDirective(_servers.back());
+                        if (_directive->getName() == "location")
+                        {
+                            context++;
+                            /*
+                            //servers.locations.addLocation(content)
+                            */
+                        }
+                        delete (_directive);
                     }
-                    /*
-                    //servers.last().push_back(directive)
-                    */
+                    if (directive== "location") // DELETE THIS DELETE THIS LATER
+                        context++; // DELETE THIS DELETE THIS LATER
+                    // else
+                        //throw e_wrong_syntax;
                 }
                 else
                 {
-                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
+                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
                     throw e_invalid_directive;
                 }
                 break;
@@ -72,12 +82,12 @@ Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
                 {
                     // TODO CREATE LOCATION DIRECTIVE
                     /*
-                    // servers.last().locations.last().addDirective(directive)
+                    // servers.back().locations.back().addDirective(directive)
                     */
-                    std::cout << GREEN << "[OK]";
+                    std::cout << GREEN << "[OK]" << std::endl;
                 }
                 else {
-                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC;
+                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
                     throw e_invalid_directive;
                 }
                 break;
@@ -85,7 +95,6 @@ Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
                 std::cout << ENDC;
                 throw e_invalid_directive;
         }
-        std::cout << std::endl;
     }
 	std::cout << WHITE << "Config created" << ENDC << std::endl;
 
@@ -94,20 +103,20 @@ Config::Config(std::ifstream & file) throw(std::exception): _config_file(file) {
         // ServerConfig::ErrorCodePage ep1("401 nice.txt");
         // ServerConfig::ErrorCodePage ep2("401 505 yes.txt");
         // ServerConfig::ErrorCodePage ep3("401 400 401 uppps.txt");// FAILING THIS TEST
-        try {
-            ServerConfig::Listen l("122.22.22.0:8040");
-            ServerConfig::Listen l1("*:8040");
-            ServerConfig::Listen l2("0.0.0.0:10");
-            ServerConfig::Listen l3("localhost");
-            ServerConfig::Listen l4("localhost:80");
-            std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
-            std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
-            std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
-            std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
-            std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
-        } catch (std::exception & e) {
-           std::cout << BLUE << e.what() << std::endl;
-        }
+        // try {
+        //     ServerConfig::Listen l("122.22.22.0:8040");
+        //     ServerConfig::Listen l1("*:8040");
+        //     ServerConfig::Listen l2("0.0.0.0:10");
+        //     ServerConfig::Listen l3("localhost");
+        //     ServerConfig::Listen l4("localhost:80");
+        //     std::cout << YELLOW << "Port: " << l.getPort() << ", Address: " <<  l.getIp() << ENDC << std::endl;
+        //     std::cout << YELLOW << "Port: " << l1.getPort() << ", Address: " <<  l1.getIp() << ENDC << std::endl;
+        //     std::cout << YELLOW << "Port: " << l2.getPort() << ", Address: " <<  l2.getIp() << ENDC << std::endl;
+        //     std::cout << YELLOW << "Port: " << l3.getPort() << ", Address: " <<  l3.getIp() << ENDC << std::endl;
+        //     std::cout << YELLOW << "Port: " << l4.getPort() << ", Address: " <<  l4.getIp() << ENDC << std::endl;
+        // } catch (std::exception & e) {
+        //    std::cout << BLUE << e.what() << std::endl;
+        // }
     }
 }
 
@@ -115,8 +124,14 @@ Config::~Config() {
 	std::cout << RED << "Config" << " destroyed" << ENDC << std::endl;
 }
 
-Config::ServerConfig::ServerConfig(): _address("127.0.0.1"), _root("html/"), _port(80) {
+Config::ServerConfig::ServerConfig() { // : _address("127.0.0.1"), _root("html/"), _port(80) {
 	std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
+}
+
+Config::ServerConfig::ServerConfig(const ServerConfig & serv_conf) {
+    _port = serv_conf._port;
+    _ip = serv_conf._ip;
+    std::cout << WHITE << "Copy ServerConfig created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::~ServerConfig() {
@@ -136,9 +151,9 @@ Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiv
 	/*
 	This constructor takes only one string which should be a valid path
 	Ex:
-		Root("/etc/www/root") [VALID]
+		Root("/etc/www/root")    [VALID]
 		Root("/etc trash wrong") [throw InvalidDirectiveException]
-		Root("") [throw InvalidDirectiveException]
+		Root("")                 [throw InvalidDirectiveException]
 	*/
 	if (str.empty() || !_validPath(str))
 		throw InvalidDirectiveException();
@@ -151,13 +166,14 @@ Config::ServerConfig::Root::~Root() {
 
 Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException):
 	Directive(LIMITMETHODS), _name("limit_methods") {
-	/* this constructor takes one string which contains the limit methods that will be assigned. 
-	   Ex:
-			Methods("GET POST DELETE") [VALID]
-			Methods("GET") [VALID]
-			Methods("GIT") [throw InvalidDirectiveException]
-			Methods("GET GET") [throw InvalidDirectiveException]
-			Methods("GET POST NIHIL") [throw InvalidDirectiveException]
+	/* 
+    This constructor takes one string which contains the limit methods that will be assigned. 
+    Ex:
+		Methods("GET POST DELETE") [VALID]
+		Methods("GET")             [VALID]
+		Methods("GIT")             [throw InvalidDirectiveException]
+		Methods("GET GET")         [throw InvalidDirectiveException]
+		Methods("GET POST NIHIL")  [throw InvalidDirectiveException]
 	*/
 	char * str = std::strtok(const_cast<char*>(content.c_str()), " ");
 	while (str) {
@@ -272,23 +288,32 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 	return (false);
 }
 
+Config::ServerConfig::Directive * Config::createDirective(std::string const & name, std::string const & content) throw(std::exception) {
+    if (name == "listen")
+    {
+        return (new ServerConfig::Listen(content));
+    }
+    return (0);
+}
+
+
 /* ServerConfig Member Functions */
-void Config::ServerConfig::setRoot(const Root & root) {_root = root.getPath();}
-std::string & Config::ServerConfig::getRoot() {return _root;}
-void Config::ServerConfig::setMethods(const Methods& methods) {_methods = methods.getMethods();}
-std::vector<std::string>& Config::ServerConfig::getMethods() {return _methods;}
-void Config::ServerConfig::setErrorCodePage(const ErrorCodePage &errorCodePage) {
-    _errorCodes = errorCodePage.getErrorCodes();
-    _errorPath = errorCodePage.getErrorPath();
-}
-std::vector<int> &Config::ServerConfig::getErrorCodes() {return _errorCodes;}
-std::string &Config::ServerConfig::getErrorPath() {return _errorPath;}
-void Config::ServerConfig::setListen(const Listen &listen) {
-    _port = listen.getPort();
-    _ip = listen.getIp();
-}
-int &Config::ServerConfig::getListenPort() {return _port;}
-std::string &Config::ServerConfig::getListenIp() {return _ip;}
+// void Config::ServerConfig::setRoot(const Root & root) {_root = root.getPath();}
+// std::string & Config::ServerConfig::getRoot() {return _root;}
+// void Config::ServerConfig::setMethods(const Methods& methods) {_methods = methods.getMethods();}
+// std::vector<std::string>& Config::ServerConfig::getMethods() {return _methods;}
+// void Config::ServerConfig::setErrorCodePage(const ErrorCodePage &errorCodePage) {
+//     _errorCodes = errorCodePage.getErrorCodes();
+//     _errorPath = errorCodePage.getErrorPath();
+// }
+// std::vector<int> &Config::ServerConfig::getErrorCodes() {return _errorCodes;}
+// std::string &Config::ServerConfig::getErrorPath() {return _errorPath;}
+
+
+int Config::ServerConfig::getPort() const {return _port;}
+std::string const & Config::ServerConfig::getIp() const {return _ip;}
+
+
 
 /* Directives Member Functions */
 
@@ -309,6 +334,8 @@ bool Config::ServerConfig::Root::_validPath(const std::string &path) {
     return true;
 }
 
+void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf) const {(void)serv_conf;}
+
 const std::string& Config::ServerConfig::Methods::getName() const {return _name;}
 
 std::vector<std::string> Config::ServerConfig::Methods::getMethods() const {return _methods;}
@@ -320,6 +347,8 @@ bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     }
     return false;
 }
+
+void Config::ServerConfig::Methods::setDirective(ServerConfig & serv_conf) const {(void)serv_conf;}
 
 const std::string &Config::ServerConfig::ErrorCodePage::getName() const {return _name;}
 
@@ -350,6 +379,8 @@ bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content
     return false;
 }
 
+void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf) const {(void)serv_conf;}
+
 const std::string &Config::ServerConfig::Listen::getName() const {return _name;}
 
 const std::string &Config::ServerConfig::Listen::getIp() const {return _ip;}
@@ -359,7 +390,6 @@ int Config::ServerConfig::Listen::getPort() const {return _port;}
 bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
     if (!ip.compare("0.0.0.0") || !ip.compare("localhost") || !ip.compare("*"))
         return true;
-//Verifies if number of dots in IP is = 3;
     int counter = 0;
     for (u_int16_t i = 0 ; i <= ip.length() ; i++)
         if (ip[i] == '.')
@@ -384,10 +414,20 @@ bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
 }
 
 
+void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf) const {
+    serv_conf._port = _port;
+    serv_conf._ip = _ip;
+}
+
 /* HELPER FUNCTIONS */
 
-std::ostream& operator<<(std::ostream& s, const Config& param) {
+std::ostream& operator<<(std::ostream & s, const Config & param) {
 	s << "Some configuration Text";
 	(void)param;
 	return (s);
+}
+
+std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
+    s << "Server " << param.getIp() << ":" << param.getPort();
+    return (s);
 }
