@@ -29,7 +29,7 @@ int	main(int ac, char **av)
 		// }
 		s.run();
 	} catch (std::exception & e) {
-		std::cout << e.what() << std::endl;
+		std::cout << RED << "EXCEPTION: " << e.what() << std::endl;
 	}
 	
 	std::cout << GREEN << "FINISHED" << ENDC << std::endl;
