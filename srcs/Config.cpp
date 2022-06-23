@@ -278,6 +278,26 @@ Config::ServerConfig::Listen::~Listen() {
     std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
 }
 
+Config::ServerConfig::Location::Location(std::string const &content) throw (InvalidDirectiveException):
+        Directive(LOCATION), _location(content), _name("location"), _autoindex(false) {
+
+    /*
+	This constructor takes only one string which should be a valid path
+	Ex:
+		Location("/etc/www/where_is_the_file") [VALID]
+		Location("/etc trash wrong") [throw InvalidDirectiveException]
+		Location("") [throw InvalidDirectiveException]
+	*/
+    if (content.empty() || content.find_first_of(SEPARATORS) != std::string::npos) {
+        throw InvalidDirectiveException();
+    }
+    std::cout << WHITE << "Location created" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Location::~Location() {
+    std::cout << RED << "Location Directive destroyed!" << ENDC << std::endl;
+}
+
 /* Config Member Functions*/
 
 bool Config::validDirective(const std::string & str, const std::string * list, int len) const {
@@ -313,7 +333,17 @@ Config::ServerConfig::Directive * Config::createDirective(std::string const & na
 int Config::ServerConfig::getPort() const {return _port;}
 std::string const & Config::ServerConfig::getIp() const {return _ip;}
 
+void Config::ServerConfig::setLocation(const Location &loc) {
+    _location = loc.getLocation();
+}
 
+std::string & Config::ServerConfig::getLocation() {
+    return _location;
+}
+
+std::vector<Config::ServerConfig::Location> & Config::ServerConfig::getLocations() {
+    return _locations;
+}
 
 /* Directives Member Functions */
 
@@ -417,6 +447,57 @@ bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
 void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf) const {
     serv_conf._port = _port;
     serv_conf._ip = _ip;
+}
+
+void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf) const {
+    serv_conf._location = _location;
+}
+
+std::string const &Config::ServerConfig::Location::getName() const {
+    return _name;
+}
+
+std::string const &Config::ServerConfig::Location::getLocation() const{
+    return _location;
+}
+
+/* LOCATION MEMBER FUNCTIONS */
+
+void Config::ServerConfig::Location::l_setAutoindex(bool value) {
+    _autoindex = value;
+}
+
+bool &Config::ServerConfig::Location::l_getAutoindex() {
+    return _autoindex;
+}
+
+void Config::ServerConfig::Location::l_setRoot(const Root & root) {
+    _l_root = root.getPath();
+}
+
+std::string Config::ServerConfig::Location::l_getRoot() const {
+    return _l_root;
+}
+
+void Config::ServerConfig::Location::l_setErrorCodePage(const ErrorCodePage &er) {
+    _l_errorCodes = er.getErrorCodes();
+    _l_errorPath = er.getErrorPath();
+}
+
+std::vector<int> &Config::ServerConfig::Location::l_getErrorCodes() {
+    return _l_errorCodes;
+}
+
+std::string &Config::ServerConfig::Location::l_getErrorPath() {
+    return _l_errorPath;
+}
+
+void Config::ServerConfig::Location::l_setMethods(const Methods &met) {
+    _l_methods = met.getMethods();
+}
+
+std::vector<std::string> &Config::ServerConfig::Location::l_getMethods() {
+    return _l_methods;
 }
 
 /* HELPER FUNCTIONS */

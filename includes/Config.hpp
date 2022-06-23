@@ -140,6 +140,47 @@ class Config {
 						virtual const std::string & getName() const;
 				};
 
+                class Location : public Directive {
+                public:
+                    Location (std::string const &) throw (InvalidDirectiveException);
+                    ~Location();
+                    //Location(const Location &);
+                    Location & operator=(const Location &);
+
+                public:
+                    virtual void setDirective(ServerConfig &) const;
+                    virtual const std::string & getName() const;
+
+
+                    std::string const & getLocation() const;
+
+                    void l_setAutoindex(bool);
+                    bool & l_getAutoindex();
+
+                    void l_setRoot(const Root &);
+                    std::string l_getRoot() const;
+                    void l_setErrorCodePage(const ErrorCodePage &);
+                    std::vector<int> & l_getErrorCodes();
+                    std::string & l_getErrorPath();
+                    void l_setMethods(const Methods&);
+                    std::vector<std::string>& l_getMethods();
+
+                private:
+                    Location();
+                    // Location(Location &);
+                    // Location &operator=(Location &);
+                private:
+                    std::string					_location;
+                    std::string					_name;
+                    bool						_autoindex;
+
+                    std::vector<std::string>    _l_index;
+                    std::string                 _l_root;
+                    std::vector<int>            _l_errorCodes;
+                    std::string                 _l_errorPath;
+                    std::vector<std::string>    _l_methods;
+                };
+
 				ServerConfig();
 				ServerConfig(const ServerConfig &);
 				~ServerConfig();
@@ -148,12 +189,16 @@ class Config {
     //             void setErrorCodePage(const ErrorCodePage &);
     //             void setListen(const Listen&);
     //             void setMethods(const Methods&);
+                 void setLocation(const Location&);
 				// std::string & getRoot();
     //             std::vector<int> & getErrorCodes();
     //             std::string & getErrorPath();
 					int getPort() const;
 					std::string const & getIp() const;
 				// std::vector<std::string>& getMethods();
+                std::string	& getLocation();
+                std::vector<Location> & getLocations();
+
 			private:
 				ServerConfig & operator=(const ServerConfig &);
 				std::string                 _ip;
@@ -163,6 +208,9 @@ class Config {
     //             std::vector<int>            _errorCodes;
     //             std::string                 _errorPath;
 				// std::vector<std::string>    _methods;
+                std::string					_location;
+
+                  std::vector<Location>		_locations;
 		};
 	private:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
