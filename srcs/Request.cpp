@@ -4,9 +4,14 @@
 
 #include "Request.hpp"
 
-Request::Request() {
+Request::Request() : _method("GET"), _yuri("/content") {
 	// TODO (default constructor)
 }
+
+/*Request::Request(std::string& buffer) :
+_method("GET"), _yuri("/content") {
+
+}*/
 
 Request::Request(const Request& param) {
 	// TODO (copy constructor)

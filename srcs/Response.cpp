@@ -31,3 +31,7 @@ std::ostream& operator<<(std::ostream& s, const Response& param) {
 	return (s);
 }
 
+void Response::createResponse(const Request& request) {
+	
+}
+

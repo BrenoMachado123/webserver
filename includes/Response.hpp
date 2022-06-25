@@ -13,6 +13,8 @@ class Response {
 		Response(const Response&);
 		~Response();
 		Response&	operator= (const Response&); // const for safety... not super nesessary
+
+		std::string createResponse(const Request&);
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);

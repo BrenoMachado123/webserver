@@ -97,6 +97,10 @@ void HTTPServer::run() {
 					perror("In Read");
 					exit(EXIT_FAILURE);
 				}
+				//std::string buf(buffer);
+				Request r;
+				Response res;
+				res.createResponse(r);
 				printf("READ: %d\n%s\n", valread, buffer);
 				write(fd, "Hello from server", strlen("Hello from server"));
 				printf("------------------Hello message sent-------------------\n");
