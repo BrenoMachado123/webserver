@@ -8,14 +8,21 @@ SRC	=	srcs/main.cpp\
 		srcs/utils.cpp\
 		srcs/Socket.cpp\
 		srcs/HTTPServer.cpp\
+		srcs/Response.cpp\
+		srcs/Request.cpp\
+		srcs/Client.cpp\
 
-CFLAGS	=	-g -Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
+CFLAGS	= -Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
 
 INC	=	-I includes
 
 OBJS_D	=	objs
 
+OBJS_DD	=	objs_debug
+
 OBJ	=	$(SRC:srcs/%.cpp=$(OBJS_D)/%.o)
+
+OBJ_DEBUG	=	$(SRC:srcs/%.cpp=$(OBJS_DD)/%.o)
 
 UNAME	:=	$(shell uname)
 
@@ -35,24 +42,43 @@ $(OBJS_D)/%.o:srcs/%.cpp
 			@mkdir -p $(OBJS_D)
 			$(CC) $(CFLAGS) $(INC) -o $@ -c $<
 
+$(OBJS_DD)/%.o:srcs/%.cpp
+			@mkdir -p $(OBJS_DD)
+			$(CC) -D CONSTRUCTORS_DESTRUCTORS_DEBUG=1 $(CFLAGS) $(INC) -o $@ -c $<
+
 $(NAME):	$(OBJ)
 			@printf "Compiling $(C_YELLOW)$(NAME)$(C_END) ... \n"
 			$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 			@printf "$(C_GREEN)DONE$(C_END)\n"
 
-test:		re
-			@printf "$(C_BLUE)Testing $(C_YELLOW)$(NAME)$(C_END)\n"
-			@printf "\n$(C_BLUE)********************************************$(C_END)\n"
-			@./$(NAME) "conf_files/configuration.conf"
-			@printf "\n$(C_BLUE)********************************************$(C_END)\n"
-			@printf "\n$(C_BLUE)Finished Test...$(C_END)\n"
-			@$(MAKE) show
-			@$(MAKE) fclean
+
+$(NAME)_debug: $(OBJ_DEBUG)
+	@printf "Compiling (DEBUG) $(C_YELLOW)$(NAME)$(C_END) ... \n"
+	$(CC) -g $(CFLAGS) $(OBJ_DEBUG) -o $(NAME)
+	@printf "$(C_GREEN)DONE$(C_END)\n"
+
+test:	re
+		@printf "$(C_BLUE)Testing $(C_YELLOW)$(NAME)$(C_END)\n"
+		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
+		@./$(NAME) "conf_files/configuration.conf"
+		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
+		@printf "\n$(C_BLUE)Finished Test...$(C_END)\n"
+		@$(MAKE) show
+		@$(MAKE) fclean
+
+debug:	re_debug
+		@printf "$(C_BLUE)Debugging $(C_YELLOW)$(NAME)$(C_END)\n"
+		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
+		@./$(NAME) "conf_files/configuration.conf"
+		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
+		@printf "\n$(C_BLUE)Finished Test...$(C_END)\n"
+		@$(MAKE) show
+		@$(MAKE) fclean
 
 all:		$(NAME)
 
 clean:
-			$(RM) $(OBJS_D)
+			$(RM) $(OBJS_D) $(OBJS_DD)
 			@printf "$(C_RED)Cleaning objs$(C_END)\n"
 
 fclean: 	clean
@@ -60,6 +86,8 @@ fclean: 	clean
 			@printf "$(C_RED)Deleted Everything$(C_END)\n"
 
 re: fclean all
+
+re_debug: fclean $(NAME)_debug
 
 show:
 	@printf "$(C_GREEN)"

@@ -12,11 +12,13 @@ HTTPServer::HTTPServer(std::string const & file): _config(file) {
 		Socket s(it->getIp(), it->getPort());
 		addSocket(s);
 	}
-	std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;
 }
 
 HTTPServer::~HTTPServer() {
-	std::cout << RED << "HTTPServer" << " destroyed" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << RED << "HTTPServer" << " destroyed" << ENDC << std::endl;
 }
 
 void HTTPServer::addSocket(Socket & s) {
@@ -41,7 +43,7 @@ bool HTTPServer::isSocketFd(int fd) {
 	return (false);
 }
 
-void HTTPServer::acceptConnectionAt(int fd) {
+int HTTPServer::acceptConnectionAt(int fd) {
 	int conn_sock;
 	struct epoll_event ev;
 	std::vector<Socket>::iterator it;
@@ -63,13 +65,13 @@ void HTTPServer::acceptConnectionAt(int fd) {
 			break ;
 		}
 	}
+	return (conn_sock);
 }
 
 void HTTPServer::run() {
 	int nfds, n;
 	struct epoll_event events[MAX_EVENTS];
 
-	std::cout << YELLOW << "WebServer Information: " << ENDC << std::endl;
 	std::vector<Socket>::iterator it;
 	std::vector<Socket>::iterator end = _sockets.end();
 	for (it = _sockets.begin(); it != end; it++) {
@@ -84,10 +86,11 @@ void HTTPServer::run() {
 		   exit(EXIT_FAILURE);
 		}
 		for (n = 0; n < nfds; ++n) {
-			std::cout << BLUE << "[*" << n << "*] " << ENDC;
 			if (isSocketFd(events[n].data.fd)) {
-				std::cout << "Accepting Connection" << std::endl;
-				acceptConnectionAt(events[n].data.fd);
+				std::cout << GREEN << "ServerSocket Accepting Connection" << ENDC << std::endl;
+				Client c(acceptConnectionAt(events[n].data.fd));
+				// WE MUST HAVE A LIST OF CLIENTS AND MONITOR ALL CLIENTS; CLIENT REQUEST AND CLOSE THEIR CONNECTION WHEN APPROPIATE
+				std::cout << c << std::endl;
 			} else {
 				std::cout << "Some input or output was detected" << std::endl;
 				int fd = events[n].data.fd;
@@ -99,7 +102,6 @@ void HTTPServer::run() {
 				}
 				printf("READ: %d\n%s\n", valread, buffer);
 				write(fd, "Hello from server", strlen("Hello from server"));
-				printf("------------------Hello message sent-------------------\n");
 				close(fd);
 		   }
 		}

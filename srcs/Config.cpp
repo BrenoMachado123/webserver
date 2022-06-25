@@ -96,8 +96,8 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                 throw e_invalid_directive;
         }
     }
-	std::cout << WHITE << "Config created" << ENDC << std::endl;
-
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << WHITE << "Config created" << ENDC << std::endl;
     {
         // TESTING
         // ServerConfig::ErrorCodePage ep1("401 nice.txt");
@@ -121,29 +121,35 @@ Config::Config(std::string const & file_str) throw(std::exception) {
 }
 
 Config::~Config() {
-	std::cout << RED << "Config" << " destroyed" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << RED << "Config" << " destroyed" << ENDC << std::endl;
 }
 
 Config::ServerConfig::ServerConfig() { // : _address("127.0.0.1"), _root("html/"), _port(80) {
-	std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::ServerConfig(const ServerConfig & serv_conf) {
     _port = serv_conf._port;
     _ip = serv_conf._ip;
-    std::cout << WHITE << "Copy ServerConfig created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Copy ServerConfig created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::~ServerConfig() {
-	std::cout << RED << "ServerConfig destroyed" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << RED << "ServerConfig destroyed" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Directive::Directive(int id): _id(id) {
-	std::cout << WHITE << "Directive(" << id <<") created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << WHITE << "Directive(" << id <<") created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Directive::~Directive() {
-	std::cout << RED << "Directive" << " destroyed" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << RED << "Directive" << " destroyed" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiveException):
@@ -157,11 +163,13 @@ Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiv
 	*/
 	if (str.empty() || !_validPath(str))
 		throw InvalidDirectiveException();
-	std::cout << WHITE << "Root created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << WHITE << "Root created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Root::~Root() {
-	std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException):
@@ -187,11 +195,13 @@ Config::ServerConfig::Methods::Methods(const std::string& content) throw (Invali
 		_methods.push_back(std::string(str));
 		str = std::strtok(NULL, " ");	
 	}
-	std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	   std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Methods::~Methods() {
-    std::cout << RED << "Methods Directive destroyed!" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "Methods Directive destroyed!" << ENDC << std::endl;
 }
 
 Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(InvalidDirectiveException):
@@ -215,11 +225,13 @@ Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) 
         || !isCodeValid(content.substr(0, found)))
         throw InvalidDirectiveException();
     _errorPath = content.substr(found + 1);
-    std::cout << WHITE <<"ErrorCode Created" << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE <<"ErrorCode Created" << std::endl;
 }
 
 Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
-    std::cout << RED << "ErrorPage Directive destroyed!" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "ErrorPage Directive destroyed!" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Listen::Listen(const std::string &content)
@@ -271,11 +283,13 @@ Config::ServerConfig::Listen::Listen(const std::string &content)
         if (_port > PORT_MAX || _port <= PORT_MIN)
             throw InvalidDirectiveException();
     }
-    std::cout << WHITE << "Listen created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Listen created" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Listen::~Listen() {
-    std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
 }
 
 Config::ServerConfig::Location::Location(std::string const &content) throw (InvalidDirectiveException):
@@ -295,7 +309,8 @@ Config::ServerConfig::Location::Location(std::string const &content) throw (Inva
 }
 
 Config::ServerConfig::Location::~Location() {
-    std::cout << RED << "Location Directive destroyed!" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "Location Directive destroyed!" << ENDC << std::endl;
 }
 
 /* Config Member Functions*/

@@ -10,7 +10,10 @@
 
 #include "Config.hpp"
 #include "Socket.hpp"
-#include "colors.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+#include "Client.hpp"
+#include "webserv.hpp"
 /*************************HTTPServer****************************/
 /* The Engine of the project                                   */
 /* This object represents a webserver                          */
@@ -27,7 +30,7 @@ class HTTPServer {
 		std::vector<Socket> _sockets;
 		Config _config;
 		bool isSocketFd(int);
-		void acceptConnectionAt(int); 
+		int acceptConnectionAt(int); 
 		HTTPServer(const HTTPServer&);
 	public:
 		HTTPServer(std::string const &);

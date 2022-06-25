@@ -14,7 +14,8 @@ Response::Response(const Response& param) {
 }
 
 Response::~Response() {
-	std::cout << "Response" << " destroyed" << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << "Response" << " destroyed" << std::endl;
 	// TODO (destructor)
 }
 
