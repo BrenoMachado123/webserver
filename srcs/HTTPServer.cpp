@@ -97,10 +97,19 @@ void HTTPServer::run() {
 					perror("In Read");
 					exit(EXIT_FAILURE);
 				}
-				//std::string buf(buffer);
+			/****************/
+			/*PSEUDO CODE****/
+			/****************/
+				std::string _response;
 				Request r;
 				Response res;
-				res.createResponse(r);
+				_response = res.createResponse(r, _config);
+				write(fd, _response, strlen(_response));
+				printf("------------------Response message sent-------------------\n");
+				close(fd);
+			/****************/
+			/*end: PSEUDO CODE****/
+			/****************/
 				printf("READ: %d\n%s\n", valread, buffer);
 				write(fd, "Hello from server", strlen("Hello from server"));
 				printf("------------------Hello message sent-------------------\n");

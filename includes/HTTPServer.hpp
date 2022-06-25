@@ -8,6 +8,8 @@
 
 #include <sys/epoll.h>
 
+#include "Response.hpp"
+#include "Request.hpp"
 #include "Config.hpp"
 #include "Socket.hpp"
 #include "colors.hpp"
@@ -25,7 +27,7 @@ class HTTPServer {
 	private:
 		int _epollfd;
 		std::vector<Socket> _sockets;
-		Config _config;
+		Config _config;q
 		bool isSocketFd(int);
 		void acceptConnectionAt(int); 
 		HTTPServer(const HTTPServer&);
