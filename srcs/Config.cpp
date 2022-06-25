@@ -66,8 +66,8 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                         }
                         delete (_directive);
                     }
-                    if (directive== "location") // DELETE THIS DELETE THIS LATER
-                        context++; // DELETE THIS DELETE THIS LATER
+                    //if (directive== "location") // DELETE THIS DELETE THIS LATER
+                     //   context++; // DELETE THIS DELETE THIS LATER
                     // else
                         //throw e_wrong_syntax;
                 }
@@ -210,12 +210,12 @@ Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) 
         ErrorCodePage("./response.html 404")        [throw InvalidDirectiveException]
         ErrorCodePage(100 ./100.html")              [throw InvalidDirectiveException]
     */
-    int found = content.find_last_of(SEPARATORS);
-    if (content.empty()|| found == -1
+    size_t found = content.find_last_of(SEPARATORS);
+    if (content.empty()|| found == std::string::npos
         || !isCodeValid(content.substr(0, found)))
         throw InvalidDirectiveException();
     _errorPath = content.substr(found + 1);
-    std::cout << WHITE <<"ErrorCode Created" << std::endl;
+    std::cout << WHITE << "ErrorCode Created" << std::endl;
 }
 
 Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
@@ -288,7 +288,7 @@ Config::ServerConfig::Location::Location(std::string const &content) throw (Inva
 		Location("/etc trash wrong") [throw InvalidDirectiveException]
 		Location("") [throw InvalidDirectiveException]
 	*/
-    if (content.empty() || content.find_first_of(SEPARATORS) != std::string::npos) {
+    if (content.empty() || content.find_first_of(SEPARATORS) == std::string::npos) {
         throw InvalidDirectiveException();
     }
     std::cout << WHITE << "Location created" << ENDC << std::endl;
@@ -309,10 +309,33 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 }
 
 Config::ServerConfig::Directive * Config::createDirective(std::string const & name, std::string const & content) throw(std::exception) {
-    if (name == "listen")
-    {
+    if (name == "listen") {
         return (new ServerConfig::Listen(content));
     }
+    else if (name == "error_page") {
+        return (new ServerConfig::ErrorCodePage(content));
+    }
+    else if (name == "root") {
+        return (new ServerConfig::Root(content));
+    }
+    else if (name == "limit_methods") {
+        return (new ServerConfig::Methods(content));
+    }
+    else if (name == "location") {
+        return (new ServerConfig::Location(content));
+    }
+    /*else if (name == "server_name") {
+        return (new ServerConfig::ServerName(content));
+    }
+    else if (name == "client_max_body_size")  {
+        return (new ServerConfig::ClientMBS(content));
+    }
+    else if (name == "index") {
+        return (new ServerConfig::Index(content));
+    }
+    else if (name == "autoindex") {
+        return (new ServerConfig::AutoIndex(content));
+    }*/
     return (0);
 }
 
@@ -334,11 +357,11 @@ int Config::ServerConfig::getPort() const {return _port;}
 std::string const & Config::ServerConfig::getIp() const {return _ip;}
 
 void Config::ServerConfig::setLocation(const Location &loc) {
-    _location = loc.getLocation();
+    _location.push_back(loc.getLocation());
 }
 
-std::string & Config::ServerConfig::getLocation() {
-    return _location;
+std::string & Config::ServerConfig::getLocation(int index) {
+    return _location.at(index);
 }
 
 std::vector<Config::ServerConfig::Location> & Config::ServerConfig::getLocations() {
@@ -450,7 +473,7 @@ void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf) const 
 }
 
 void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf) const {
-    serv_conf._location = _location;
+    serv_conf._location.push_back(_location);
 }
 
 std::string const &Config::ServerConfig::Location::getName() const {
