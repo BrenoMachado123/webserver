@@ -31,7 +31,7 @@
 #include <stdlib.h>
 
 #include "Socket.hpp"
-#include "colors.hpp"
+#include "webserv.hpp"
 
 // Config represents the whole configuration file //
 class Config {

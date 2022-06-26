@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include "Request.hpp"
+#include "webserv.hpp"
 
 class Response {
 	public:

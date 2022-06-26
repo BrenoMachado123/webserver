@@ -24,11 +24,13 @@ Socket::Socket(const std::string & ip, int port) {
         perror("Listen");
         exit(EXIT_FAILURE);
     }
-    std::cout << WHITE << "Socket created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Socket created" << ENDC << std::endl;
 }
 
 Socket::~Socket() {
-	std::cout << RED << "Socket [" << _ip_address << ":" << _port <<"] destroyed" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "Socket [" << _ip_address << ":" << _port <<"] destroyed" << ENDC << std::endl;
 }
 
 Socket::Socket(const Socket & s) {
@@ -37,7 +39,8 @@ Socket::Socket(const Socket & s) {
     _port = s._port;
     _ip_address = s._ip_address;
     _address = s._address;
-    std::cout << WHITE << "Copy Socket created" << ENDC << std::endl;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Copy Socket created" << ENDC << std::endl;
 }
 
 int Socket::getPort() const {
@@ -63,6 +66,6 @@ int Socket::acceptConnection() {
 }
 
 std::ostream& operator<<(std::ostream& s, const Socket& param) {
-	s << YELLOW << "Socket: http://" << param.getIpAddress() << ":" << param.getPort() << ENDC;
+	s << "http://" << param.getIpAddress() << ":" << param.getPort() << ENDC;
 	return (s);
 }

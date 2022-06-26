@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 
 #include <sys/epoll.h>
 
@@ -12,7 +13,11 @@
 #include "Request.hpp"
 #include "Config.hpp"
 #include "Socket.hpp"
-#include "colors.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
+#include "Client.hpp"
+#include "webserv.hpp"
+#include "utils.hpp"
 /*************************HTTPServer****************************/
 /* The Engine of the project                                   */
 /* This object represents a webserver                          */
@@ -27,9 +32,11 @@ class HTTPServer {
 	private:
 		int _epollfd;
 		std::vector<Socket> _sockets;
-		Config _config;q
+		std::map<int, std::vector<Client> > _clients;
+		Config _config;
 		bool isSocketFd(int);
 		void acceptConnectionAt(int); 
+		//void addClientAt(int);
 		HTTPServer(const HTTPServer&);
 	public:
 		HTTPServer(std::string const &);
