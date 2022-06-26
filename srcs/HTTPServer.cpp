@@ -10,7 +10,7 @@ HTTPServer::HTTPServer(std::string const & file): _config(file) {
 	std::vector<Config::ServerConfig> servers = _config._servers;
 	std::vector<Config::ServerConfig>::iterator it;
 	for (it = servers.begin(); it != servers.end(); ++it) {
-		Socket s(it->getIp(), it->getPort());
+		Socket s(it->getIp(), it->getPort(), *it);
 		addSocket(s);
 		std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
 		_clients.insert(p);
@@ -116,11 +116,20 @@ void HTTPServer::run() {
 						perror("In Read");
 						exit(EXIT_FAILURE);
 					}
-					printf("READ: %d\n%s\n", valread, buffer);
-					char headers[] = "HTTP/1.1 200 OK\nDate: Sun, 26 Jun 2022 13:44:15 GMT\nServer: BTP/1.0.\nContent-Length: 178\nContent-Type: text/html; charset=iso-8859-1\n";
-					char html[] = "\n<!DOCTYPE html><html>\n<head>\n<style type=\"text/css\" src=\"/some.css\"></style>\n</head>\n<body>\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n</body>\n</html>\n";
-					write(fd, headers, strlen(headers));
-					write(fd, html, strlen(html));
+					//We are searching here for the proper client, that means to know what server operate on.
+					int big_sock(0);
+					std::vector<Client>::iterator v_it;
+					for (m_it = _clients.begin(); m_it != _clients.end() && big_sock == 0; ++m_it) {
+						for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
+							if (v_it->getFd() == events[n].data.fd) {
+								big_sock = m_it->first;
+						 		std::cout << "Client: " << v_it->getFd() << " " << v_it->getSocket() << std::endl;
+								break;
+						 	}
+						}
+					}
+					std::string _buffer(buffer, valread); // it will create a buffer of a size valread
+					v_it->handleRequest(_buffer);
 				}
 				{
 					// IMAGINE THAT WE UST CLOSE CONNECTION... THEN WE DO THIS:
@@ -141,20 +150,16 @@ void HTTPServer::run() {
 			/****************/
 			/*PSEUDO CODE****/
 			/****************/
-				std::string _response;
-				Request r;
-				Response res;
-				_response = res.createResponse(r, _config);
-				write(fd, _response, strlen(_response));
-				printf("------------------Response message sent-------------------\n");
-				close(fd);
+				// std::string _response;
+				// Request r;
+				// Response res;
+				// _response = res.createResponse(r, _config);
+				// write(fd, _response.c_str(), strlen(_response));
+				// printf("------------------Response message sent-------------------\n");
+				// close(fd);
 			/****************/
 			/*end: PSEUDO CODE****/
 			/****************/
-				printf("READ: %d\n%s\n", valread, buffer);
-				write(fd, "Hello from server", strlen("Hello from server"));
-				printf("------------------Hello message sent-------------------\n");
-				close(fd);
 		   }
 		}
 	}

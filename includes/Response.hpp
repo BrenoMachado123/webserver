@@ -7,26 +7,36 @@
 
 #include <iostream>
 
-//class Response;
+class Response;
 #include <map>
 #include <unistd.h>
 #include <fstream>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <sstream>
+#include <ostream>
 #include "Request.hpp"
 #include "webserv.hpp"
 
 class Response {
 	public:
-		Response();
-		Response(const Response&);
+		Response(Request const &);
 		~Response();
-		Response&	operator= (const Response&); // const for safety... not super nesessary
 
-		std::string createResponse(const Request&);
+		std::string createResponse();
 	
 	private:
-		std::map<int, std::string> _codeMessage;
+		Response();
+		Response(const Response&);
+
+	private:
+		int _status_code;
+		std::string _date;
+		std::string _server_name;
+		std::string _content_length;
+		std::string _content_type;
+		std::string _content;
+		static std::map<int, std::string> _codeMessage;
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);

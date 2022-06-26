@@ -1,8 +1,7 @@
 #include "Socket.hpp"
 
-Socket::Socket(const std::string & ip, int port) {
-	_port = port;
-	_ip_address = ip;
+Socket::Socket(const std::string & ip, int port, Config::ServerConfig const &sc):
+       _port(port), _ip_address(ip), _server_config(sc) {
 	if ((_socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0) {
         perror("Socket");
         exit(EXIT_FAILURE);
@@ -58,6 +57,10 @@ const std::string & Socket::getIpAddress() const {
 }
 struct sockaddr_in Socket::getAddress() const {
 	return _address;
+}
+
+Config::ServerConfig const & Socket::getServerConfig() const {
+    return _server_config;
 }
 
 int Socket::acceptConnection() {

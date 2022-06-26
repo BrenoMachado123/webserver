@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+class Socket;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -11,6 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+
+class Socket;
+#include "Config.hpp"
 
 #include "webserv.hpp"
 /************************Socket***************************/
@@ -24,15 +28,21 @@ class Socket {
 		int _port;
 		std::string _ip_address;
     	struct sockaddr_in _address;
+	// It is one configuraiton per socket. This is why we keep it inside this class
+	// not in the client class as we previously had it.
+		Config::ServerConfig _server_config;
 		Socket();
 	public:
-		Socket(const std::string &, int);
+		Socket(const std::string &, int, Config::ServerConfig const &);
 		~Socket();
 		Socket(const Socket &);
+		int acceptConnection();
+		
 		int getPort() const;
 		int getSocketFd() const;
 		int getAddressLen() const;
-		int acceptConnection();
+		Config::ServerConfig const & getServerConfig() const;
+
 		const std::string & getIpAddress() const;
 		struct sockaddr_in getAddress() const;
 };

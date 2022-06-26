@@ -30,7 +30,6 @@
 
 #include <stdlib.h>
 
-#include "Socket.hpp"
 #include "webserv.hpp"
 
 // Config represents the whole configuration file //
@@ -145,7 +144,7 @@ class Config {
                     Location (std::string const &) throw (InvalidDirectiveException);
                     ~Location();
                     //Location(const Location &);
-                    Location & operator=(const Location &);
+                    //Location & operator=(const Location &);
 
                 public:
                     virtual void setDirective(ServerConfig &) const;
@@ -200,7 +199,7 @@ class Config {
                 std::vector<Location> & getLocations();
 
 			private:
-				ServerConfig & operator=(const ServerConfig &);
+				//ServerConfig & operator=(const ServerConfig &);
 				std::string                 _ip;
                 int                         _port;
 				// std::string                 _root;

@@ -8,6 +8,9 @@
 #include <iostream>
 #include <map>
 
+class Request;
+#include "Response.hpp"
+#include "Config.hpp"
 #include "Socket.hpp"
 #include "webserv.hpp"
 
@@ -15,30 +18,34 @@ class Request {
 
 	private:
 		// std::map<std::string, std::string> _headers;
-	 //    std::string _method;
-	 //    std::string _uri_target;
-	 //    std::string _http_version;
-	 //    std::string _query;
-	 //    std::string _body;
-	 //    std::string _transfer_encoding;
-	 //    long _content_length;
-		Socket _s;
+	    // std::string _method;
+	    // std::string _uri_target;
+	    // std::string _http_version;
+	    // std::string _query;
+	    // std::string _body;
+	    // std::string _transfer_encoding;
+	    // long _content_length;
+
+		// Socket _s;
 		// Request(const Request &);
 		// Request&	operator= (const Request&);
 		// Request();
 	public:
-		Request();
-		Request(std::string&);
-		Request(const Request&);
+		Request(std::string const &, Config::ServerConfig const &);
 		~Request();
+		//Socket const & getSocket() const;
+
+	private:
+		Request();
+		Request(const Request&);
 		Request&	operator= (const Request&); // const for safety... not super nesessary
 
 	private:
 		std::string _method;
-		std::string _yuri;
+		std::string _uri;
+		//std::server(?)
 		Request(Socket const &);
-		~Request();
-		Socket const & getSocket() const;
+		Config::ServerConfig const & _serverConfig;
 };
 
 std::ostream &	operator<<(std::ostream &, const Request &);
