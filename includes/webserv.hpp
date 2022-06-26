@@ -5,6 +5,7 @@
 #  define CONSTRUCTORS_DESTRUCTORS_DEBUG 0
 # endif
 
+//# define uint64_t int
 
 #include "colors.hpp"
 #include <iostream>

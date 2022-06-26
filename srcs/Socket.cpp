@@ -66,6 +66,6 @@ int Socket::acceptConnection() {
 }
 
 std::ostream& operator<<(std::ostream& s, const Socket& param) {
-	s << CYAN << "Socket: http://" << param.getIpAddress() << ":" << param.getPort() << ENDC;
+	s << "http://" << param.getIpAddress() << ":" << param.getPort() << ENDC;
 	return (s);
 }

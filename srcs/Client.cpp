@@ -4,14 +4,15 @@
 
 #include "Client.hpp"
 
-Client::Client(int fd): _fd(fd) {
-	// TODO (default constructor)
+Client::Client(int fd, Socket & s): _fd(fd), _socket(s) {
+	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << WHITE << "Client" << " created" << std::endl;
 }
 
-// Client::Client(const Client& param) {
-// 	// TODO (copy constructor)
-// 	(void)param;
-// }
+Client::Client(const Client& param): _fd(param._fd), _socket(param._socket) {
+	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << WHITE << "Client Copy" << " created" << std::endl;
+}
 
 Client::~Client() {
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -19,15 +20,18 @@ Client::~Client() {
 	// TODO (destructor)
 }
 
-// Client& Client::operator= (const Client& param) {
-// 	// TODO (Assignment operatior)
-// 	// std::swap()
-// 	(void)param;
-// 	return (*this);
-// }
+Client& Client::operator= (const Client& param) {
+	_fd = param._fd;
+	_socket = param._socket;
+	return (*this);
+}
 
 int Client::getFd() const {
 	return	(_fd);
+}
+
+Socket const & Client::getSocket() const {
+	return	(_socket);
 }
 
 std::ostream& operator<<(std::ostream& s, const Client& param) {
