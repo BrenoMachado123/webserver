@@ -31,8 +31,9 @@ class Socket {
 	// It is one configuraiton per socket. This is why we keep it inside this class
 	// not in the client class as we previously had it.
 		Config::ServerConfig _server_config;
-		Socket();
+		// Socket();
 	public:
+		Socket();
 		Socket(const std::string &, int, Config::ServerConfig const &);
 		~Socket();
 		Socket(const Socket &);

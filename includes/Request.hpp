@@ -17,35 +17,32 @@ class Request;
 class Request {
 
 	private:
-		// std::map<std::string, std::string> _headers;
-	    // std::string _method;
-	    // std::string _uri_target;
-	    // std::string _http_version;
-	    // std::string _query;
-	    // std::string _body;
-	    // std::string _transfer_encoding;
-	    // long _content_length;
+		std::map<std::string, std::string> _headers;
+	    std::string _method;
+	    std::string _uri_target;
+	    std::string _http_version;
+	    std::string _query;
+	    std::string _body;
+	    std::string _transfer_encoding;
+	    long _content_length;
 
-		// Socket _s;
-		// Request(const Request &);
-		// Request&	operator= (const Request&);
-		// Request();
+		Config::ServerConfig const & _serverConfig;
+
+		Socket _s;
+		Request(const Request &);
+		Request&	operator= (const Request&);
+		Request();
 	public:
 		Request(std::string const &, Config::ServerConfig const &);
 		~Request();
 		//Socket const & getSocket() const;
 
 	private:
-		Request();
-		Request(const Request&);
-		Request&	operator= (const Request&); // const for safety... not super nesessary
+		// Request();
+		// Request(const Request&);
+		// Request&	operator= (const Request&); // const for safety... not super nesessary
 
 	private:
-		std::string _method;
-		std::string _uri;
-		//std::server(?)
-		Request(Socket const &);
-		Config::ServerConfig const & _serverConfig;
 };
 
 std::ostream &	operator<<(std::ostream &, const Request &);
