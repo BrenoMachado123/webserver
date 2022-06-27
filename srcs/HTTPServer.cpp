@@ -1,5 +1,4 @@
 #include "HTTPServer.hpp"
-#include <unistd.h>
 
 HTTPServer::HTTPServer(std::string const & file): _config(file) {
 	_epollfd = epoll_create(10);

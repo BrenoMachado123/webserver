@@ -1,7 +1,3 @@
-//***************************//
-//*Template by pulgamecanica*//
-//***************************//
-
 #include "Client.hpp"
 
 Client::Client(int fd, Socket & s): _fd(fd), _socket(s) {

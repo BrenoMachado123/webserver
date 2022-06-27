@@ -3,16 +3,15 @@
 
 #include <iostream>
 
-#include "Config.hpp"
-#include "Request.hpp"
 #include "Socket.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
 #include "webserv.hpp"
 
 class Client {
 	private:
 		int _fd;
 		Socket & _socket;
-		// Config::ServerConfig _serverConfig;
 		Client();
 	public:
 		Client(int, Socket &);
