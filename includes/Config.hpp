@@ -13,14 +13,11 @@
 # define SERVERNAME			10
 # define UPLOAD				11
 # define RETURN_D			12
-
 # define SERVER_CONTEXT_DIRECTIVES		6
 # define LOCATION_CONTEXT_DIRECTIVES	5
 # define ALL_ERROR_CODES				40
-
 # define PORT_MAX 65535
 # define PORT_MIN 1
-
 # define SEPARATORS " \t\v\n\r\f"
 
 #include <vector>
@@ -32,199 +29,160 @@
 
 #include "webserv.hpp"
 
-// Config represents the whole configuration file //
+/**************************Config***+***************************/
+/*                          -----                              */
+/* Config represents the whole configuration file              */
+/* + Config custom exceptions                                  */
+/*  - File is invalid                                          */
+/*  - Configuration file syntax is invalid                     */
+/*  - Wrong Directive / Wrong Scope                            */
+/*                          -----                              */
+/**************************ServerConfig*************************/
+/*                          -----                              */
+/* ServerConfig is an object to represent the server Directive */
+/* We decided not to represent this as a directive but as      */
+/* a parent to all directives inside it's scope                */
+/*                          -----                              */
+/**************************Directive****************************/
+/*                          -----                              */
+/* Abstract Class Directive                                    */
+/* This class is usefull because it represents the concept of  */
+/* a directive and we can treat all directives as one abstract */
+/* class                                                       */
+/*                          -----                              */
+/***************************************************************/
 class Config {
 	public:
-		/**********Config custom exceptions**********/
-		/* - File is invalid                        */
-		/* - Configuration file syntax is invalid   */
-		/* - Wrong Directive / Wrong Scope          */
-		/********************************************/
-		class	InvalidDirectiveException: public std::exception {
+		class InvalidDirectiveException: public std::exception {
 			public:
 				virtual const char * what() const throw();
-		}	e_invalid_directive;
-		class	WrongSyntaxException: public std::exception {
+		} e_invalid_directive;
+		class WrongSyntaxException: public std::exception {
 			public:
 				virtual const char * what() const throw();
-		}	e_wrong_syntax;
-		class	InvalidConfigurationFileException: public std::exception {
+		} e_wrong_syntax;
+		class InvalidConfigurationFileException: public std::exception {
 			public:
 				virtual const char * what() const throw();
-		}	e_invalid_configuration_file;
-		/*************************ServerConfig***************************/
-		/* ServerConfig is an object to represent the server Directive  */
-		/* We decided not to represent this as a directive but as       */
-		/* a parent to all directives inside it's scope                 */
-		/****************************************************************/
+		} e_invalid_configuration_file;
 		class ServerConfig {
 			public:
-				/*********Directive**********/
-				/* AbstractClass directive  */
-				/* Identify, name directive */
-				/* Polymorphism             */
-				/****************************/
 				class Directive {
 					private:
-						int _id;
+						int	_id;
 						Directive();
 					public:
 						Directive(int);
+						int	getId() const;
 						virtual ~Directive();
-						virtual const std::string & getName() const = 0;
-						virtual void setDirective(ServerConfig &) const = 0;
-						int getId() const;
+						virtual void	setDirective(ServerConfig &) const = 0;
 				};
-
 				class Root: public Directive {
 					private:
-						const std::string & _path;
-						const std::string _name;
-						bool _validPath(const std::string&);
+						const std::string &	_path;
+						bool	_validPath(const std::string&);
 						Root();
 					public:
 						Root(const std::string &) throw (InvalidDirectiveException);
 						~Root();
-						virtual void setDirective(ServerConfig &) const;
-						virtual const std::string & getName() const;
-						const std::string & getPath() const;
+						virtual void	setDirective(ServerConfig &) const;
 				};
-
-
                 class ErrorCodePage: public Directive {
 	                private:
-	                	static const int _allErrorCodes[ALL_ERROR_CODES];
-	                    const std::string _name;
-	                    std::vector<int> _errorCodes;
-	                    std::string _errorPath;
-	                    bool isCodeValid(const std::string &);
+	                	static const int	_allErrorCodes[ALL_ERROR_CODES];
+	                    std::vector<int>	_errorCodes;
+	                    std::string			_errorPath;
+	                    bool	isCodeValid(const std::string &);
 	                    ErrorCodePage();
 	                public:
 	                    ErrorCodePage(const std::string &) throw (InvalidDirectiveException);
 	                    ~ErrorCodePage();
-						virtual void setDirective(ServerConfig &) const;
-	                    const std::string & getName() const;
-	                    const std::string & getErrorPath() const;
-	                    const std::vector<int> & getErrorCodes() const;
+						virtual void	setDirective(ServerConfig &) const;
                 };
-
                 class Listen: public Directive {
 	                private:
-	                    const std::string _name;
-	                    std::string _ip;
-	                    int _port;
-	                    bool isIpValid(const std::string &);
+	                    std::string	_ip;
+	                    int			_port;
+	                    bool	isIpValid(const std::string &);
 						Listen();
 	                public:
 	                    Listen(const std::string &) throw (InvalidDirectiveException);
 	                    ~Listen();
-						virtual void setDirective(ServerConfig &) const;
-	                    const std::string & getName() const;
-	                    const std::string & getIp() const;
-	                    int getPort() const;
-                };
-
+						virtual void	setDirective(ServerConfig &) const;
+				};
 				class Methods : public Directive {
 					private:
-						std::vector<std::string> _methods;
-						const std::string _name;
-						bool _validMethod(const std::string &);
+						static const std::string	_valid_methods[3];
+						std::vector<std::string>	_methods;
+						bool	_validMethod(const std::string &);
 						Methods();
 					public:
 						Methods(const std::string &) throw (InvalidDirectiveException);
 						~Methods();
-						virtual void setDirective(ServerConfig &) const;
-						static const std::string _valid_methods[3];
-						std::vector<std::string> getMethods() const;
-						virtual const std::string & getName() const;
+						virtual void	setDirective(ServerConfig &) const;
 				};
-
                 class Location : public Directive {
-                public:
-                    Location (std::string const &) throw (InvalidDirectiveException);
-                    ~Location();
-                    //Location(const Location &);
-                    //Location & operator=(const Location &);
-
-                public:
-                    virtual void setDirective(ServerConfig &) const;
-                    virtual const std::string & getName() const;
-
-
-                    std::string const & getLocation() const;
-
-                    void l_setAutoindex(bool);
-                    bool & l_getAutoindex();
-
-                    void l_setRoot(const Root &);
-                    std::string l_getRoot() const;
-                    void l_setErrorCodePage(const ErrorCodePage &);
-                    std::vector<int> & l_getErrorCodes();
-                    std::string & l_getErrorPath();
-                    void l_setMethods(const Methods&);
-                    std::vector<std::string>& l_getMethods();
-
-                private:
-                    Location();
-                    // Location(Location &);
-                    // Location &operator=(Location &);
-                private:
-                    std::string					_location;
-                    std::string					_name;
-                    bool						_autoindex;
-
-                    std::vector<std::string>    _l_index;
-                    std::string                 _l_root;
-                    std::vector<int>            _l_errorCodes;
-                    std::string                 _l_errorPath;
-                    std::vector<std::string>    _l_methods;
+					private:
+						std::string					_location;
+						bool						_autoindex;
+						std::vector<std::string>	_l_index;
+						std::string					_l_root;
+						std::vector<int>			_l_errorCodes;
+						std::string					_l_errorPath;
+						std::vector<std::string>	_l_methods;
+						Location();
+	                public:
+                    	Location (std::string const &) throw (InvalidDirectiveException);
+                    	~Location();
+	                    virtual void	setDirective(ServerConfig &) const;
+	                    // std::string const & getLocation() const;
+	                    // void l_setAutoindex(bool);
+	                    // bool & l_getAutoindex();
+	                    // void l_setRoot(const Root &);
+	                    // std::string l_getRoot() const;
+	                    // void l_setErrorCodePage(const ErrorCodePage &);
+	                    // std::vector<int> & l_getErrorCodes();
+	                    // std::string & l_getErrorPath();
+	                    // void l_setMethods(const Methods&);
+	                    // std::vector<std::string>& l_getMethods();
                 };
 
 				ServerConfig();
 				ServerConfig(const ServerConfig &);
 				~ServerConfig();
-
-				// void setRoot(const Root &);
-    //             void setErrorCodePage(const ErrorCodePage &);
-    //             void setListen(const Listen&);
-    //             void setMethods(const Methods&);
-                 void setLocation(const Location&);
+				int					getPort() const;
+				std::string const &	getIp() const;
+				// void setLocation(const Location&);
 				// std::string & getRoot();
-    //             std::vector<int> & getErrorCodes();
-    //             std::string & getErrorPath();
-					int getPort() const;
-					std::string const & getIp() const;
+				// std::vector<int> & getErrorCodes();
+				// std::string & getErrorPath();
 				// std::vector<std::string>& getMethods();
-                std::string& getLocation(int index);
-                std::vector<Location> & getLocations();
-
+				// std::string& getLocation(int index);
+				// std::vector<Location> & getLocations();
 			private:
-				//ServerConfig & operator=(const ServerConfig &);
-				std::string                 _ip;
-                int                         _port;
-				// std::string                 _root;
-    //             std::string                 _name;
-    //             std::vector<int>            _errorCodes;
-    //             std::string                 _errorPath;
-				// std::vector<std::string>    _methods;
+				std::string					_ip;
+                int							_port;
                 std::vector<std::string>	_location;
-
                 std::vector<Location>		_locations;
+				// std::string                 _root;
+				// std::string                 _name;
+				// std::vector<int>            _errorCodes;
+				// std::string                 _errorPath;
+				// std::vector<std::string>    _methods;
 		};
 	private:
-		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
-		static const std::string _location_directives[LOCATION_CONTEXT_DIRECTIVES];
-		bool	validDirective(const std::string &, const std::string *, int len) const;
-		Config::ServerConfig::Directive * createDirective(std::string const &, std::string const &) throw(std::exception);
-		Config & operator=(const Config &);
+		static const std::string	_server_directives[SERVER_CONTEXT_DIRECTIVES];
+		static const std::string	_location_directives[LOCATION_CONTEXT_DIRECTIVES];
+		bool								validDirective(const std::string &, const std::string *, int len) const;
+		Config::ServerConfig::Directive *	createDirective(std::string const &, std::string const &) throw(std::exception);
 		Config();
 		Config(const Config &);
 	public:
 		Config(std::string const &) throw(std::exception);
 		~Config();
-		std::vector<ServerConfig> _servers;
+		std::vector<ServerConfig>	_servers;
 };
+
 std::ostream&	operator<<(std::ostream &, const Config &);
 std::ostream&	operator<<(std::ostream &, const Config::ServerConfig &);
-
 #endif
