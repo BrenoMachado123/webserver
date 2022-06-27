@@ -22,30 +22,52 @@ static std::map<int, std::string> insert_to_map() {
 std::map<int, std::string> Response::_codeMessage = insert_to_map();
 
 
-// Response::Response() {
-// 	// _codeMessage.insert(std::pair<int, std::string>(400, "Bad Request"))
-// 	_codeMessage.insert(std::pair<int, std::string>(200, "OK"));
-// 	_codeMessage.insert(std::pair<int, std::string>(404, "Not Found"));
-// 	_codeMessage.insert(std::pair<int, std::string>(413, "Bad Request"))
-// 	_codeMessage.insert(std::pair<int, std::string>(414, "Bad Request"))
-// 	_codeMessage.insert(std::pair<int, std::string>(431, "Bad Request"))
-// 	_codeMessage.insert(std::pair<int, std::string>(400, "Bad Request"))
-// 	_codeMessage.insert(std::pair<int, std::string>(505, "Bad Request"))
-// }
 
-// Response::Response(const Response& param) {
-// 	// TODO (copy constructor)
-// 	(void)param;
-// }
 
 Response::Response(Request const & request) {
-	(void)request;
-	_status_code = 200; // this parametre will be defined by response and got by request.getResponse(); 
-	_date = "Date: Mon, 18 Jul 2016 16:06:00 GMT";
-	_server_name = "Server: BPT server 1.0";
-	_content_length = "Content-Length: 176"; // + request.getLength
-	_content_type = "text/html";
-	_content = "\n<!DOCTYPE html><html>\n<head>\n<style type=\"text/css\" src=\"/some.css\"></style>\n</head>\n<body>\n<h1>My First Heading</h1>\n<p>My first paragraph.</p>\n</body>\n</html>\n";
+	std::fstream file;
+	std::string buffer;
+
+	if (request.get_error_code()) { //otherwise its set to 0 in response
+		_status_code = request.get_error_code();
+
+		std::fstream error_file;
+		std::string error_buffer;
+		error_file.open("../errors/" + std::to_string(_status_code) + ".html", std::ios::in);
+		while (!std::getline(error_file, error_buffer))
+			;
+		_content_length = error_buffer.length();
+		_content_type = "text/html";
+		_date = "Date: Mon, 18 Jul 2016 16:06:00 GMT"; //request.get_date();
+	_	server_name = "Server: BPT server 1.0";
+		_content = error_buffer;
+	}
+	else {
+		std::fstream file;
+		std::string buffer;
+
+		file.open(/*what location?*/, std::ios::in);
+		if (!file.is_open()) { // if requested file not found 404
+			_status_code = 404;
+			while (!std::getline(file, buffer))
+			;
+			_content_length = buffer.length();
+			_content_type = "text/html";
+			_date = "Date: Mon, 18 Jul 2016 16:06:00 GMT"; //request.get_date();
+		_	server_name = "Server: BPT server 1.0";
+			_content = buffer;
+		}
+		else { // if requested file found
+			_status_code = 200;
+			while (!std::getline(file, buffer))
+				;
+			_content_length =  buffer.length();
+			_content_type = "text/html";
+			_date = "Date: Mon, 18 Jul 2016 16:06:00 GMT"; //request.get_date();
+		_	server_name = "Server: BPT server 1.0";
+			_content = buffer;
+		}
+	}
 }
 
 Response::~Response() {

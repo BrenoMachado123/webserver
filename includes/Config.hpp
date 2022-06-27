@@ -194,7 +194,7 @@ class Config {
     //             std::string & getErrorPath();
 					int getPort() const;
 					std::string const & getIp() const;
-				// std::vector<std::string>& getMethods();
+				std::vector<std::string>& getMethods() const;
                 std::string& getLocation(int index);
                 std::vector<Location> & getLocations();
 
@@ -206,10 +206,10 @@ class Config {
     //             std::string                 _name;
     //             std::vector<int>            _errorCodes;
     //             std::string                 _errorPath;
-				// std::vector<std::string>    _methods;
+				std::vector<std::string>    _methods;
                 std::vector<std::string>	_location;
 
-                std::vector<Location>		_locations;
+                //std::vector<Location>		_locations;
 		};
 	private:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];
