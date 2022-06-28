@@ -1,5 +1,7 @@
 #include "Socket.hpp"
 
+Socket::Socket() {}
+
 Socket::Socket(const std::string & ip, int port, Config::ServerConfig const &sc):
        _port(port), _ip_address(ip), _server_config(sc) {
 	if ((_socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0) {
