@@ -33,11 +33,10 @@ Let's create a simple server using C++
     + [https://www.youtube.com/watch?v=dEHZb9JsmOU](https://www.youtube.com/watch?v=dEHZb9JsmOU)
 
 <details>
-    <summary><h3>Directives</h3></summary>
+  <summary><h3>Directives</h3></summary>
     
 | Directive | Description | Example |
 | --------- | ----------- | ------- |
-| auth | restrict route to a user | auth user:route |
 | autoindex | directory listing on & off | autoindex off \| on  |
 | cgi | cgi | cgi |
 | cgi-bin | cgi-bin | cgi-bin |
@@ -52,7 +51,8 @@ Let's create a simple server using C++
 
 </details>
 
-### Tony Extra Info
+<details>
+  <summary><h3>Tony Extra Info</h3></summary>
 
 * SEARCH FOR A FILE:
  * if found -> return a file in a body message
@@ -270,3 +270,5 @@ for (; it != _location.end() ; it++){
     }
 }
 ```
+
+</details>
