@@ -1,5 +1,4 @@
 #include "webserv.hpp"
-#include "Socket.hpp"
 #include "HTTPServer.hpp"
 
 static void help(char *prog_name) {

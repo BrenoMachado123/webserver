@@ -1,7 +1,3 @@
-//***************************//
-//*Template by pulgamecanica*//
-//***************************//
-
 #include "Response.hpp"
 
 static std::map<int, std::string> insert_to_map() {

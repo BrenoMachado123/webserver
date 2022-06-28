@@ -1,5 +1,4 @@
 #include "HTTPServer.hpp"
-#include <unistd.h>
 
 HTTPServer::HTTPServer(std::string const & file): _config(file) {
 	_epollfd = epoll_create(10);
@@ -14,6 +13,7 @@ HTTPServer::HTTPServer(std::string const & file): _config(file) {
 		addSocket(s);
 		std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
 		_clients.insert(p);
+		std::cout << std::endl << *it;
 	}
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;

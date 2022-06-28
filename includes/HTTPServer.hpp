@@ -8,16 +8,14 @@
 #include <map>
 
 #include <sys/epoll.h>
+#include <unistd.h>
 
-#include "Response.hpp"
-#include "Request.hpp"
 #include "Config.hpp"
 #include "Socket.hpp"
-#include "Request.hpp"
-#include "Response.hpp"
 #include "Client.hpp"
 #include "webserv.hpp"
 #include "utils.hpp"
+
 /*************************HTTPServer****************************/
 /* The Engine of the project                                   */
 /* This object represents a webserver                          */

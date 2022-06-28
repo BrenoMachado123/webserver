@@ -8,8 +8,6 @@
 #include <iostream>
 #include <map>
 
-class Request;
-#include "Response.hpp"
 #include "Config.hpp"
 #include "Socket.hpp"
 #include "webserv.hpp"

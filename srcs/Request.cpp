@@ -1,7 +1,3 @@
-//***************************//
-//*Template by pulgamecanica*//
-//***************************//
-
 #include "Request.hpp"
 
 // Request::Request() : _method("GET"), _uri("/content") {

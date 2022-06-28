@@ -7,19 +7,17 @@
 
 #include <iostream>
 
-class Response;
 #include <map>
-#include <unistd.h>
 #include <fstream>
-#include <fcntl.h>
-#include <stdlib.h>
 #include <sstream>
 #include <ostream>
 #include <string>
-
-//==============//
 #include <algorithm>
-//==============//
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+
 
 #include "Request.hpp"
 #include "webserv.hpp"
