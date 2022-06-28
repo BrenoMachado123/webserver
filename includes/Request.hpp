@@ -21,6 +21,7 @@ class Request {
 		int			_error_code;
 	    std::string _method;
 	    std::string _uri_target;
+		std::string _location_root;
 	    std::string _http_version;
 	    // std::string _query;
 	    // std::string _body;
@@ -41,7 +42,8 @@ class Request {
 		std::string const & get_method() const;
 		std::string const & get_uri_target() const;
 		std::string const & get_http_version() const;
-		std::string const & get_content_length() const;
+		long const & get_content_length() const;
+		std::string const & get_location_root() const;
 		// std::string & get_error_code() const;
 		// std::string & get_error_code() const;
 		// std::string & get_error_code() const;

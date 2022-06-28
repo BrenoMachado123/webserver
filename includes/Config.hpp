@@ -209,7 +209,7 @@ class Config {
 				std::vector<std::string>    _methods;
                 std::vector<std::string>	_location;
 
-                //std::vector<Location>		_locations;
+                std::vector<Location>		_locations;
 		};
 	private:
 		static const std::string _server_directives[SERVER_CONTEXT_DIRECTIVES];

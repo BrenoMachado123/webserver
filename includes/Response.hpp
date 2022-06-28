@@ -15,6 +15,12 @@ class Response;
 #include <stdlib.h>
 #include <sstream>
 #include <ostream>
+#include <string>
+
+//==============//
+#include <algorithm>
+//==============//
+
 #include "Request.hpp"
 #include "webserv.hpp"
 
@@ -37,6 +43,7 @@ class Response {
 		std::string _content_type;
 		std::string _content;
 		static std::map<int, std::string> _codeMessage;
+		//static std::string _mime_type_detector(std::string const & file_name);
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);

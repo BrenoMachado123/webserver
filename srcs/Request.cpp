@@ -20,7 +20,6 @@ _method("GET"), _yuri("/content") {
 //}
 
 Request::Request(std::string const & _request, Config::ServerConfig const & sc): _serverConfig(sc), _error_code(0) {
-
 	std::stringstream ss(_request);
 	std::string line;
 	int big_context = 0;
@@ -29,7 +28,6 @@ Request::Request(std::string const & _request, Config::ServerConfig const & sc):
 	// if (_request.length()) ??
 	_content_length = _request.length();
 
-//TJERE IS PROBLEM IWTH SWITHC AND WHILE. CHECK TEST SOLVE IT AND IMPLEMENT HERE.
 	while (std::getline(ss, line)) {
 		switch(big_context) {
 			case 0:
@@ -85,7 +83,8 @@ Request::Request(std::string const & _request, Config::ServerConfig const & sc):
 
 	std::vector<Config::ServerConfig::Location>::iterator itl = _serverConfig.getLocations().begin();
 	for (; itl != _serverConfig.getLocations().end(); it++)
-		;
+		if (_uri_target == itl->getLocation())
+			_location_root = itl->l_getRoot();
 
 	for (int i = 0 ; i < _http_version.length() ; i++)
 		 _http_version.at(i) = std::tolower( _http_version.at(i));
@@ -94,7 +93,6 @@ Request::Request(std::string const & _request, Config::ServerConfig const & sc):
 		itl == _serverConfig.getLocations().end() ||
 		_http_version.compare("http/1.1"))
 			_error_code = 400;
-	
 	else if (_uri_target.length() > 8000)
 		_error_code = 414;
 
@@ -128,8 +126,12 @@ std::string const & Request::get_http_version() const {
 	return _http_version;
 }
 
-std::string const & Request::get_content_length() const {
+long const & Request::get_content_length() const {
 	return _content_length;
+}
+
+std::string const & Request::get_location_root() const {
+	return _location_root;
 }
 
 // Socket const & Request::getSocket() const {
