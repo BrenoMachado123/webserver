@@ -56,7 +56,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                     _directive = createDirective(directive, directive_content);
                     if (_directive != 0)
                     {
-                        _directive->setDirective(_servers.back());
+                        _directive->setDirective(_servers.back(), context);
                         if (directive == "location")
                             context++;
                         delete (_directive);
@@ -73,10 +73,16 @@ Config::Config(std::string const & file_str) throw(std::exception) {
             case 2:
                 if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
                 {
-                    /*
-                    // servers.back().locations.back().addDirective(directive)
-                    */
                     std::cout << GREEN << "[OK]" << std::endl;
+                    ServerConfig::Directive * _directive;
+                    _directive = createDirective(directive, directive_content);
+                    if (_directive != 0)
+                    {
+                        _directive->setDirective(_servers.back(), context);
+                        delete (_directive);
+                    }
+                    // else
+                        //throw e_wrong_syntax;
                 }
                 else {
                     std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
@@ -140,7 +146,7 @@ Config::ServerConfig::Root::~Root() {
 	   std::cout << RED << "Root Directive destroyed!" << ENDC << std::endl;
 }
 
-Config::ServerConfig::Methods::Methods(const std::string& content) throw (InvalidDirectiveException):
+Config::ServerConfig::Methods::Methods(const std::string & content) throw (InvalidDirectiveException):
 	Directive(LIMITMETHODS) {
 	/* This constructor takes one string which contains the limit methods that will be assigned. 
 		Methods("GET POST DELETE") [VALID]
@@ -150,12 +156,12 @@ Config::ServerConfig::Methods::Methods(const std::string& content) throw (Invali
 	char * str = std::strtok(const_cast<char*>(content.c_str()), " ");
 	while (str) {
 		if (!_validMethod(std::string(str)))
-			throw InvalidDirectiveException();
+            throw InvalidDirectiveException();
 		std::vector<std::string>::iterator last = _methods.end();
 		std::vector<std::string>::iterator tmp = _methods.begin();
 		for (; tmp != last; ++tmp)
 			if (*tmp == str)
-				throw InvalidDirectiveException();
+                throw InvalidDirectiveException();
 		_methods.push_back(std::string(str));
 		str = std::strtok(NULL, " ");	
 	}
@@ -191,7 +197,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
         std::cout << RED << "ErrorPage Directive destroyed!" << ENDC << std::endl;
 }
 
-Config::ServerConfig::Listen::Listen(const std::string &content) throw (InvalidDirectiveException):
+Config::ServerConfig::Listen::Listen(const std::string & content) throw (InvalidDirectiveException):
     Directive(LISTEN), _ip("127.0.0.1"), _port(80) {
     /* This constructor takes only one string which can be the ip_address and port separated by a color or either without any colon
         Listen("*:80")          [VALID]
@@ -243,8 +249,8 @@ Config::ServerConfig::Listen::~Listen() {
         std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
 }
 
-Config::ServerConfig::Location::Location(std::string const &content) throw (InvalidDirectiveException):
-        Directive(LOCATION), _location(content), _autoindex(false) {
+Config::ServerConfig::Location::Location(std::string const & content) throw (InvalidDirectiveException):
+    Directive(LOCATION), _location(content), _autoindex(false) {
     /* This constructor takes only one string which should be a valid path
 		Location("/etc/www/where_is_the_file") [VALID]
 		Location("/etc trash wrong") [throw InvalidDirectiveException]
@@ -259,6 +265,88 @@ Config::ServerConfig::Location::Location(std::string const &content) throw (Inva
 Config::ServerConfig::Location::~Location() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "Location Directive destroyed!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::ServerName::ServerName(const std::string & content) throw (InvalidDirectiveException):
+    Directive(SERVERNAME) {
+    /*First, a connection is created in a default server context.
+    Then, the server name can be determined in the following request processing stage:
+    after processing the request line, after processing the Host header field.
+    If the server name was not determined after processing the request line or from the Host header field,
+    will use the empty name as the server name.*/
+    std::string tmp(content);
+    char *token = strtok(const_cast<char*>(tmp.c_str()), SEPARATORS);
+    while (token != NULL) {
+        _server_names.push_back(token);
+        token = strtok(NULL, SEPARATORS);
+    }
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "ServerName created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::ServerName::~ServerName() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "ServerName Directive destroyed!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::ClientMaxBodySize::ClientMaxBodySize(const std::string & content) throw (InvalidDirectiveException):
+    Directive(SERVERNAME), _max_size(0) {
+    /*Sets the maximum allowed size of the client request body. 
+    If the size in a request exceeds the configured value, 
+    the 413 (Request Entity Too Large) error is returned to the client.
+    Please be aware that browsers cannot correctly display this error. 
+    Setting size to 0 disables checking of client request body size.*/
+    if (content.find(SEPARATORS) == std::string::npos)
+        throw InvalidDirectiveException();
+    std::stringstream intValue(content);
+    intValue >> _max_size;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "ClientMaxBodySize created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "ClientMaxBodySize Directive destroyed!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Index::Index(const std::string & content) throw (InvalidDirectiveException):
+    Directive(INDEX) {
+    /*You can list more than one filename in the index directive.
+    Webserv searches for files in the specified order and returns the first one it finds.*/
+    if (content.empty())
+        throw InvalidDirectiveException();
+    std::string tmp(content);
+    char *token = strtok(const_cast<char*>(tmp.c_str()), SEPARATORS);
+    while (token != NULL) {
+        _indexes.push_back(token);
+        token = strtok(NULL, SEPARATORS);
+    }
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Index created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Index::~Index() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "Index Directive destroyed!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::AutoIndex::AutoIndex(const std::string & content) throw (InvalidDirectiveException):
+    Directive(AUTOINDEX) {
+    /* To configure webserv to return an automatically generated directory listing instead,
+    include the on parameter to the autoindex directive:.*/
+    if (content == "on")
+        _option = true;
+    else if (content == "off")
+        _option = false;
+    else
+        throw InvalidDirectiveException();
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "AutoIndex created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::AutoIndex::~AutoIndex() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "AutoIndex Directive destroyed!" << ENDC << std::endl;
 }
 
 /* Config Member Functions*/
@@ -343,7 +431,7 @@ bool Config::ServerConfig::Root::_validPath(const std::string &path) {
     return true;
 }
 
-void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf) const {(void)serv_conf;}
+void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
 
 bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     for(size_t i = 0; i < 3; i++) {
@@ -353,7 +441,7 @@ bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     return false;
 }
 
-void Config::ServerConfig::Methods::setDirective(ServerConfig & serv_conf) const {(void)serv_conf;}
+void Config::ServerConfig::Methods::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
 
 bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content) {
     std::stringstream stoi_converter;
@@ -378,7 +466,7 @@ bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content
     return false;
 }
 
-void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf) const {(void)serv_conf;}
+void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
 
 bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
     if (!ip.compare("0.0.0.0") || !ip.compare("localhost") || !ip.compare("*"))
@@ -406,16 +494,25 @@ bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
     return true;
 }
 
+void Config::ServerConfig::ServerName::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
 
-void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf) const {
-    serv_conf._port = _port;
-    serv_conf._ip = _ip;
+void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == 1) {
+        serv_conf._port = _port;
+        serv_conf._ip = _ip;
+    }
 }
 
-void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf) const {
-    serv_conf._location.push_back(_location);
+void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == 1)
+        serv_conf._location.push_back(_location);
 }
 
+void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
+
+void Config::ServerConfig::Index::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
+
+void Config::ServerConfig::AutoIndex::setDirective(ServerConfig & serv_conf, int context) const {(void)serv_conf;(void)context;}
 
 // std::string const &Config::ServerConfig::Location::getLocation() const{
 //     return _location;

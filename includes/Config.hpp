@@ -12,7 +12,8 @@
 # define ROOT				9
 # define SERVERNAME			10
 # define UPLOAD				11
-# define RETURN_D			12
+# define INDEX				12
+# define RETURN_D			13
 # define SERVER_CONTEXT_DIRECTIVES		6
 # define LOCATION_CONTEXT_DIRECTIVES	5
 # define ALL_ERROR_CODES				40
@@ -75,7 +76,7 @@ class Config {
 						Directive(int);
 						int	getId() const;
 						virtual ~Directive();
-						virtual void	setDirective(ServerConfig &) const = 0;
+						virtual void	setDirective(ServerConfig &, int) const = 0;
 				};
 				class Root: public Directive {
 					private:
@@ -85,7 +86,7 @@ class Config {
 					public:
 						Root(const std::string &) throw (InvalidDirectiveException);
 						~Root();
-						virtual void	setDirective(ServerConfig &) const;
+						virtual void	setDirective(ServerConfig &, int) const;
 				};
                 class ErrorCodePage: public Directive {
 	                private:
@@ -97,7 +98,7 @@ class Config {
 	                public:
 	                    ErrorCodePage(const std::string &) throw (InvalidDirectiveException);
 	                    ~ErrorCodePage();
-						virtual void	setDirective(ServerConfig &) const;
+						virtual void	setDirective(ServerConfig &, int) const;
                 };
                 class Listen: public Directive {
 	                private:
@@ -108,9 +109,9 @@ class Config {
 	                public:
 	                    Listen(const std::string &) throw (InvalidDirectiveException);
 	                    ~Listen();
-						virtual void	setDirective(ServerConfig &) const;
+						virtual void	setDirective(ServerConfig &, int) const;
 				};
-				class Methods : public Directive {
+				class Methods: public Directive {
 					private:
 						static const std::string	_valid_methods[3];
 						std::vector<std::string>	_methods;
@@ -119,9 +120,43 @@ class Config {
 					public:
 						Methods(const std::string &) throw (InvalidDirectiveException);
 						~Methods();
-						virtual void	setDirective(ServerConfig &) const;
+						virtual void	setDirective(ServerConfig &, int) const;
 				};
-                class Location : public Directive {
+				class ServerName: public Directive {
+					private:
+						std::vector<std::string> _server_names;
+						ServerName();
+					public:
+						ServerName(const std::string &) throw (InvalidDirectiveException);
+						~ServerName();
+						virtual void	setDirective(ServerConfig &, int) const;
+				};
+				class Index: public Directive {
+					private:
+						std::vector<std::string> _indexes;
+						Index();
+					public:
+						Index(const std::string &) throw (InvalidDirectiveException);
+						~Index();
+						virtual void	setDirective(ServerConfig &, int) const;
+				};
+				class ClientMaxBodySize: public Directive {
+					private:
+						int _max_size;
+					public:
+						ClientMaxBodySize(const std::string &) throw (InvalidDirectiveException);
+						~ClientMaxBodySize();
+						virtual void	setDirective(ServerConfig &, int) const;
+				};
+				class AutoIndex: public Directive {
+					private:
+						bool _option;
+					public:
+						AutoIndex(const std::string &) throw (InvalidDirectiveException);
+						~AutoIndex();
+						virtual void	setDirective(ServerConfig &, int) const;	
+				};
+                class Location: public Directive {
 					private:
 						std::string					_location;
 						bool						_autoindex;
@@ -134,7 +169,7 @@ class Config {
 	                public:
                     	Location (std::string const &) throw (InvalidDirectiveException);
                     	~Location();
-	                    virtual void	setDirective(ServerConfig &) const;
+	                    virtual void	setDirective(ServerConfig &, int) const;
 	                    // std::string const & getLocation() const;
 	                    // void l_setAutoindex(bool);
 	                    // bool & l_getAutoindex();
