@@ -19,45 +19,56 @@ _method("GET"), _yuri("/content") {
 //	TODO (default constructor)
 //}
 
-Request::Request(std::string const & _request, Config::ServerConfig const & sc): _serverConfig(sc), _error_code(0) {
+
+Request::Request(std::string const & _request, Config::ServerConfig const & sc): _error_code(0), _serverConfig(sc) {
 	std::stringstream ss(_request);
 	std::string line;
-	int big_context = 0;
-	int context = 0;
 
 	// if (_request.length()) ??
-	_content_length = _request.length();
+	_content_length = _request.length(); //this is ALL request, we need only content!! part after \r\n
+										// this content length is always defined in the headder
+	std::getline(ss, line);
+//WE CAN CHECK FIRST IF THERE ARE 3 TOKENS
+// THEN IF THEY ARE PARSE THEm
 
-	while (std::getline(ss, line)) {
-		switch(big_context) {
-			case 0:
-			{
-                while (!line.empty()) {
-                    int pos = line.find_first_of(SEPARATORS);
-                    if (context == 0)
-                        _method = line.substr(0, pos);
-                    else if (context == 1)
-                        _uri_target = line.substr(0, pos);
-                    else if (context == 2) {
-                        _http_version = line.substr(0, pos);
-						line.erase(0, pos);
-                        big_context++;
-                    }
-					line.erase(0, pos + 1);
-                    context++;
-                }
-				continue ;
-			}
-			case 1:
-			{
-				int pos = line.find(':');
-				_headers[line.substr(0, pos)] = line.substr(pos + 1, line.find('\n') - pos);
-				if (_headers[line.substr(0, pos)].length() > 8000) //check if header isnt too long
-					_error_code = 414; break ;
-				continue ;
-			}
+//READ REQUEST LINE
+	// if (_request.empty())
+	// 	return ;
+	// _method = line.substr(0,  line.find_first_of(SEPARATORS));
+	// line = line.substr(line.find_first_of(SEPARATORS), line.length());
+	// line = strtrim(line);
+	// if (line.empty())
+	// 	_error_code = 400;
+	// _uri_target = line.substr(0,  line.find_first_of(SEPARATORS));
+	// line = line.substr(line.find_first_of(SEPARATORS), line.length());
+	// line = strtrim(line);
+	// if (line.empty())
+	// 	_error_code = 400;
+	// _http_version = line.substr(0,  line.find_first_of(SEPARATORS));
+	// line = line.substr(line.find_first_of(SEPARATORS), line.length());
+	// line = strtrim(line);
+	// if (!line.empty())
+	// 	_error_code = 400;
+
+//READ HEADDRES
+	while (std::getline(ss, line) && line != "\r\n") {
+		long unsigned int pos = line.find(':');
+		if (pos == std::string::npos)
+			break ;
+		_headers[line.substr(0, pos)] = line.substr(pos + 1, line.find('\n') - pos);
+		if (_headers[line.substr(0, pos)].length() > 8000) { //check if header isnt too long
+			_error_code = 414; 
+			break ;
 		}
-    }
+		std::cout << "infinite1" << std::endl;
+	}
+
+//READ CONTENT
+	while (std::getline(ss, line)) {
+		_post_content += line;
+		_content_length = _post_content.length();
+		std::cout << "infinite2" << std::endl;
+	}
 
 //PRINTING TO CHECK IF IT WORKS AS EXPECTED
 	std::cout << "METHOD: " << _method << std::endl;
@@ -69,38 +80,34 @@ Request::Request(std::string const & _request, Config::ServerConfig const & sc):
 
 
 	//CHECK IF METHOD IS SUPPORTED
-	for (int i = 0 ; i < _method.length() ; i++)
-		_method.at(i) = std::tolower(_method.at(i));
+	// for (long unsigned int i = 0 ; i < _method.length() ; i++)
+	// 	_method.at(i) = std::tolower(_method.at(i));
 
-	std::vector<std::string>::iterator itm = _serverConfig.getMethods().begin();
-	for (; itm != _serverConfig.getMethods().end() ; it++)
-		;
+	// std::vector<std::string>::iterator itm = _serverConfig.getMethods().begin();
+	// for (; itm != _serverConfig.getMethods().end() ; it++)
+	// 	;
 
 
 	//CHECK URI: if it exist in the location and also if its not too long.
-	for (int i = 0 ; i < _uri_target.length() ; i++)
-		_uri_target.at(i) = std::tolower(_uri_target.at(i));
+	// for (long unsigned int i = 0 ; i < _uri_target.length() ; i++)
+	// 	_uri_target.at(i) = std::tolower(_uri_target.at(i));
 
-	std::vector<Config::ServerConfig::Location>::iterator itl = _serverConfig.getLocations().begin();
-	for (; itl != _serverConfig.getLocations().end(); it++)
-		if (_uri_target == itl->getLocation())
-			_location_root = itl->l_getRoot();
+	// std::vector<Config::ServerConfig::Location>::iterator itl = _serverConfig.getLocations().begin();
+	// for (; itl != _serverConfig.getLocations().end(); it++)
+	// 	if (_uri_target == itl->getLocation())
+	// 		_location_root = itl->l_getRoot();
 
-	for (int i = 0 ; i < _http_version.length() ; i++)
-		 _http_version.at(i) = std::tolower( _http_version.at(i));
+	// for (long unsigned int i = 0 ; i < _http_version.length() ; i++)
+	// 	 _http_version.at(i) = std::tolower( _http_version.at(i));
 
-	if (itm == _serverConfig.getMethods().end() ||
-		itl == _serverConfig.getLocations().end() ||
-		_http_version.compare("http/1.1"))
-			_error_code = 400;
-	else if (_uri_target.length() > 8000)
-		_error_code = 414;
+	// if (itm == _serverConfig.getMethods().end() ||
+	// 	itl == _serverConfig.getLocations().end() ||
+	// 	_http_version.compare("http/1.1"))
+	// 		_error_code = 400;
+	// else if (_uri_target.length() > 8000)
+	// 	_error_code = 414;
 
-	//PARSE INSIDE THE CONSTRUCTOR - just parse the first line METHOD TARGET VERSION
-		// check if VALID METHOD, TARGET EXIST, VERSION IS 1.1
-		// METHOD TARGET HTTP <- if not this order and space/tab then error
-		// possible solution: 3 substrings, begining-1st SEPARATOR and chck if it is valid
-	// headders are map<key, value>
+	std::cout << PURPLE << "FINISHED" << ENDC << std::endl;
 }
 
 
@@ -132,6 +139,10 @@ long const & Request::get_content_length() const {
 
 std::string const & Request::get_location_root() const {
 	return _location_root;
+}
+
+Config::ServerConfig const & Request::get_server_confing() const {
+	return _serverConfig;
 }
 
 // Socket const & Request::getSocket() const {

@@ -126,8 +126,6 @@ static std::string const _mime_type_detector(std::string const & file_name) {
 		return "application/octet-stream"; // default for binary files. It means unknown binary file
 }
 
-
-
 Response::Response(Request const & request) {
 	std::fstream file;
 	std::string buffer;
@@ -136,7 +134,7 @@ Response::Response(Request const & request) {
 
 	if(request.get_error_code()) { //otherwise its set to 0 in response
 		_status_code = request.get_error_code();
-		location = "../errors/" + std::to_string(_status_code) + ".html";
+		location = "../errors/400.html"; /*std::to_string(_status_code)*/
 	}
 
 	
@@ -155,7 +153,7 @@ Response::Response(Request const & request) {
 		file.open(location.c_str(), std::ios::in);
 		if(!file.is_open()) {
 			_status_code = 404;
-			location = "../errors/" + std::to_string(_status_code) + ".html";
+			location = "../errors/404.html"; /*std::to_string(_status_code)*/
 		}
 		else {
 			_status_code = 200;
@@ -163,13 +161,15 @@ Response::Response(Request const & request) {
 		}
 	}
 	file.open(location.c_str(), std::ios::in);
-	while (!std::getline(file, buffer))
+	while (std::getline(file, buffer))
 		;
 	_content_length = buffer.length();
 	_content_type = _mime_type_detector(location); // we pass location to be trimmed inside the function
 	_date = "Date: Mon, 18 Jul 2016 16:06:00 GMT"; //request.get_date();
-	_server_name = "Server: BPT server 1.0";
+	_server_name = "BLABLABLA TODO"; //request.get_server_confing().get;
 	_content = buffer;
+
+	std::cout << RED << "FINISH RESPONSE" << ENDC << std::endl;
 }
 
 Response::~Response() {

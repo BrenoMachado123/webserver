@@ -13,6 +13,7 @@ class Request;
 #include "Config.hpp"
 #include "Socket.hpp"
 #include "webserv.hpp"
+#include "utils.hpp"
 
 class Request {
 
@@ -23,12 +24,13 @@ class Request {
 	    std::string _uri_target;
 		std::string _location_root;
 	    std::string _http_version;
+		std::string _post_content;
 	    // std::string _query;
 	    // std::string _body;
 	    // std::string _transfer_encoding;
 	    long _content_length;
 
-		Config::ServerConfig & _serverConfig;
+		Config::ServerConfig const & _serverConfig;
 
 		Socket _s;
 		Request(const Request &);
@@ -44,6 +46,8 @@ class Request {
 		std::string const & get_http_version() const;
 		long const & get_content_length() const;
 		std::string const & get_location_root() const;
+
+		Config::ServerConfig const & get_server_confing() const;
 		// std::string & get_error_code() const;
 		// std::string & get_error_code() const;
 		// std::string & get_error_code() const;

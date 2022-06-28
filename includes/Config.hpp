@@ -194,7 +194,7 @@ class Config {
     //             std::string & getErrorPath();
 					int getPort() const;
 					std::string const & getIp() const;
-				std::vector<std::string>& getMethods() const;
+				//std::vector<std::string>& getMethods() const;
                 std::string& getLocation(int index);
                 std::vector<Location> & getLocations();
 
