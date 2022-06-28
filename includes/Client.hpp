@@ -4,6 +4,8 @@
 #include <iostream>
 
 #include "Socket.hpp"
+#include "Request.hpp"
+#include "Response.hpp"
 #include "webserv.hpp"
 
 class Client {
@@ -18,6 +20,7 @@ class Client {
 		Client&	operator= (const Client&);
 		int getFd() const;
 		Socket const &  getSocket() const;
+		void handleRequest(std::string const &);
 };
 
 std::ostream&	operator<<(std::ostream&, const Client&);

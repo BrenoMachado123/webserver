@@ -12,7 +12,9 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include "Config.hpp"
 #include "webserv.hpp"
+
 /************************Socket***************************/
 /* This object represents a single server configuration  */
 /* from the configuraton file. Listens to port & address */
@@ -24,15 +26,20 @@ class Socket {
 		int _port;
 		std::string _ip_address;
     	struct sockaddr_in _address;
-		Socket();
+		Config::ServerConfig _server_config;
+		// Socket();
 	public:
-		Socket(const std::string &, int);
+		Socket();
+		Socket(const std::string &, int, Config::ServerConfig const &);
 		~Socket();
 		Socket(const Socket &);
+		int acceptConnection();
+		
 		int getPort() const;
 		int getSocketFd() const;
 		int getAddressLen() const;
-		int acceptConnection();
+		Config::ServerConfig const & getServerConfig() const;
+
 		const std::string & getIpAddress() const;
 		struct sockaddr_in getAddress() const;
 };

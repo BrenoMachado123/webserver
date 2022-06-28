@@ -13,4 +13,6 @@
 std::string & strtrim(std::string & str, const char * separators = SEPARATORS);
 uint64_t	timestamp_in_ms(void);
 
+char *itoa(int);
+
 #endif
