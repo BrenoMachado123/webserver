@@ -21,10 +21,12 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 			std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
 		}
 	}
-	if (_headers.find("content-length") != _headers.end())
+	if (_headers.find("content-length") != _headers.end()) {
 		; // TODO 
-	if (_headers.find("cockies" != _headers.end())
+	}
+	if (_headers.find("cockies") != _headers.end()) {
 		; // TODO
+	}
 
 	//CHECK IF METHOD IS SUPPORTED
 	// for (long unsigned int i = 0 ; i < _method.length() ; i++)

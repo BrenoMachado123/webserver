@@ -27,6 +27,7 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
+#include <map>
 
 #include <stdlib.h>
 
@@ -194,7 +195,7 @@ class Config {
                 std::vector<Location>		_locations;
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;
-				std::map<std::string, std::vector<int> > errors_map;
+				//std::map<std::string, std::vector<int> > errors_map;
 				// std::vector<int>            _errorCodes;
 				// std::vector<std::string>    _methods;
 		};
