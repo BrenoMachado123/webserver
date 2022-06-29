@@ -44,6 +44,14 @@ class Response {
 		//static std::string _mime_type_detector(std::string const & file_name);
 };
 
+//map<string, vecotr<int> >
+/*
+{
+	{"path/error/", [400, 401]},
+	{"ErrornewPATH/", [402, 414]},
+}
+/*
+
 std::ostream&	operator<<(std::ostream&, const Response&);
 
 #endif

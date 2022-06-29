@@ -191,10 +191,10 @@ class Config {
                 int							_port;
 				std::string                 _root_path;
 				std::string                 _error_path;
-        
                 std::vector<Location>		_locations;
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;
+				std::map<std::string, std::vector<int> > errors_map;
 				// std::vector<int>            _errorCodes;
 				// std::vector<std::string>    _methods;
 		};

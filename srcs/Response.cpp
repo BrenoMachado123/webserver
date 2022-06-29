@@ -165,6 +165,19 @@ Response::Response(Request const & request) {
 	_server_name = "BLABLABLA TODO"; //request.get_server_confing().get;
 	_content = buffer;
 
+//	if (is_directory && autoindex) {
+//		stream = open_dir_stream(root);
+//		_content = "<html><head><title>" + _target + "</title></head><body>\n";
+//		for (every_node_in_dir()) {
+//			if (is_file)
+//				_content += "<a href=\"" + abs_path_to_file OR path_to_file + "\"> + " filename "</a>\n"
+//			else (is_dir)
+//				_content += "<a href=\"" + abs_path_to_dir OR path_to_dir + "\"> - " filename "/ </a>\n"
+//		}
+//		_content += "</body></html>"
+//	}
+
+
 	std::cout << RED << "FINISH RESPONSE" << ENDC << std::endl;
 }
 
