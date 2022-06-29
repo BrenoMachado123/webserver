@@ -2,7 +2,7 @@
 
 Socket::Socket() {}
 
-Socket::Socket(const std::string & ip, int port, Config::ServerConfig const &sc):
+Socket::Socket(const std::string & ip, int port, Config::ServerConfig const & sc):
        _port(port), _ip_address(ip), _server_config(sc) {
 	if ((_socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0) {
         perror("Socket");
@@ -40,6 +40,7 @@ Socket::Socket(const Socket & s) {
     _port = s._port;
     _ip_address = s._ip_address;
     _address = s._address;
+    _server_config = s._server_config;
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "Copy Socket created" << ENDC << std::endl;
 }

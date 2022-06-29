@@ -29,9 +29,9 @@ class Request {
 	    // std::string _body;
 	    // std::string _transfer_encoding;
 
-		Config::ServerConfig const & _serverConfig;
+		Config::ServerConfig const & _server_config;
 
-		Socket _s;
+		// Socket _s;
 		Request(const Request &);
 		Request&	operator= (const Request&);
 		Request();

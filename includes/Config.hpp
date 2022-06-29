@@ -178,6 +178,7 @@ class Config {
 				// ServerConfig(const ServerConfig &);
 				~ServerConfig();
 				int					getPort() const;
+				std::string	const & findTargetPath(std::string const &) const;
 				std::string const &	getIp() const;
 				// void setLocation(const Location&);
 				// std::string & getRoot();

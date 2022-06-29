@@ -384,6 +384,17 @@ int Config::ServerConfig::getPort() const {return _port;}
 
 std::string const & Config::ServerConfig::getIp() const {return _ip;}
 
+std::string const & Config::ServerConfig::findTargetPath(std::string const & target) const {
+    (void)target; //TODO
+    if (_locations.empty())
+        return (_root_path);
+    else
+        return (_locations.back()._root_path);
+}
+
+// std::string target_location(0, _target.find_last_of("/"));
+// target_location += "/";
+
 int Config::ServerConfig::Directive::getId() const {return (_id);}
 
 bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content) {

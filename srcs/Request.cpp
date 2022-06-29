@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request(std::string const & request, Config::ServerConfig const & sc): _error_code(0), _serverConfig(sc) {
+Request::Request(std::string const & request, Config::ServerConfig const & sc): _error_code(0), _server_config(sc) {
 	std::stringstream ss(request);
 	std::string line;
 	
@@ -27,7 +27,19 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	if (_headers.find("cockies") != _headers.end()) {
 		; // TODO
 	}
-
+	_location_root = _server_config.findTargetPath(_target);
+	if (_location_root.empty()) {
+		_error_code = 404;
+		std::cout << RED << "Wrong target [" << _target << "] couldn't find any configuration" << ENDC << std::endl;
+	}
+	else {
+		std::cout << YELLOW << "Target found [" << _target << "] & Root [" << _location_root << "]" << ENDC << std::endl;
+		_target = _location_root + _target;
+		std::cout << YELLOW << "Final Target Path [" << _target << "]" << ENDC <<std::endl;
+	//if (_target.substr(_target.find_last_of(".")) == "html") {
+	//	_target = _serverConfig._locations
+ 
+ 	}
 	//CHECK IF METHOD IS SUPPORTED
 	// for (long unsigned int i = 0 ; i < _method.length() ; i++)
 	// 	_method.at(i) = std::tolower(_method.at(i));
@@ -89,7 +101,7 @@ std::string const & Request::get_location_root() const {
 }
 
 Config::ServerConfig const & Request::get_server_confing() const {
-	return _serverConfig;
+	return _server_config;
 }
 
 // Socket const & Request::getSocket() const {

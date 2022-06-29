@@ -27,9 +27,8 @@ class Socket {
 		std::string _ip_address;
     	struct sockaddr_in _address;
 		Config::ServerConfig _server_config;
-		// Socket();
-	public:
 		Socket();
+	public:
 		Socket(const std::string &, int, Config::ServerConfig const &);
 		~Socket();
 		Socket(const Socket &);
