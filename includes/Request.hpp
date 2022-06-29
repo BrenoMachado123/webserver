@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <map>
+#include <algorithm>
 
 #include "Config.hpp"
 #include "Socket.hpp"
@@ -18,15 +19,15 @@ class Request {
 	private:
 		std::map<std::string, std::string> _headers;
 		int			_error_code;
+	    long		_content_length;
 	    std::string _method;
-	    std::string _uri_target;
+	    std::string _target;
 		std::string _location_root;
 	    std::string _http_version;
-		std::string _post_content;
+		// std::string _post_content;
 	    // std::string _query;
 	    // std::string _body;
 	    // std::string _transfer_encoding;
-	    long _content_length;
 
 		Config::ServerConfig const & _serverConfig;
 
@@ -39,10 +40,10 @@ class Request {
 		~Request();
 
 		int const & get_error_code() const;
-		std::string const & get_method() const;
-		std::string const & get_uri_target() const;
-		std::string const & get_http_version() const;
 		long const & get_content_length() const;
+		std::string const & get_method() const;
+		std::string const & get_target() const;
+		std::string const & get_http_version() const;
 		std::string const & get_location_root() const;
 
 		Config::ServerConfig const & get_server_confing() const;

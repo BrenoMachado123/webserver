@@ -1,79 +1,30 @@
 #include "Request.hpp"
 
-// Request::Request() : _method("GET"), _uri("/content") {
-// 	// TODO (default constructor)
-// }
-
-/*Request::Request(std::string& buffer) :
-_method("GET"), _yuri("/content") {
-
-}*/
-
-// Request::Request(const Request& param) {}
-		
-//Request::Request(Socket const & s): _s(s){
-//	TODO (default constructor)
-//}
-
-
-Request::Request(std::string const & _request, Config::ServerConfig const & sc): _error_code(0), _serverConfig(sc) {
-	std::stringstream ss(_request);
+Request::Request(std::string const & request, Config::ServerConfig const & sc): _error_code(0), _serverConfig(sc) {
+	std::stringstream ss(request);
 	std::string line;
-
-	// if (_request.length()) ??
-	_content_length = _request.length(); //this is ALL request, we need only content!! part after \r\n
-										// this content length is always defined in the headder
+	
 	std::getline(ss, line);
-//WE CAN CHECK FIRST IF THERE ARE 3 TOKENS
-// THEN IF THEY ARE PARSE THEm
-
-//READ REQUEST LINE
-	// if (_request.empty())
-	// 	return ;
-	// _method = line.substr(0,  line.find_first_of(SEPARATORS));
-	// line = line.substr(line.find_first_of(SEPARATORS), line.length());
-	// line = strtrim(line);
-	// if (line.empty())
-	// 	_error_code = 400;
-	// _uri_target = line.substr(0,  line.find_first_of(SEPARATORS));
-	// line = line.substr(line.find_first_of(SEPARATORS), line.length());
-	// line = strtrim(line);
-	// if (line.empty())
-	// 	_error_code = 400;
-	// _http_version = line.substr(0,  line.find_first_of(SEPARATORS));
-	// line = line.substr(line.find_first_of(SEPARATORS), line.length());
-	// line = strtrim(line);
-	// if (!line.empty())
-	// 	_error_code = 400;
-
-//READ HEADDRES
+	line = strtrim(line, " \r\t");
+	_method = line.substr(0, line.find_first_of(" \r\t"));
+	_target = line.substr(_method.length(), line.find_last_of(" \r\t") - _method.length());
+	_http_version = line.substr(_method.length() + _target.length());
+	_target = strtrim(_target, " \r\t");
+	_http_version = strtrim(_http_version, " \r\t");
+	std::cout << PURPLE << "Method => [" << _method << "], Target => [" << _target << "], HTTP Version => [" << _http_version << "]" << ENDC << std::endl;;	
 	while (std::getline(ss, line) && line != "\r\n") {
-		long unsigned int pos = line.find(':');
-		if (pos == std::string::npos)
-			break ;
-		_headers[line.substr(0, pos)] = line.substr(pos + 1, line.find('\n') - pos);
-		if (_headers[line.substr(0, pos)].length() > 8000) { //check if header isnt too long
-			_error_code = 414; 
-			break ;
+		if (line.find(':') != std::string::npos) {
+			std::string name(line.substr(0, line.find(':')));
+			std::string content(line.substr(line.find(':')));
+    		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+			_headers[name] = strtrim(content, ": \t");
+			std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
 		}
-		std::cout << "infinite1" << std::endl;
 	}
-
-//READ CONTENT
-	while (std::getline(ss, line)) {
-		_post_content += line;
-		_content_length = _post_content.length();
-		std::cout << "infinite2" << std::endl;
-	}
-
-//PRINTING TO CHECK IF IT WORKS AS EXPECTED
-	std::cout << "METHOD: " << _method << std::endl;
-	std::cout << "URI: " << _uri_target << std::endl;
-	std::cout << "HTTP: " << _http_version << std::endl;
-	std::map<std::string, std::string>::iterator it = _headers.begin();
-	for (; it != _headers.end() ; it++)
-		std::cout << "HEADDER: -" << (*it).first << "->" << (*it).second << std::endl;
-
+	if (_headers.find("content-length") != _headers.end())
+		; // TODO 
+	if (_headers.find("cockies" != _headers.end())
+		; // TODO
 
 	//CHECK IF METHOD IS SUPPORTED
 	// for (long unsigned int i = 0 ; i < _method.length() ; i++)
@@ -102,8 +53,6 @@ Request::Request(std::string const & _request, Config::ServerConfig const & sc):
 	// 		_error_code = 400;
 	// else if (_uri_target.length() > 8000)
 	// 	_error_code = 414;
-
-	std::cout << PURPLE << "FINISHED" << ENDC << std::endl;
 }
 
 
@@ -121,8 +70,8 @@ std::string const & Request::get_method() const {
 	return _method;
 }
 
-std::string const & Request::get_uri_target() const {
-	return _uri_target;
+std::string const & Request::get_target() const {
+	return _target;
 }
 
 std::string const & Request::get_http_version() const {

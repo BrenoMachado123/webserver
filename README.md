@@ -34,7 +34,24 @@ Let's create a simple server using C++
 
 <details>
   <summary><h3>Directives</h3></summary>
-    
+
+We deleoped a configuration file based on the NGINX configuration file.
+All Featured Directives are listed bellow on the table.
+The Configuration File has 2 contexts, server & location context. The Location context must belong to a server context.
+Example:
+
+```python
+server {
+  # INSIDE SERVER CONTEXT
+  # (SP) Space
+  DIRECTIVE (SP) VALUE
+  location / {
+    #INSIDE LOCATION CONTEXT
+    DIRECTIVE (SP) VALUE
+  }
+}
+```
+
 | Directive | Description | Example |
 | --------- | ----------- | ------- |
 | autoindex | directory listing on & off | autoindex off \| on  |

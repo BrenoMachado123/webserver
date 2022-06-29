@@ -135,10 +135,10 @@ Response::Response(Request const & request) {
 
 	
 	//here we need to combine the root url with the file so file.open works correctly
-	int pos = request.get_uri_target().find_last_of('.');
+	int pos = request.get_target().find_last_of('.');
 
-// copies extension of the uri_target
-	std::copy(request.get_uri_target().begin() + pos, request.get_uri_target().end(), extension.begin()); // copy extension and later location = root + extension;
+// copies extension of the_target
+	std::copy(request.get_target().begin() + pos, request.get_target().end(), extension.begin()); // copy extension and later location = root + extension;
 	
 // location is set to root of the directive location.
 // it was determined in request.

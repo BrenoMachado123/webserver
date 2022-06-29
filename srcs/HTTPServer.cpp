@@ -91,7 +91,7 @@ void HTTPServer::run() {
 	for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it) {
 		std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;;
 	}
-	std::cout << "[" << timestamp_in_ms() << "]" << " Use Ctrl-C to stop" << std::endl;
+	std::cout << WHITE << "[" << timestamp_in_ms() << "]" << " Use Ctrl-C to stop" << std::endl;
 	for (;;) {
 		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, -1);
 		if (nfds == -1) {
@@ -100,22 +100,11 @@ void HTTPServer::run() {
 		}
 		for (n = 0; n < nfds; ++n) {
 			if (isSocketFd(events[n].data.fd)) {
-				std::cout << "[" << timestamp_in_ms() << "]" << GREEN << " ServerSocket Accepting Connection" << ENDC << std::endl;
+				std::cout << WHITE << "[" << timestamp_in_ms() << "]" << YELLOW << " ServerSocket Accepting Connection" << ENDC << std::endl;
 				acceptConnectionAt(events[n].data.fd);
-				for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it) {
-					std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;;
-				}
 			} else {
-				std::cout << "[" << timestamp_in_ms() << "]" <<  " Some input or output was detected" << std::endl;
 				int fd = events[n].data.fd;
 				{
-					// TEST TO SEND A RANDOM HEADER WITH HTML
-					char buffer[30000] = {0};
-					int valread = read(fd, buffer, 30000);
-					if (valread < 0) {
-						perror("In Read");
-						exit(EXIT_FAILURE);
-					}
 					//We are searching here for the proper client, that means to know what server operate on.
 					int big_sock(0);
 					std::vector<Client>::iterator v_it;
@@ -123,23 +112,28 @@ void HTTPServer::run() {
 						for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
 							if (v_it->getFd() == events[n].data.fd) {
 								big_sock = m_it->first;
-						 		std::cout << "Client: " << v_it->getFd() << " " << v_it->getSocket() << std::endl;
 								break;
 						 	}
 						}
 					}
-					std::string _buffer(buffer, valread); // it will create a buffer of a size valread
+					std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Input From Client: " << v_it->getFd() << " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;
+					char buffer[30000] = {0};
+					int valread = read(fd, buffer, 30000);
+					if (valread < 0) {
+						perror("In Read");
+						exit(EXIT_FAILURE);
+					}
+					std::string _buffer(buffer, valread);
 					v_it->handleRequest(_buffer);
 				}
 				{
-					// IMAGINE THAT WE UST CLOSE CONNECTION... THEN WE DO THIS:
+					// IMAGINE THAT WE MUST CLOSE CONNECTION... THEN WE DO THIS:
 					int big_sock(0);
 					std::vector<Client>::iterator v_it;
 					for (m_it = _clients.begin(); m_it != _clients.end() && big_sock == 0; ++m_it) {
 						for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
 							if (v_it->getFd() == events[n].data.fd) {
 								big_sock = m_it->first;
-						 		std::cout << "Client: " << v_it->getFd() << " " << v_it->getSocket() << std::endl;
 								break;
 						 	}
 						}
