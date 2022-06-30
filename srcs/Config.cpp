@@ -389,13 +389,16 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
     std::vector<Location> tmp_locs(_locations);
     std::vector<Location>::iterator l_it;
     std::vector<Location>::iterator tmp_it;
+    std::cout << "Searching..." << std::endl;
     for (l_it = tmp_locs.begin(); l_it != tmp_locs.end(); ++l_it) {
         int tmp = target.compare(0, l_it->_target.length(), l_it->_target);
         if (tmp == 0 && l_it->_target.length() > matches) {
             matches = l_it->_target.length();
             tmp_it = l_it;
+            std::cout << GREEN << std::endl << "Matches " << l_it->_target << ENDC << std::endl;
         }
         else
+            std::cout << RED << std::endl << "Doesn't Matches " << l_it->_target << ENDC << std::endl;
     }
     if (matches == 0)
         return (0);
@@ -433,6 +436,14 @@ bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content
 bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     for(size_t i = 0; i < 3; i++) {
         if (method == _valid_methods[i])
+            return true;
+    }
+    return false;
+}
+
+bool Config::ServerConfig::findMethod(const std::string& method) const {
+    for(size_t i = 0; i < 3; i++) {
+        if (method == Methods::_valid_methods[i])
             return true;
     }
     return false;

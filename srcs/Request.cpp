@@ -36,18 +36,25 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	}
 	else {
 		_location_root = tmp_loc->_root_path;
-		_final_path = _location_root + _uri_target.substr(tmp_loc->_uri_target.length());
+		_final_path = _location_root + _uri_target.substr(tmp_loc->_target.length());
 		std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
  		delete (tmp_loc);
  	}
 	//CHECK IF METHOD IS SUPPORTED
-	// for (long unsigned int i = 0 ; i < _method.length() ; i++)
-	// 	_method.at(i) = std::tolower(_method.at(i));
+		//change it to upper case before comparing;
+	for (long unsigned int i = 0 ; i < _method.length() ; i++)
+		_method.at(i) = std::toupper(_method.at(i)); // c++11
 
-	// std::vector<std::string>::iterator itm = _serverConfig.getMethods().begin();
-	// for (; itm != _serverConfig.getMethods().end() ; it++)
-	// 	;
+	//CHECK IF HTTP PROTOCOL IS CORRECT
+		//change it to lower case before comparing
+	for (long unsigned int i = 0 ; i < _http_version.length() ; i++)
+		 _http_version.at(i) = std::tolower( _http_version.at(i)); // c++11
 
+	if (!_server_config.findMethod(_method) || !_http_version.compare("http/1.1"))
+		_error_code = 404;
+
+	if (_uri_target.length() > 8000)
+		_error_code = 414;
 
 	//CHECK URI: if it exist in the location and also if its not too long.
 	// for (long unsigned int i = 0 ; i < _uri_uri_target.length() ; i++)

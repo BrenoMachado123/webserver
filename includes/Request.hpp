@@ -42,7 +42,7 @@ class Request {
 		int const & get_error_code() const;
 		long const & get_content_length() const;
 		std::string const & get_method() const;
-		std::string const & get_target() const;
+		std::string const & get_uri_target() const;
 		std::string const & get_http_version() const;
 		std::string const & get_location_root() const;
 

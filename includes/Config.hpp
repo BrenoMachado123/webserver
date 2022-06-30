@@ -128,7 +128,6 @@ class Config {
 				};
 				class Methods: public Directive {
 					private:
-						static const std::string	_valid_methods[3];
 						std::vector<std::string>	_methods;
 						bool	_validMethod(const std::string &);
 						Methods();
@@ -136,6 +135,7 @@ class Config {
 						Methods(const std::string &) throw (InvalidDirectiveException);
 						~Methods();
 						virtual void	setDirective(ServerConfig &, int) const;
+						static const std::string	_valid_methods[3];
 				};
                 class Listen: public Directive {
 	                private:
@@ -187,6 +187,7 @@ class Config {
 				~ServerConfig();
 				int					getPort() const;
 				Location * findLocation(std::string const &) const;
+				bool findMethod(std::string const &) const ;
 				std::string const &	getIp() const;
 				// void setLocation(const Location&);
 				// std::string & getRoot();
@@ -204,6 +205,9 @@ class Config {
                 std::vector<Location>		_locations;
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;
+				
+				static const std::string	_valid_methods_server[3];
+
 				//std::map<std::string, std::vector<int> > errors_map;
 				// std::vector<int>            _errorCodes;
 				// std::vector<std::string>    _methods;
