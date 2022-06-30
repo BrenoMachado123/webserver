@@ -44,13 +44,20 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
  		delete (tmp_loc);
  	}
 	//CHECK IF METHOD IS SUPPORTED
-	// for (long unsigned int i = 0 ; i < _method.length() ; i++)
-	// 	_method.at(i) = std::tolower(_method.at(i));
+		//change it to upper case before comparing;
+	for (long unsigned int i = 0 ; i < _method.length() ; i++)
+		_method.at(i) = std::toupper(_method.at(i));
 
-	// std::vector<std::string>::iterator itm = _serverConfig.getMethods().begin();
-	// for (; itm != _serverConfig.getMethods().end() ; it++)
-	// 	;
+	//CHECK IF HTTP PROTOCOL IS CORRECT
+		//change it to lower case before comparing
+	for (long unsigned int i = 0 ; i < _http_version.length() ; i++)
+		 _http_version.at(i) = std::tolower( _http_version.at(i));
 
+	if (!_server_config.findMethod(_method) || !_http_version.compare("http/1.1"))
+		_error_code = 404;
+
+	if (_target.length() > 8000)
+		_error_code = 414;
 
 	//CHECK URI: if it exist in the location and also if its not too long.
 	// for (long unsigned int i = 0 ; i < _uri_target.length() ; i++)
@@ -60,16 +67,6 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	// for (; itl != _serverConfig.getLocations().end(); it++)
 	// 	if (_uri_target == itl->getLocation())
 	// 		_location_root = itl->l_getRoot();
-
-	// for (long unsigned int i = 0 ; i < _http_version.length() ; i++)
-	// 	 _http_version.at(i) = std::tolower( _http_version.at(i));
-
-	// if (itm == _serverConfig.getMethods().end() ||
-	// 	itl == _serverConfig.getLocations().end() ||
-	// 	_http_version.compare("http/1.1"))
-	// 		_error_code = 400;
-	// else if (_uri_target.length() > 8000)
-	// 	_error_code = 414;
 }
 
 

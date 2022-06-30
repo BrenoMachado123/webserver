@@ -5,6 +5,7 @@
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location", "index", "autoindex"};
 const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size"};
 const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
+const std::string Config::ServerConfig::_valid_methods_server[3] = {"GET", "POST", "DELETE"};
 const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] = {
 	400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
 	410, 411, 412, 413, 414, 415, 416, 417, 418,
@@ -399,6 +400,14 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
     return (0);
 }
 
+bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
+    for(size_t i = 0; i < 3; i++) {
+        if (method == _valid_methods[i])
+            return true;
+    }
+    return false;
+}
+
 // std::string target_location(0, _target.find_last_of("/"));
 // target_location += "/";
 
@@ -427,13 +436,18 @@ bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content
     return false;
 }
 
-bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
+//ADDED ===========================
+bool Config::ServerConfig::findMethod(const std::string& method) const {
     for(size_t i = 0; i < 3; i++) {
-        if (method == _valid_methods[i])
+        if (method == _valid_methods_server[i])
             return true;
     }
     return false;
 }
+// ========================== ADDED
+
+
+
 
 bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
     if (!ip.compare("0.0.0.0") || !ip.compare("localhost") || !ip.compare("*"))

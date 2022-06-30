@@ -179,6 +179,7 @@ class Config {
 				~ServerConfig();
 				int					getPort() const;
 				Location * findLocation(std::string const &) const;
+				bool findMethod(std::string const &) const ;
 				std::string const &	getIp() const;
 				// void setLocation(const Location&);
 				// std::string & getRoot();
@@ -196,6 +197,9 @@ class Config {
                 std::vector<Location>		_locations;
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;
+				
+				static const std::string	_valid_methods_server[3];
+
 				//std::map<std::string, std::vector<int> > errors_map;
 				// std::vector<int>            _errorCodes;
 				// std::vector<std::string>    _methods;
