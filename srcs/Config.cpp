@@ -283,7 +283,7 @@ Config::ServerConfig::Listen::~Listen() {
 }
 
 Config::ServerConfig::Location::Location(std::string const & content) throw (InvalidDirectiveException):
-    Directive(LOCATION), _target(content), _max_body_size(-1), _autoindex(false) {
+    Directive(LOCATION), _error_path("www/default_error/"), _target(content), _max_body_size(-1), _autoindex(false) {
     /*This constructor takes only one string which should be a valid path
         Location("/etc/www/where_is_the_file {") [VALID]
         Location("/etc trash wrong {") [throw InvalidDirectiveException]
@@ -385,18 +385,21 @@ int Config::ServerConfig::getPort() const {return _port;}
 std::string const & Config::ServerConfig::getIp() const {return _ip;}
 
 Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string const & target) const {
+    size_t matches(0);
     std::vector<Location> tmp_locs(_locations);
     std::vector<Location>::iterator l_it;
-    std::cout << YELLOW << "Searching... [";
+    std::vector<Location>::iterator tmp_it;
     for (l_it = tmp_locs.begin(); l_it != tmp_locs.end(); ++l_it) {
-        std::cout << l_it->_target << ", ";
-        if (l_it->_target == target) {
-            std::cout << "]" << ENDC << std::endl;
-            return (new Location(*l_it));
+        int tmp = target.compare(0, l_it->_target.length(), l_it->_target);
+        if (tmp == 0 && l_it->_target.length() > matches) {
+            matches = l_it->_target.length();
+            tmp_it = l_it;
         }
+        else
     }
-    std::cout << "]" << ENDC << std::endl;
-    return (0);
+    if (matches == 0)
+        return (0);
+    return (new Location(*tmp_it));
 }
 
 // std::string target_location(0, _target.find_last_of("/"));

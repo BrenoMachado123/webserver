@@ -97,6 +97,14 @@ class Config {
 						~ClientMaxBodySize();
 						virtual void	setDirective(ServerConfig &, int) const;
 				};
+				// class CgiBin: public Directive {
+				// 	private:
+				// 		int	_path;
+				// 	public:
+				// 		CgiBin(const std::string &) throw (InvalidDirectiveException);
+				// 		~CgiBin();
+				// 		virtual void	setDirective(ServerConfig &, int) const;
+				// };
                 class ErrorCodePage: public Directive {
 	                private:
 	                	static const int	_allErrorCodes[ALL_ERROR_CODES];

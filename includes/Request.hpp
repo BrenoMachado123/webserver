@@ -15,14 +15,14 @@
 #include "utils.hpp"
 
 class Request {
-
 	private:
 		std::map<std::string, std::string> _headers;
 		int			_error_code;
 	    long		_content_length;
 	    std::string _method;
-	    std::string _target;
+	    std::string _uri_target;
 		std::string _location_root;
+		std::string _final_path;
 	    std::string _http_version;
 		// std::string _post_content;
 	    // std::string _query;
