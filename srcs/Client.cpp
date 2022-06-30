@@ -34,11 +34,12 @@ void Client::handleRequest(std::string const & request) {
 	Request req(request, _socket.getServerConfig());
 	// Request status? Error ? -> Generate Error Response
 	// Status Perfect? Generate Response Evaluate METHOD
-	Response res(req);
+	//Response res(req);
 	// res.sendResponse()
 
-	std::string _response_content(res.createResponse());
-	write(_fd, _response_content.c_str(), _response_content.length());
+	//std::string _response_content(res.createResponse());
+	//write(_fd, _response_content.c_str(), _response_content.length());
+	write(_fd, "Hello World", strlen("Hello World"));
 }
 
 std::ostream& operator<<(std::ostream& s, const Client& param) {

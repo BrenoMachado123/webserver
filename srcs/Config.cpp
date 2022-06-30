@@ -384,12 +384,19 @@ int Config::ServerConfig::getPort() const {return _port;}
 
 std::string const & Config::ServerConfig::getIp() const {return _ip;}
 
-std::string const & Config::ServerConfig::findTargetPath(std::string const & target) const {
-    (void)target; //TODO
-    if (_locations.empty())
-        return (_root_path);
-    else
-        return (_locations.back()._root_path);
+Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string const & target) const {
+    std::vector<Location> tmp_locs(_locations);
+    std::vector<Location>::iterator l_it;
+    std::cout << YELLOW << "Searching... [";
+    for (l_it = tmp_locs.begin(); l_it != tmp_locs.end(); ++l_it) {
+        std::cout << l_it->_target << ", ";
+        if (l_it->_target == target) {
+            std::cout << "]" << ENDC << std::endl;
+            return (new Location(*l_it));
+        }
+    }
+    std::cout << "]" << ENDC << std::endl;
+    return (0);
 }
 
 // std::string target_location(0, _target.find_last_of("/"));
