@@ -27,15 +27,16 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	if (_headers.find("cockies") != _headers.end()) {
 		; // TODO
 	}
+	std::string target_loc(_target.substr(0, _target.find_last_of("/") + 1));
 	Config::ServerConfig::Location * tmp_loc;
-	tmp_loc = _server_config.findLocation(_target);
+	tmp_loc = _server_config.findLocation(target_loc);
 	if (!tmp_loc) {
 		_error_code = 404;
-		std::cout << RED << "Wrong target [" << _target << "], couldn't find any configuration" << ENDC << std::endl;
+		std::cout << RED << "Wrong target [" << target_loc << "], couldn't find any configuration" << ENDC << std::endl;
 	}
 	else {
 		_location_root = tmp_loc->_root_path;
-		std::cout << YELLOW << "Target found [" << _target << "] & Root [" << _location_root << "]" << ENDC << std::endl;
+		std::cout << GREEN << "Target found [" << target_loc << "] & Root [" << _location_root << "]" << ENDC << std::endl;
 		_target = _location_root + _target;
 		std::cout << YELLOW << "Final Target Path [" << _target << "]" << ENDC <<std::endl;
 	//if (_target.substr(_target.find_last_of(".")) == "html") {
