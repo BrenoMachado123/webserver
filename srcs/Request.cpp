@@ -7,8 +7,10 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	std::getline(ss, line);
 	line = strtrim(line, " \r\t");
 	_method = line.substr(0, line.find_first_of(" \r\t"));
+	std::transform(_method.begin(), _method.end(), _method.begin(), ::ft_toupper);
 	_uri_target = line.substr(_method.length(), line.find_last_of(" \r\t") - _method.length());
 	_http_version = line.substr(_method.length() + _uri_target.length());
+	std::transform(_http_version.begin(), _http_version.end(), _http_version.begin(), ::ft_tolower);
 	_uri_target = strtrim(_uri_target, " \r\t");
 	_http_version = strtrim(_http_version, " \r\t");
 	std::cout << PURPLE << "Method => [" << _method << "], Target => [" << _uri_target << "], HTTP Version => [" << _http_version << "]" << ENDC << std::endl;;	
@@ -16,7 +18,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 		if (line.find(':') != std::string::npos) {
 			std::string name(line.substr(0, line.find(':')));
 			std::string content(line.substr(line.find(':')));
-    		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+    		std::transform(name.begin(), name.end(), name.begin(), ::ft_tolower);
 			_headers[name] = strtrim(content, ": \t");
 			std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
 		}
@@ -30,9 +32,9 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	// /content
 	Config::ServerConfig::Location * tmp_loc;
 	tmp_loc = _server_config.findLocation(_uri_target);
-	if (!tmp_loc) {
+	if (!tmp_loc || !_server_config.findMethod(_method) || _http_version.compare("http/1.1") != 0) { // SERVER CONFIG DOENS'T CHECK FOR METHOD. LOCATION DOES
 		_error_code = 404;
-		std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration" << ENDC << std::endl;
+		std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration or method or http version is wrong" << ENDC << std::endl;
 	}
 	else {
 		_location_root = tmp_loc->_root_path;
@@ -40,19 +42,6 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 		std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
  		delete (tmp_loc);
  	}
-	//CHECK IF METHOD IS SUPPORTED
-		//change it to upper case before comparing;
-	for (long unsigned int i = 0 ; i < _method.length() ; i++)
-		_method.at(i) = std::toupper(_method.at(i)); // c++11
-
-	//CHECK IF HTTP PROTOCOL IS CORRECT
-		//change it to lower case before comparing
-	for (long unsigned int i = 0 ; i < _http_version.length() ; i++)
-		 _http_version.at(i) = std::tolower( _http_version.at(i)); // c++11
-
-	if (!_server_config.findMethod(_method) || !_http_version.compare("http/1.1"))
-		_error_code = 404;
-
 	if (_uri_target.length() > 8000)
 		_error_code = 414;
 
