@@ -34,7 +34,7 @@ void Client::handleRequest(std::string const & request) {
 	Request req(request, _socket.getServerConfig());
 	// Request status? Error ? -> Generate Error Response
 	// Status Perfect? Generate Response Evaluate METHOD
-	//Response res(req);
+	//Response res(req, _socket.getServerConfig());
 	// res.sendResponse()
 
 	//std::string _response_content(res.createResponse());

@@ -24,7 +24,7 @@
 
 class Response {
 	public:
-		Response(Request const &);
+		Response(Request const &, Config::ServerConfig const & sc);
 		~Response();
 
 		std::string createResponse();
@@ -40,7 +40,13 @@ class Response {
 		std::string _content_length;
 		std::string _content_type;
 		std::string _content;
+		std::string _default_error_path;
+
+		Config::ServerConfig const & _server_config;
+
 		static std::map<int, std::string> _codeMessage;
+
+		bool _check_default_error_code_and_assign_path(int);
 		//static std::string _mime_type_detector(std::string const & file_name);
 };
 
