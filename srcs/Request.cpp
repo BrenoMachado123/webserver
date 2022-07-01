@@ -1,6 +1,8 @@
 #include "Request.hpp"
 
-Request::Request(std::string const & request, Config::ServerConfig const & sc): _error_code(0), _server_config(sc) {			
+Request::Request(std::string const & request, Config::ServerConfig const & sc):
+	_error_code(0), _server_config(sc), _server_error_codes(_server_config._server_errors_map)
+	{			
 	std::stringstream ss(request);
 	std::string line;
 	
@@ -29,49 +31,32 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc): 
 	if (_headers.find("cockies") != _headers.end()) {
 		; // TODO
 	}
-	// /content
-	Config::ServerConfig::Location * tmp_loc;
-	tmp_loc = _server_config.findLocation(_uri_target);
-	if (!tmp_loc) {
-		_error_code = 400;
-		std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration" << ENDC << std::endl;
-	}
-	else {
-		_location_root = tmp_loc->_root_path;
-	//THIS IS NOT CHECKING IF THAT FILE EXIST ACTUALLY!
-		_final_path = _location_root + _uri_target.substr(tmp_loc->_target.length());
-		std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
-		if (!tmp_loc->findMethod(_method) || _http_version.compare("http/1.1")) {
-			std::cout << RED << "flag1" << ENDC << std::endl;
-			_error_code = 400;
-		}
- 		delete (tmp_loc);
- 	}
-
 	if (_uri_target.length() > 8000)
 		_error_code = 414;
-
-	//if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	else {
+		// /content
+		Config::ServerConfig::Location * tmp_loc;
+		tmp_loc = _server_config.findLocation(_uri_target);
+		if (!tmp_loc) {
+			_error_code = 400;
+			std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration" << ENDC << std::endl;
+		}
+		else {
+			_location_root = tmp_loc->_root_path;
+			_location_error_codes = tmp_loc->_location_errors_map;
+		//THIS IS NOT CHECKING IF THAT FILE EXIST ACTUALLY!
+			_final_path = _location_root + _uri_target.substr(tmp_loc->_target.length());
+			std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
+			if (!tmp_loc->findMethod(_method) || _http_version.compare("http/1.1")) {
+				std::cout << RED << "flag1" << ENDC << std::endl;
+				_error_code = 400;
+			}
+			delete (tmp_loc);
+		}
+	}
+	
+	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Request Succesfully Parsed" << ENDC << std::endl;
-
-	//CHECK URI: if it exist in the location and also if its not too long.
-	// for (long unsigned int i = 0 ; i < _uri_uri_target.length() ; i++)
-	// 	_uri_uri_target.at(i) = std::tolower(_uri_uri_target.at(i));
-
-	// std::vector<Config::ServerConfig::Location>::iterator itl = _serverConfig.getLocations().begin();
-	// for (; itl != _serverConfig.getLocations().end(); it++)
-	// 	if (_uri_uri_target == itl->getLocation())
-	// 		_location_root = itl->l_getRoot();
-
-	// for (long unsigned int i = 0 ; i < _http_version.length() ; i++)
-	// 	 _http_version.at(i) = std::tolower( _http_version.at(i));
-
-	// if (itm == _serverConfig.getMethods().end() ||
-	// 	itl == _serverConfig.getLocations().end() ||
-	// 	_http_version.compare("http/1.1"))
-	// 		_error_code = 400;
-	// else if (_uri_uri_target.length() > 8000)
-	// 	_error_code = 414;
 }
 
 
