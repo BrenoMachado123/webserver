@@ -12,6 +12,7 @@ class Client {
 	private:
 		int _fd;
 		Socket & _socket;
+		uint64_t _time_to_die;
 		Client();
 	public:
 		Client(int, Socket &);
@@ -21,6 +22,9 @@ class Client {
 		int getFd() const;
 		Socket const &  getSocket() const;
 		void handleRequest(std::string const &);
+		uint64_t const & getTimeToDie() const;
+
+		bool _keep_alive;
 };
 
 std::ostream&	operator<<(std::ostream&, const Client&);

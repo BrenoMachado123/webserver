@@ -21,26 +21,33 @@
 
 #include "Request.hpp"
 #include "webserv.hpp"
+#include "utils.hpp"
 
 class Response {
 	public:
-		Response(Request const &);
+		Response(Request const &, Config::ServerConfig const & sc);
 		~Response();
 
-		std::string createResponse();
-	
+		std::string createResponse(void);
+		bool getKeepAlive(void) const;
 	private:
 		Response();
 		Response(const Response&);
 
 	private:
 		int _status_code;
+		bool _keep_alive;
 		std::string _date;
 		std::string _server_name;
 		std::string _content_length;
 		std::string _content_type;
 		std::string _content;
+
+		Config::ServerConfig const & _server_config;
+
 		static std::map<int, std::string> _codeMessage;
+
+		//bool _check_default_error_code_and_assign_path(int);
 		//static std::string _mime_type_detector(std::string const & file_name);
 };
 

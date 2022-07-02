@@ -15,12 +15,15 @@
 # define INDEX				12
 # define RETURN_D			13
 # define SERVER_CONTEXT_DIRECTIVES		8
-# define LOCATION_CONTEXT_DIRECTIVES	6
+# define LOCATION_CONTEXT_DIRECTIVES	8
 # define TOTAL_DIRECTIVES	13
 # define ALL_ERROR_CODES				40
 # define PORT_MAX 65535
 # define PORT_MIN 1
 # define SEPARATORS " \t\v\n\r\f"
+
+# define INSIDE_SERVER_CONTEXT 1
+# define INSIDE_LOCATION_CONTEXT 2
 
 #include <vector>
 #include <fstream>
@@ -97,17 +100,29 @@ class Config {
 						~ClientMaxBodySize();
 						virtual void	setDirective(ServerConfig &, int) const;
 				};
-				// class CgiBin: public Directive {
-				// 	private:
-				// 		int	_path;
-				// 	public:
-				// 		CgiBin(const std::string &) throw (InvalidDirectiveException);
-				// 		~CgiBin();
-				// 		virtual void	setDirective(ServerConfig &, int) const;
-				// };
+
+				class CgiBin: public Directive {
+					private:
+						std::string	_path;
+					public:
+						CgiBin(const std::string &) throw (InvalidDirectiveException);
+						~CgiBin();
+						virtual void setDirective(ServerConfig &, int) const;
+				};
+ 
+				class Cgi : public Directive {
+					public:
+						Cgi(const std::string&) throw (InvalidDirectiveException);
+						~Cgi();
+						std::vector<std::string> getCgi() const;
+						virtual void setDirective(ServerConfig&,int) const;
+					private:
+						std::vector<std::string> _cgi;
+						void _parseCgiContent(std::vector<std::string>&, const std::string&);
+				};
+
                 class ErrorCodePage: public Directive {
 	                private:
-	                	static const int	_allErrorCodes[ALL_ERROR_CODES];
 	                    std::vector<int>	_error_codes;
 	                    std::string			_error_path;
 	                    bool	isCodeValid(const std::string &);
@@ -115,6 +130,7 @@ class Config {
 	                public:
 	                    ErrorCodePage(const std::string &) throw (InvalidDirectiveException);
 	                    ~ErrorCodePage();
+	                	static const int	_allErrorCodes[ALL_ERROR_CODES];
 						virtual void	setDirective(ServerConfig &, int) const;
                 };
 				class Index: public Directive {
@@ -151,6 +167,7 @@ class Config {
                 class Location: public Directive {
 					private:
 						Location();
+
 						// std::vector<int>			_l_errorCodes;
 	                public:
                     	Location (std::string const &) throw (InvalidDirectiveException);
@@ -163,6 +180,14 @@ class Config {
 						std::vector<std::string>	_indexes;
 						int							_max_body_size;
 						bool						_autoindex;
+						std::vector<Cgi>			_cgi;
+						std::string					_cgi_bin;
+						
+						// std::map<int, std::vector<std::string> > _cgi;
+						// std::vector<Cgi> _cgi; <- I prefer this one;
+						std::map<std::string, std::vector<int> > _location_errors_map;
+
+						bool findMethod(std::string const &) const ;
                 };
 				class Root: public Directive {
 					private:
@@ -187,7 +212,6 @@ class Config {
 				~ServerConfig();
 				int					getPort() const;
 				Location * findLocation(std::string const &) const;
-				bool findMethod(std::string const &) const ;
 				std::string const &	getIp() const;
 				// void setLocation(const Location&);
 				// std::string & getRoot();
@@ -206,9 +230,10 @@ class Config {
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;
 				
+				std::map<std::string, std::vector<int> > _server_errors_map;
+				
 				static const std::string	_valid_methods_server[3];
 
-				//std::map<std::string, std::vector<int> > errors_map;
 				// std::vector<int>            _errorCodes;
 				// std::vector<std::string>    _methods;
 		};

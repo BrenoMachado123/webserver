@@ -93,7 +93,7 @@ void HTTPServer::run() {
 	}
 	std::cout << WHITE << "[" << timestamp_in_ms() << "]" << " Use Ctrl-C to stop" << std::endl;
 	for (;;) {
-		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, -1);
+		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, 2000);
 		if (nfds == -1) {
 		   perror("epoll_wait");
 		   exit(EXIT_FAILURE);
@@ -105,7 +105,6 @@ void HTTPServer::run() {
 			} else {
 				int fd = events[n].data.fd;
 				{
-					//We are searching here for the proper client, that means to know what server operate on.
 					int big_sock(0);
 					std::vector<Client>::iterator v_it;
 					for (m_it = _clients.begin(); m_it != _clients.end() && big_sock == 0; ++m_it) {
@@ -120,41 +119,32 @@ void HTTPServer::run() {
 					char buffer[30000] = {0};
 					int valread = read(fd, buffer, 30000);
 					if (valread < 0) {
-						perror("In Read");
+						perror("In Read\n");
 						exit(EXIT_FAILURE);
 					}
 					std::string _buffer(buffer, valread);
 					v_it->handleRequest(_buffer);
 				}
-				{
-					// IMAGINE THAT WE MUST CLOSE CONNECTION... THEN WE DO THIS:
-					int big_sock(0);
-					std::vector<Client>::iterator v_it;
-					for (m_it = _clients.begin(); m_it != _clients.end() && big_sock == 0; ++m_it) {
-						for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
-							if (v_it->getFd() == events[n].data.fd) {
-								big_sock = m_it->first;
-								break;
-						 	}
-						}
-					}
-					_clients.find(big_sock)->second.erase(v_it);
-					close(fd);
-				}
-			/****************/
-			/*PSEUDO CODE****/
-			/****************/
-				// std::string _response;
-				// Request r;
-				// Response res;
-				// _response = res.createResponse(r, _config);
-				// write(fd, _response.c_str(), strlen(_response));
-				// printf("------------------Response message sent-------------------\n");
-				// close(fd);
-			/****************/
-			/*end: PSEUDO CODE****/
-			/****************/
 		   }
+		}
+		uint64_t timestamp(timestamp_in_ms());
+		std::vector<Client>::iterator v_it;
+		std::vector<std::vector<Client>::iterator> _clients_to_die;
+
+	/*
+	 * @brief This function iterates via map of clients and checks if time passed is higher than "time to die" for the client
+	 * 			If it is then it closes the connection with that client (that was saved in a vector) and erase it from vector.
+	 */
+		for (m_it = _clients.begin(); m_it != _clients.end() ; ++m_it) {
+			for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
+				std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->getTimeToDie() << ENDC << std::endl;
+				if (v_it->getTimeToDie() < timestamp || !(v_it->_keep_alive)) {
+					close(v_it->getFd());
+					_clients_to_die.push_back(v_it);
+				}
+			}
+			for (std::vector<std::vector<Client>::iterator>::iterator c_it = _clients_to_die.begin() ; c_it != _clients_to_die.end() ; c_it++)
+				 m_it->second.erase(*c_it);
 		}
 	}
 }

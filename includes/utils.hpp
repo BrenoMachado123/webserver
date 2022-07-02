@@ -3,7 +3,9 @@
 
 
 #include <iostream>
+
 #include <sys/time.h>
+#include <time.h>
 
 #include "Config.hpp"
 #include <webserv.hpp>
@@ -12,9 +14,7 @@
 
 std::string & strtrim(std::string & str, const char * separators = SEPARATORS);
 uint64_t	timestamp_in_ms(void);
-
-char *itoa(int);
-int ft_tolower (int);
-int ft_toupper (int);
-
+int 		ft_tolower (int);
+int 		ft_toupper (int);
+char * 		get_local_time (void);
 #endif

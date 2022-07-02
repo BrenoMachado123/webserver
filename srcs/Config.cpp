@@ -3,7 +3,7 @@
 
 /* STATIC CLASS MEMBERS */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location", "index", "autoindex"};
-const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size"};
+const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size", "cgi", "cgi-bin"};
 const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
 const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] = {
 	400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
@@ -35,7 +35,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                 throw e_invalid_directive;
             continue ;
         }
-        std::cout << BLUE << std::left << (context == 2 ? "Location" : "Server") << " context: " << YELLOW;
+        std::cout << BLUE << std::left << (context == INSIDE_LOCATION_CONTEXT ? "Location" : "Server") << " context: " << YELLOW;
         std::cout << "[" << directive << "]" << " - [" << directive_content << "]";
         switch (context) {
             case 0:
@@ -48,7 +48,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                 else
                     throw e_invalid_directive;
                 break ;
-            case 1:
+            case INSIDE_SERVER_CONTEXT:
                 if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES))
                 {
                     std::cout << GREEN << "[OK]" << ENDC << std::endl;
@@ -70,7 +70,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                     throw e_invalid_directive;
                 }
                 break;
-            case 2:
+            case INSIDE_LOCATION_CONTEXT:
                 if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
                 {
                     std::cout << GREEN << "[OK]" << ENDC << std::endl;
@@ -160,6 +160,51 @@ Config::ServerConfig::ClientMaxBodySize::ClientMaxBodySize(const std::string & c
 Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "ClientMaxBodySize Directive destroyed!" << ENDC << std::endl;
+}
+
+/**
+ * @brief Construct a new Cgi object
+ * 
+ *  This constructor takes a string as argument that will be splited to get two arguments: "program extension" and "program path".
+ *  Then both will be parsed and pushed to the object. If one of the arguments is missing or one of them is invalid, throws an exception.
+ * 
+ * @param content 
+ *  The string after directive "cgi" is found by the parser.
+ */
+Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (InvalidDirectiveException):
+    Directive(CGI), _cgi() {
+        if (content.empty())
+            throw InvalidDirectiveException();
+        _parseCgiContent(_cgi, content);
+        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+            std::cout << WHITE << "Cgi created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Cgi::~Cgi() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Cgi Directive destroyed!" << ENDC << std::endl;
+}
+
+/**
+ * @brief Construct a new CgiBin object
+ * 
+ *  This constructor takes a string as argument that will be the path of cgi-bin.
+ *  If path is empty, throws an exception.
+ * 
+ * @param content
+ *  The string after directive "cgi" is found by the parser.
+ */
+Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (InvalidDirectiveException):
+    Directive(CGIBIN), _path(content) {
+        if (_path.empty())
+            throw InvalidDirectiveException();
+        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+            std::cout << WHITE << "CgiBin created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::CgiBin::~CgiBin() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "CgiBin destroyed!" << ENDC << std::endl;
 }
 
 Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(InvalidDirectiveException):
@@ -339,6 +384,7 @@ Config::ServerConfig::ServerName::~ServerName() {
         std::cout << RED << "ServerName Directive destroyed!" << ENDC << std::endl;
 }
 
+
 /* MEMBER FUNCTIONS */
 bool Config::validDirective(const std::string & str, const std::string * list, int len) const {
 	int i(0);
@@ -377,6 +423,12 @@ Config::ServerConfig::Directive * Config::createDirective(std::string const & na
     else if (name == "autoindex") {
         return (new ServerConfig::AutoIndex(content));
     }
+    else if (name == "cgi") {
+        return (new ServerConfig::Cgi(content));
+    }
+    else if (name == "cgi-bin") {
+        return (new ServerConfig::CgiBin(content));
+    }
     return (0);
 }
 
@@ -406,6 +458,8 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
 
 int Config::ServerConfig::Directive::getId() const {return (_id);}
 
+std::vector<std::string> Config::ServerConfig::Cgi::getCgi() const { return _cgi; }
+
 bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content) {
     std::stringstream stoi_converter;
     int converted_number;
@@ -429,6 +483,16 @@ bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content
     return false;
 }
 
+void Config::ServerConfig::Cgi::_parseCgiContent(std::vector<std::string>& _target, const std::string& content) {
+    char* token = std::strtok(const_cast<char*>(content.c_str()), " ");
+    while (token) {
+        _target.push_back(std::string(token));
+        token = std::strtok(NULL, SEPARATORS);
+    }
+    if (_target.size() != 2)
+        throw InvalidDirectiveException();
+}
+
 bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     for(size_t i = 0; i < 3; i++) { // i < 3; is just wrong
         if (method == _valid_methods[i])
@@ -437,11 +501,11 @@ bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     return false;
 }
 
-bool Config::ServerConfig::findMethod(const std::string& method) const {
-    for(size_t i = 0; i < 3; i++) {
-        if (method == Methods::_valid_methods[i])
+bool Config::ServerConfig::Location::findMethod(const std::string& method) const {
+    std::vector<std::string>::const_iterator it = _methods.begin();
+    for(; it != _methods.end() ; it++)
+        if (method == *it)
             return true;
-    }
     return false;
 }
 
@@ -472,60 +536,74 @@ bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
 }
 
 void Config::ServerConfig::AutoIndex::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
+    if (context == INSIDE_SERVER_CONTEXT)
         serv_conf._autoindex = _option;
-    else if (context == 2)
+    else if (context == INSIDE_LOCATION_CONTEXT)
         serv_conf._locations.back()._autoindex = _option;
 }
 
 void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
+    if (context == INSIDE_SERVER_CONTEXT)
         serv_conf._max_body_size = _max_size;
-    else if (context == 2)
+    else if (context == INSIDE_LOCATION_CONTEXT)
         serv_conf._locations.back()._max_body_size = _max_size;
 }
 
+
+// *************************************************
 void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
-        serv_conf._error_path = _error_path;
-    else if (context == 2)
-        serv_conf._locations.back()._error_path = _error_path;
+    if (context == INSIDE_SERVER_CONTEXT)
+        serv_conf._server_errors_map[_error_path] = _error_codes;
+    else if (context == INSIDE_LOCATION_CONTEXT)
+        serv_conf._locations.back()._location_errors_map[_error_path] = _error_codes;
 }
+// *************************************************
+
 
 void Config::ServerConfig::Index::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
+    if (context == INSIDE_SERVER_CONTEXT)
         serv_conf._indexes = _indexes;
-    else if (context == 2)
+    else if (context == INSIDE_LOCATION_CONTEXT)
         serv_conf._locations.back()._indexes = _indexes;
 }
 
 void Config::ServerConfig::Methods::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 2)
+    if (context == INSIDE_LOCATION_CONTEXT)
         serv_conf._locations.back()._methods = _methods;
 }
 
 void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context != 1)
+    if (context != INSIDE_SERVER_CONTEXT)
         return ;
     serv_conf._port = _port;
     serv_conf._ip = _ip;
 }
 
 void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
+    if (context == INSIDE_SERVER_CONTEXT)
         serv_conf._locations.push_back(*this);
 }
 
 void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
+    if (context == INSIDE_SERVER_CONTEXT)
         serv_conf._root_path = _path;
-    else if (context == 2)
+    else if (context == INSIDE_LOCATION_CONTEXT)
         serv_conf._locations.back()._root_path = _path;
 }
 
 void Config::ServerConfig::ServerName::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == 1)
+    if (context == INSIDE_SERVER_CONTEXT)
         serv_conf._names = _server_names;
+}
+
+void Config::ServerConfig::Cgi::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == INSIDE_LOCATION_CONTEXT)
+        (serv_conf._locations.back()._cgi).push_back(*this);
+}
+
+void Config::ServerConfig::CgiBin::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == INSIDE_LOCATION_CONTEXT)
+        serv_conf._locations.back()._cgi_bin = _path;
 }
 
 // std::string const &Config::ServerConfig::Location::getLocation() const{return _location;}
@@ -547,6 +625,16 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
     s << "|**********************************************|"<< std::endl;
     s << "| Server " << param.getIp() << ":" << param.getPort() << std::endl;
     s << "| - root path " << param._root_path << std::endl;
+    s << "| - errorCodeMap<std::string, std::vector<int> > ";
+    std::map<std::string, std::vector<int> >::const_iterator it_m = param._server_errors_map.begin();
+    std::vector<int>::const_iterator it_v;
+	for (; it_m != param._server_errors_map.end() ; it_m++) {
+        s << "[" << it_m->first << " ";
+		for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++)
+            s << *it_v << " ";
+        s << "]" << std::endl;
+        std::cout << std::endl;
+    }
     s << "| - error path " << param._error_path << std::endl;
     s << "| - server names [";
     std::vector<std::string> s_list(param._names);
@@ -562,7 +650,16 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
     for (; it != list.end() ; ++it) {
         s << "|  + target " << it->_target << std::endl;
         s << "|     root path " << it->_root_path << std::endl;
-        s << "|     error path " << it->_error_path << std::endl;
+        s << "| - errorCodeMap<std::string, std::vector<int> > ";
+        std::map<std::string, std::vector<int> >::const_iterator it_m = it->_location_errors_map.begin();
+        std::vector<int>::const_iterator it_v;
+        for (; it_m !=  it->_location_errors_map.end() ; it_m++) {
+            s << "[" << it_m->first << " ";
+            for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++)
+                s << *it_v << " ";
+            std::cout << "]";
+        }
+        std::cout << std::endl;
         s << "|     autoindex " << (it->_autoindex == true ? "on" : "off") << std::endl;
         s << "|     max_body_size " << it->_max_body_size << std::endl;
         s << "|     Index [";
@@ -575,6 +672,13 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
         for (; m_it != it->_methods.end() ; ++m_it)
             s << *m_it << " ";
         s << "]" << std::endl;
+        s << "|     cgi_bin " << it->_cgi_bin << std::endl;
+        s << "|     CGI [" << std::endl;
+        std::vector<Config::ServerConfig::Cgi>::iterator c_it(it->_cgi.begin());
+        for (; c_it != it->_cgi.end() ; ++c_it) {
+            s << "|         CGI_conf: " << (c_it->getCgi()).at(0) << " " <<  (c_it->getCgi()).at(1) << std::endl;
+        }
+        s << "|     ]" << std::endl;
     }
     s << "|**********************************************|"<< std::endl;
     return (s);
