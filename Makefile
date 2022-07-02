@@ -57,7 +57,7 @@ $(NAME)_debug: $(OBJ_DEBUG)
 	$(CC) -g $(CFLAGS) $(OBJ_DEBUG) -o $(NAME)
 	@printf "$(C_GREEN)DONE$(C_END)\n"
 
-test:	re
+test:	all
 		@printf "$(C_BLUE)Testing $(C_YELLOW)$(NAME)$(C_END)\n"
 		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
 		@./$(NAME) "conf_files/configuration.conf"

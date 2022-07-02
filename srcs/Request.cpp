@@ -20,7 +20,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 		if (line.find(':') != std::string::npos) {
 			std::string name(line.substr(0, line.find(':')));
 			std::string content(line.substr(line.find(':')));
-    		std::transform(name.begin(), name.end(), name.begin(), ::ft_tolower);
+    		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 			_headers[name] = strtrim(content, ": \t");
 			std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
 		}
@@ -31,22 +31,9 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	if (_headers.find("cockies") != _headers.end()) {
 		; // TODO
 	}
-	Config::ServerConfig::Location * tmp_loc;
-	tmp_loc = _server_config.findLocation(_uri_target);
-	if (!tmp_loc || !_server_config.findMethod(_method) || _http_version.compare("http/1.1") != 0) { // SERVER CONFIG DOENS'T CHECK FOR METHOD. LOCATION DOES
-		_error_code = 404;
-		std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration or method or http version is wrong" << ENDC << std::endl;
-	}
-	else {
-		_location_root = tmp_loc->_root_path;
-		_final_path = _location_root + _uri_target.substr(tmp_loc->_target.length());
-		std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
- 		delete (tmp_loc);
- 	}
 	if (_uri_target.length() > 8000)
 		_error_code = 414;
 	else {
-		// /content
 		Config::ServerConfig::Location * tmp_loc;
 		tmp_loc = _server_config.findLocation(_uri_target);
 		if (!tmp_loc) {
@@ -76,6 +63,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 Request::~Request() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << "Request" << " destroyed" << std::endl;
+	// TODO (destructor)
 }
 
 int const & Request::get_error_code() const {

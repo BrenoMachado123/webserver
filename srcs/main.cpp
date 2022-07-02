@@ -18,14 +18,6 @@ int	main(int ac, char **av)
 
 	try {
 		HTTPServer s(av[1]);
-		// {
-		// 	Socket s1("127.0.0.1", 4242);
-		// 	Socket s2("127.0.0.1", 4243);
-		// 	Socket s3("127.0.0.1", 4244);
-		// 	s.addSocket(s1);
-		// 	s.addSocket(s2);
-		// 	s.addSocket(s3);
-		// }
 		s.run();
 	} catch (std::exception & e) {
 		std::cout << RED << "EXCEPTION: " << e.what() << std::endl;
