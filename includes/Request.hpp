@@ -28,8 +28,14 @@ class Request {
 	    // std::string _query;
 	    // std::string _body;
 	    // std::string _transfer_encoding;
-
 		Config::ServerConfig const & _server_config;
+
+
+		std::map<std::string, std::vector<int> > _location_error_codes;
+		std::map<std::string, std::vector<int> > _server_error_codes;
+
+
+		bool _check_default_error_code_and_assign_path(int) const;
 
 		// Socket _s;
 		Request(const Request &);
@@ -45,6 +51,9 @@ class Request {
 		std::string const & get_uri_target() const;
 		std::string const & get_http_version() const;
 		std::string const & get_location_root() const;
+		std::string const & get_final_path() const;
+		bool const & get_is_default() const;
+		std::string const & get_default_error_path() const ;
 
 		Config::ServerConfig const & get_server_confing() const;
 		// std::string & get_error_code() const;

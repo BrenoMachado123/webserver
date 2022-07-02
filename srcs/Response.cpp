@@ -122,7 +122,7 @@ static std::string const _mime_type_detector(std::string const & file_name) {
 		return "application/octet-stream"; // default for binary files. It means unknown binary file
 }
 
-Response::Response(Request const & request) {
+Response::Response(Request const & request, Config::ServerConfig const & sc): _server_config(sc) {
 	std::fstream file;
 	std::string buffer;
 	std::string location;
@@ -130,33 +130,29 @@ Response::Response(Request const & request) {
 
 	if(request.get_error_code()) { //otherwise its set to 0 in response
 		_status_code = request.get_error_code();
-		location = "../errors/400.html"; /*std::to_string(_status_code)*/
+		if (_check_default_error_code_and_assign_path(_status_code))
+			location = _default_error_path;
+		else
+			location = "../errors/400.html"; /*std::to_string(_status_code)*/
 	}
 
-	
-	//here we need to combine the root url with the file so file.open works correctly
-	int pos = request.get_uri_target().find_last_of('.');
-
-// copies extension of the_target
-	std::copy(request.get_uri_target().begin() + pos, request.get_uri_target().end(), extension.begin()); // copy extension and later location = root + extension;
-	
-// location is set to root of the directive location.
-// it was determined in request.
-	location = request.get_location_root() + extension;
 
 // request error code is sent by default to 0. If there is no errors it is 0, if the error during request parsing occures it has value.
-	if(!request.get_error_code())  { 
+	if(!request.get_error_code())  {
+		location = request.get_final_path();
 		file.open(location.c_str(), std::ios::in);
 		if(!file.is_open()) {
 			_status_code = 404;
-			location = "../errors/404.html"; /*std::to_string(_status_code)*/
+			// check if its default
+			location = "../www/404.html"; /*std::to_string(_status_code)*/
 		}
-		else {
+		else
 			_status_code = 200;
-			location = request.get_location_root(); // ++ need to add file?
-		}
+			// check if its default;
 	}
 	file.open(location.c_str(), std::ios::in);
+	std::cout << "LOCATION STATUS CODE: " << RED << _status_code << ENDC << std::endl;
+	std::cout << "LOCATION RESPONSE: " << RED << location << ENDC << std::endl;
 	while (std::getline(file, buffer))
 		;
 	_content_length = buffer.length();
@@ -165,6 +161,7 @@ Response::Response(Request const & request) {
 	_server_name = "BLABLABLA TODO"; //request.get_server_confing().get;
 	_content = buffer;
 
+// autoindex part;
 //	if (is_directory && autoindex) {
 //		stream = open_dir_stream(root);
 //		_content = "<html><head><title>" + _target + "</title></head><body>\n";
@@ -186,6 +183,23 @@ Response::~Response() {
 		std::cout << "Response" << " destroyed" << std::endl;
 	// TODO (destructor)
 }
+
+
+bool Response::_check_default_error_code_and_assign_path(int code) {
+	std::map<std::string, std::vector<int> >::const_iterator it_m = _server_config._server_errors_map.begin();
+	std::vector<int>::const_iterator it_v;
+	for (; it_m != _server_config._server_errors_map.end() ; it_m++) {
+		for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++) {
+			if (*it_v == code) {
+				_default_error_path = it_m->first;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 
 
 std::ostream& operator<<(std::ostream& s, const Response& param) {

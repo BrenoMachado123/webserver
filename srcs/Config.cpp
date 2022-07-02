@@ -504,11 +504,11 @@ bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
     return false;
 }
 
-bool Config::ServerConfig::findMethod(const std::string& method) const {
-    for(size_t i = 0; i < 3; i++) {
-        if (method == Methods::_valid_methods[i])
+bool Config::ServerConfig::Location::findMethod(const std::string& method) const {
+    std::vector<std::string>::const_iterator it = _methods.begin();
+    for(; it != _methods.end() ; it++)
+        if (method == *it)
             return true;
-    }
     return false;
 }
 
@@ -552,12 +552,16 @@ void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_c
         serv_conf._locations.back()._max_body_size = _max_size;
 }
 
+
+// *************************************************
 void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == INSIDE_SERVER_CONTEXT)
-        serv_conf._error_path = _error_path;
+        serv_conf._server_errors_map[_error_path] = _error_codes;
     else if (context == INSIDE_LOCATION_CONTEXT)
-        serv_conf._locations.back()._error_path = _error_path;
+        serv_conf._locations.back()._location_errors_map[_error_path] = _error_codes;
 }
+// *************************************************
+
 
 void Config::ServerConfig::Index::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == INSIDE_SERVER_CONTEXT)
@@ -624,6 +628,16 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
     s << "|**********************************************|"<< std::endl;
     s << "| Server " << param.getIp() << ":" << param.getPort() << std::endl;
     s << "| - root path " << param._root_path << std::endl;
+    s << "| - errorCodeMap<std::string, std::vector<int> > ";
+    std::map<std::string, std::vector<int> >::const_iterator it_m = param._server_errors_map.begin();
+    std::vector<int>::const_iterator it_v;
+	for (; it_m != param._server_errors_map.end() ; it_m++) {
+        s << "[" << it_m->first << " ";
+		for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++)
+            s << *it_v << " ";
+        s << "]" << std::endl;
+        std::cout << std::endl;
+    }
     s << "| - error path " << param._error_path << std::endl;
     s << "| - server names [";
     std::vector<std::string> s_list(param._names);
@@ -639,7 +653,16 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
     for (; it != list.end() ; ++it) {
         s << "|  + target " << it->_target << std::endl;
         s << "|     root path " << it->_root_path << std::endl;
-        s << "|     error path " << it->_error_path << std::endl;
+        s << "| - errorCodeMap<std::string, std::vector<int> > ";
+        std::map<std::string, std::vector<int> >::const_iterator it_m = it->_location_errors_map.begin();
+        std::vector<int>::const_iterator it_v;
+        for (; it_m !=  it->_location_errors_map.end() ; it_m++) {
+            s << "[" << it_m->first << " ";
+            for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++)
+                s << *it_v << " ";
+            std::cout << "]";
+        }
+        std::cout << std::endl;
         s << "|     autoindex " << (it->_autoindex == true ? "on" : "off") << std::endl;
         s << "|     max_body_size " << it->_max_body_size << std::endl;
         s << "|     Index [";

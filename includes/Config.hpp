@@ -167,6 +167,7 @@ class Config {
                 class Location: public Directive {
 					private:
 						Location();
+
 						// std::vector<int>			_l_errorCodes;
 	                public:
                     	Location (std::string const &) throw (InvalidDirectiveException);
@@ -184,6 +185,9 @@ class Config {
 						
 						// std::map<int, std::vector<std::string> > _cgi;
 						// std::vector<Cgi> _cgi; <- I prefer this one;
+						std::map<std::string, std::vector<int> > _location_errors_map;
+
+						bool findMethod(std::string const &) const ;
                 };
 				class Root: public Directive {
 					private:
@@ -208,7 +212,6 @@ class Config {
 				~ServerConfig();
 				int					getPort() const;
 				Location * findLocation(std::string const &) const;
-				bool findMethod(std::string const &) const ;
 				std::string const &	getIp() const;
 				// void setLocation(const Location&);
 				// std::string & getRoot();
@@ -227,9 +230,10 @@ class Config {
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;
 				
+				std::map<std::string, std::vector<int> > _server_errors_map;
+				
 				static const std::string	_valid_methods_server[3];
 
-				//std::map<std::string, std::vector<int> > errors_map;
 				// std::vector<int>            _errorCodes;
 				// std::vector<std::string>    _methods;
 		};
