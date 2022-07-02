@@ -123,7 +123,6 @@ class Config {
 
                 class ErrorCodePage: public Directive {
 	                private:
-	                	static const int	_allErrorCodes[ALL_ERROR_CODES];
 	                    std::vector<int>	_error_codes;
 	                    std::string			_error_path;
 	                    bool	isCodeValid(const std::string &);
@@ -131,6 +130,7 @@ class Config {
 	                public:
 	                    ErrorCodePage(const std::string &) throw (InvalidDirectiveException);
 	                    ~ErrorCodePage();
+	                	static const int	_allErrorCodes[ALL_ERROR_CODES];
 						virtual void	setDirective(ServerConfig &, int) const;
                 };
 				class Index: public Directive {

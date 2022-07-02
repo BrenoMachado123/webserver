@@ -33,3 +33,12 @@ int ft_toupper (int c) {
         return (c - 32);
     return (c);
 }
+
+char * get_local_time (void) {
+  time_t rawtime;
+  struct tm * timeinfo;
+
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+  return (asctime(timeinfo));
+}

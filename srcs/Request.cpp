@@ -47,10 +47,11 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 		//THIS IS NOT CHECKING IF THAT FILE EXIST ACTUALLY!
 			_final_path = _location_root + _uri_target.substr(tmp_loc->_target.length());
 			std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
-			if (!tmp_loc->findMethod(_method) || _http_version.compare("http/1.1")) {
-				std::cout << RED << "flag1" << ENDC << std::endl;
-				_error_code = 400;
+			if (!tmp_loc->findMethod(_method)) {
+				_error_code = 405;
 			}
+			else if (_http_version.compare("http/1.1"))
+				_error_code = 505;
 			delete (tmp_loc);
 		}
 	}

@@ -12,7 +12,7 @@ SRC	=	srcs/main.cpp\
 		srcs/Request.cpp\
 		srcs/Client.cpp\
 
-CFLAGS	= -Wall -Wextra -Werror -std=c++98 -pedantic -fsanitize=address
+CFLAGS	= -Wall -Wextra -Werror -std=c++98 -pedantic
 
 INC	=	-I includes
 

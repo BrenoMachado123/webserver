@@ -162,6 +162,51 @@ Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
         std::cout << RED << "ClientMaxBodySize Directive destroyed!" << ENDC << std::endl;
 }
 
+/**
+ * @brief Construct a new Cgi object
+ * 
+ *  This constructor takes a string as argument that will be splited to get two arguments: "program extension" and "program path".
+ *  Then both will be parsed and pushed to the object. If one of the arguments is missing or one of them is invalid, throws an exception.
+ * 
+ * @param content 
+ *  The string after directive "cgi" is found by the parser.
+ */
+Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (InvalidDirectiveException):
+    Directive(CGI), _cgi() {
+        if (content.empty())
+            throw InvalidDirectiveException();
+        _parseCgiContent(_cgi, content);
+        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+            std::cout << WHITE << "Cgi created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::Cgi::~Cgi() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Cgi Directive destroyed!" << ENDC << std::endl;
+}
+
+/**
+ * @brief Construct a new CgiBin object
+ * 
+ *  This constructor takes a string as argument that will be the path of cgi-bin.
+ *  If path is empty, throws an exception.
+ * 
+ * @param content
+ *  The string after directive "cgi" is found by the parser.
+ */
+Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (InvalidDirectiveException):
+    Directive(CGIBIN), _path(content) {
+        if (_path.empty())
+            throw InvalidDirectiveException();
+        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+            std::cout << WHITE << "CgiBin created!" << ENDC << std::endl;
+}
+
+Config::ServerConfig::CgiBin::~CgiBin() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "CgiBin destroyed!" << ENDC << std::endl;
+}
+
 Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(InvalidDirectiveException):
     Directive(ERRORPAGE) {
     /* This constructor takes only one string which should be valid error code/s
@@ -339,50 +384,6 @@ Config::ServerConfig::ServerName::~ServerName() {
         std::cout << RED << "ServerName Directive destroyed!" << ENDC << std::endl;
 }
 
-/**
- * @brief Construct a new Cgi object
- * 
- *  This constructor takes a string as argument that will be splited to get two arguments: "program extension" and "program path".
- *  Then both will be parsed and pushed to the object. If one of the arguments is missing or one of them is invalid, throws an exception.
- * 
- * @param content 
- *  The string after directive "cgi" is found by the parser.
- */
-Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (InvalidDirectiveException):
-    Directive(CGI), _cgi() {
-        if (content.empty())
-            throw InvalidDirectiveException();
-        _parseCgiContent(_cgi, content);
-        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-            std::cout << WHITE << "Cgi created!" << ENDC << std::endl;
-}
-
-Config::ServerConfig::Cgi::~Cgi() {
-    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "Cgi Directive destroyed!" << ENDC << std::endl;
-}
-
-/**
- * @brief Construct a new CgiBin object
- * 
- *  This constructor takes a string as argument that will be the path of cgi-bin.
- *  If path is empty or not exists, throws an exception.
- * 
- * @param content
- *  The string after directive "cgi" is found by the parser.
- */
-Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (InvalidDirectiveException):
-    Directive(CGIBIN), _path(content) {
-        if (_path.empty() /*|| < check if directory exists >*/)
-            throw InvalidDirectiveException();
-        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-            std::cout << WHITE << "CgiBin created!" << ENDC << std::endl;
-}
-
-Config::ServerConfig::CgiBin::~CgiBin() {
-    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "CgiBin destroyed!" << ENDC << std::endl;
-}
 
 /* MEMBER FUNCTIONS */
 bool Config::validDirective(const std::string & str, const std::string * list, int len) const {
@@ -681,7 +682,7 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
         for (; c_it != it->_cgi.end() ; ++c_it) {
             s << "|         CGI_conf: " << (c_it->getCgi()).at(0) << " " <<  (c_it->getCgi()).at(1) << std::endl;
         }
-        s << "| ]" << std::endl;
+        s << "|     ]" << std::endl;
     }
     s << "|**********************************************|"<< std::endl;
     return (s);

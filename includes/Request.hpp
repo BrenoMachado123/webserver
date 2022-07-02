@@ -30,11 +30,9 @@ class Request {
 	    // std::string _transfer_encoding;
 		Config::ServerConfig const & _server_config;
 
-
 		std::map<std::string, std::vector<int> > _location_error_codes;
 		std::map<std::string, std::vector<int> > _server_error_codes;
-
-
+		
 		bool _check_default_error_code_and_assign_path(int) const;
 
 		// Socket _s;

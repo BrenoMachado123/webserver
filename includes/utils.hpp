@@ -3,7 +3,9 @@
 
 
 #include <iostream>
+
 #include <sys/time.h>
+#include <time.h>
 
 #include "Config.hpp"
 #include <webserv.hpp>
@@ -15,5 +17,5 @@ uint64_t	timestamp_in_ms(void);
 
 int ft_tolower (int);
 int ft_toupper (int);
-
+char * get_local_time (void);
 #endif
