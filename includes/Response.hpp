@@ -17,7 +17,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
-
+#include <sys/stat.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "Request.hpp"
 #include "webserv.hpp"
@@ -37,14 +41,14 @@ class Response {
 	private:
 		int _status_code;
 		bool _keep_alive;
+		bool _autoindex;
 		std::string _date;
 		std::string _server_name;
 		std::string _content_length;
 		std::string _content_type;
 		std::string _content;
-
+		Request const & _req;
 		Config::ServerConfig const & _server_config;
-
 		static std::map<int, std::string> _codeMessage;
 
 		//bool _check_default_error_code_and_assign_path(int);

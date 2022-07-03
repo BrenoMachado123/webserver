@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request(std::string const & request, Config::ServerConfig const & sc):
-	_error_code(0), _server_config(sc), _server_error_codes(_server_config._server_errors_map)
+	_error_code(0), _server_config(sc), _server_error_codes(_server_config._server_errors_map), _loc(NULL)
 	{			
 	std::stringstream ss(request);
 	std::string line;
@@ -34,68 +34,71 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	if (_uri_target.length() > 8000)
 		_error_code = 414;
 	else {
-		Config::ServerConfig::Location * tmp_loc;
-		tmp_loc = _server_config.findLocation(_uri_target);
-		if (!tmp_loc) {
+		_loc = _server_config.findLocation(_uri_target);
+		if (!_loc) {
 			_error_code = 400;
 			std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration" << ENDC << std::endl;
 		}
 		else {
-			_location_root = tmp_loc->_root_path;
-			_location_error_codes = tmp_loc->_location_errors_map;
-		//THIS IS NOT CHECKING IF THAT FILE EXIST ACTUALLY!
-			_final_path = _location_root + _uri_target.substr(tmp_loc->_target.length());
+			_location_root = _loc->_root_path;
+			_location_error_codes = _loc->_location_errors_map;
+			_final_path = _location_root + _uri_target.substr(_loc->_target.length());
 			std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
-			if (!tmp_loc->findMethod(_method)) {
+			if (!_loc->findMethod(_method)) {
 				_error_code = 405;
 			}
 			else if (_http_version.compare("http/1.1"))
 				_error_code = 505;
-			delete (tmp_loc);
 		}
 	}
 	
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Request Succesfully Parsed" << ENDC << std::endl;
 }
-
-
 Request::~Request() {
+	if (_loc)
+		delete (_loc);
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << "Request" << " destroyed" << std::endl;
-	// TODO (destructor)
 }
 
-int const & Request::get_error_code() const {
-	return _error_code;
+int Request::get_error_code() const {
+	return (_error_code);
 }
 
-std::string const & Request::get_method() const {
-	return _method;
+bool Request::is_target_dir() const {
+	if (_loc)
+		if (_loc->_target == _uri_target)
+			return (true);
+	return (false);
 }
 
-std::string const & Request::get_uri_target() const {
-	return _uri_target;
-}
+// std::string const & Request::get_method() const {
+// 	return _method;
+// }
 
-std::string const & Request::get_http_version() const {
-	return _http_version;
-}
+// std::string const & Request::get_uri_target() const {
+// 	return _uri_target;
+// }
 
-long const & Request::get_content_length() const {
-	return _content_length;
-}
+// std::string const & Request::get_http_version() const {
+// 	return _http_version;
+// }
 
-std::string const & Request::get_location_root() const {
-	return _location_root;
-}
+// long const & Request::get_content_length() const {
+// 	return _content_length;
+// }
 
-Config::ServerConfig const & Request::get_server_confing() const {
-	return _server_config;
-}
+// std::string const & Request::get_location_root() const {
+// 	return _location_root;
+// }
+
+// Config::ServerConfig const & Request::get_server_confing() const {
+// 	return _server_config;
+// }
 
 std::string const & Request::get_final_path() const {
-	return _final_path;
+	return (_final_path);
 }
 
 

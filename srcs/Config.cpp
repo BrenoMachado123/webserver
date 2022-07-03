@@ -16,6 +16,32 @@ const char * Config::InvalidConfigurationFileException::what() const throw() {re
 const char * Config::InvalidDirectiveException::what() const throw() {return ("Directive is invalid");}
 const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong Directive Syntax");}
 /* CONSTUCTORS & DESTRUCTORS */
+/*
+ * @brief Construct a new Config
+ * 
+ *  The constructor takes a string which should be the configuration file.
+ *  It will parse all the directives inside the configuration file.
+ *  The parsing is done line by line, one directive per line.
+ *  Throw exception in case of error (file, directive, syntax)
+ *  There are 3 valid contexts
+ *    - No context (Outside any scope)
+ *    - Server context (Inside the server Scope) [server {...}]
+ *    - Location context (Inside the server Scope, inside Location scope) [server {... location {...}}]
+ * @param content 
+ *  First check if the file is valid and create a file input stream to read from.
+ *  Create a line tmp variable and an integer to keep track of the context [0: No Context, 1: Server context, 2:  Location context].
+ *  Read the file stream line by line with a while loop.
+ *  For every line:
+ *   1 - Trim both sides of the string with the SEPARATORS string constant MACRO
+ *   2.a - If line is empty or starts with '#' then continue to the next line. (ignore this line)
+ *   2.b - Split the string in 2 pieces. [1:directive, 2:directive_content]
+ *         The first piece is the line from the begining to the first separator.
+ *         The second piece is the line from the first separator to the end. (empty if there is no separator)
+ *   3   - 
+ *  
+ *  
+ *  
+ */
 Config::Config(std::string const & file_str) throw(std::exception) {
     std::ifstream file;
     file.open(file_str.c_str(), std::ios::in);
@@ -28,18 +54,19 @@ Config::Config(std::string const & file_str) throw(std::exception) {
         if (!line.length() || line[0] == '#')
             continue;
         std::string directive(line.substr(0, line.find_first_of(SEPARATORS)));
-        std::string tmp(line.substr(line.find_first_of(SEPARATORS) + 1, line.length()));
+        std::string tmp(line.substr(line.find_first_of(SEPARATORS) + 1));
         std::string directive_content(strtrim(tmp));
-        if (directive == "}") {
+        if (directive == "}" && directive_content == directive) {
             if (--context < 0)
                 throw e_invalid_directive;
             continue ;
         }
-        std::cout << BLUE << std::left << (context == INSIDE_LOCATION_CONTEXT ? "Location" : "Server") << " context: " << YELLOW;
-        std::cout << "[" << directive << "]" << " - [" << directive_content << "]";
+        if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+            std::cout << BLUE << std::left << (context == LOCATION_CONTEXT ? "Location" : "Server") << " context: " << YELLOW << "[" << directive << "]" << " - [" << directive_content << "]";
         switch (context) {
             case 0:
-                std::cout << std::endl;
+                if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                    std::cout << ENDC << std::endl;
                 if (directive == "server" && directive_content == "{") {
                     ServerConfig s;
                     _servers.push_back(s);
@@ -48,10 +75,10 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                 else
                     throw e_invalid_directive;
                 break ;
-            case INSIDE_SERVER_CONTEXT:
-                if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES))
-                {
-                    std::cout << GREEN << "[OK]" << ENDC << std::endl;
+            case SERVER_CONTEXT:
+                if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES)) {
+                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                        std::cout << GREEN << "[OK]" << ENDC << std::endl;
                     ServerConfig::Directive * _directive;
                     _directive = createDirective(directive, directive_content);
                     if (_directive != 0)
@@ -66,14 +93,16 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                 }
                 else
                 {
-                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
+                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                        std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
                     throw e_invalid_directive;
                 }
                 break;
-            case INSIDE_LOCATION_CONTEXT:
+            case LOCATION_CONTEXT:
                 if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
                 {
-                    std::cout << GREEN << "[OK]" << ENDC << std::endl;
+                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                        std::cout << GREEN << "[OK]" << ENDC << std::endl;
                     ServerConfig::Directive * _directive;
                     _directive = createDirective(directive, directive_content);
                     if (_directive != 0)
@@ -85,12 +114,13 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                         throw e_wrong_syntax;
                 }
                 else {
-                    std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
+                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                        std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
                     throw e_invalid_directive;
                 }
                 break;
             default:
-                std::cout << ENDC;
+                std::cout << ENDC << std::endl;
                 throw e_invalid_directive;
         }
     }
@@ -155,7 +185,7 @@ Config::ServerConfig::ClientMaxBodySize::ClientMaxBodySize(const std::string & c
     std::stringstream intValue(content);
     intValue >> _max_size;
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "ClientMaxBodySize created!" << ENDC << std::endl;
+        std::cout << WHITE << "ClientMaxBodySize created [" << _max_size << "]" << ENDC << std::endl;
 }
 Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -217,12 +247,11 @@ Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) 
         ErrorCodePage("404 405 ./r.html ./el.html") [throw InvalidDirectiveException]
         ErrorCodePage("./response.html")            [throw InvalidDirectiveException] */
     size_t found = content.find_last_of(SEPARATORS);
-    if (content.empty()|| found == std::string::npos
-        || !isCodeValid(content.substr(0, found)))
+    if (content.empty()|| found == std::string::npos || !isCodeValid(content.substr(0, found)))
         throw InvalidDirectiveException();
     _error_path = content.substr(found + 1);
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE <<"ErrorCode created" << std::endl;
+        std::cout << WHITE <<"ErrorCode created [" << _error_path << "]" << std::endl;
 }
 Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -242,7 +271,7 @@ Config::ServerConfig::Index::Index(const std::string & content) throw (InvalidDi
         token = strtok(NULL, SEPARATORS);
     }
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "Index created!" << ENDC << std::endl;
+        std::cout << WHITE << "Index created [" << _indexes.size() << " indexes]" << ENDC << std::endl;
 }
 Config::ServerConfig::Index::~Index() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -269,7 +298,7 @@ Config::ServerConfig::Methods::Methods(const std::string & content) throw (Inval
 		str = std::strtok(NULL, " ");	
 	}
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-	   std::cout << WHITE << "Limit Methods created" << ENDC << std::endl;
+	   std::cout << WHITE << "Limit Methods created [" << _methods.size() << " methods]" << ENDC << std::endl;
 }
 Config::ServerConfig::Methods::~Methods() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -320,7 +349,7 @@ Config::ServerConfig::Listen::Listen(const std::string & content) throw (Invalid
             throw InvalidDirectiveException();
     }
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "Listen created" << ENDC << std::endl;
+        std::cout << WHITE << "Listen created [" << _ip << ":" << _port << "]" << ENDC << std::endl;
 }
 Config::ServerConfig::Listen::~Listen() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -340,7 +369,7 @@ Config::ServerConfig::Location::Location(std::string const & content) throw (Inv
     if (_target.empty() || _target.find(SEPARATORS) != std::string::npos)
         throw InvalidDirectiveException();
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "Location created" << ENDC << std::endl;
+        std::cout << WHITE << "Location created [" << _target << "]" << ENDC << std::endl;
 }
 Config::ServerConfig::Location::~Location() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -356,7 +385,7 @@ Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiv
 	if (str.empty() || str.find(SEPARATORS) != std::string::npos)
 		throw InvalidDirectiveException();
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-	   std::cout << WHITE << "Root created" << ENDC << std::endl;
+	   std::cout << WHITE << "Root created [" << _path << "]" << ENDC << std::endl;
 }
 Config::ServerConfig::Root::~Root() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -377,7 +406,7 @@ Config::ServerConfig::ServerName::ServerName(const std::string & content) throw 
         token = strtok(NULL, SEPARATORS);
     }
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "ServerName created!" << ENDC << std::endl;
+        std::cout << WHITE << "ServerName created [" << _server_names.size() << " names]" << ENDC << std::endl;
 }
 Config::ServerConfig::ServerName::~ServerName() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -536,73 +565,73 @@ bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
 }
 
 void Config::ServerConfig::AutoIndex::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._autoindex = _option;
-    else if (context == INSIDE_LOCATION_CONTEXT)
+    else if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._autoindex = _option;
 }
 
 void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._max_body_size = _max_size;
-    else if (context == INSIDE_LOCATION_CONTEXT)
+    else if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._max_body_size = _max_size;
 }
 
 
 // *************************************************
 void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._server_errors_map[_error_path] = _error_codes;
-    else if (context == INSIDE_LOCATION_CONTEXT)
+    else if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._location_errors_map[_error_path] = _error_codes;
 }
 // *************************************************
 
 
 void Config::ServerConfig::Index::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._indexes = _indexes;
-    else if (context == INSIDE_LOCATION_CONTEXT)
+    else if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._indexes = _indexes;
 }
 
 void Config::ServerConfig::Methods::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_LOCATION_CONTEXT)
+    if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._methods = _methods;
 }
 
 void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context != INSIDE_SERVER_CONTEXT)
+    if (context != SERVER_CONTEXT)
         return ;
     serv_conf._port = _port;
     serv_conf._ip = _ip;
 }
 
 void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._locations.push_back(*this);
 }
 
 void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._root_path = _path;
-    else if (context == INSIDE_LOCATION_CONTEXT)
+    else if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._root_path = _path;
 }
 
 void Config::ServerConfig::ServerName::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT)
         serv_conf._names = _server_names;
 }
 
 void Config::ServerConfig::Cgi::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_LOCATION_CONTEXT)
+    if (context == LOCATION_CONTEXT)
         (serv_conf._locations.back()._cgi).push_back(*this);
 }
 
 void Config::ServerConfig::CgiBin::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == INSIDE_LOCATION_CONTEXT)
+    if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._cgi_bin = _path;
 }
 

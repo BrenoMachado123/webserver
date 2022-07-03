@@ -122,30 +122,46 @@ static std::string const _mime_type_detector(std::string const & file_name) {
 		return "application/octet-stream"; // default for binary files. It means unknown binary file
 }
 
-Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true), _server_config(sc) {
+Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _req(request), _server_config(sc) {
 	std::fstream file;
 	std::string tmp_buffer;
 	std::string buffer;
 	std::string location;
 	std::string extension;
 
-	_status_code = request.get_error_code();
+	_status_code = _req.get_error_code();
 	_date = get_local_time();
 	_server_name = "Breno_Tony_Pulga";
 	std::cout << YELLOW << "Status code " << GREEN << _status_code << ENDC << std::endl;
-	if (_status_code == 0) {
-		location = request.get_final_path();
-		// THIS ONLY WORKS IF THE REQUEST IS REQUESTING A SPECIFIC FILE, DOESN'T WORK FOR INDEX OR AUTO INDEX
-		file.open(location.c_str(), std::ios::in);
-		if(file.is_open()) {
-			_status_code = 200;
-			// check if its default;
-			while (std::getline(file, tmp_buffer))
-				buffer += tmp_buffer;
-			_content_length = buffer.length();
-			_content_type = _mime_type_detector(location);
-			_content = buffer;
-			std::cout << CYAN << location << _content_length << ", " << _content_type << ", " << _date << ", " << _server_name << ENDC << std::endl;
+	if (_status_code == 0 && _req._loc) {
+		std::cout << RED << "FLAG 1" << ENDC << std::endl;
+		if (_req.is_target_dir()) {
+			std::cout << RED << "FLAG 2" << ENDC << std::endl;
+			if (_req._loc->_autoindex) {
+				std::cout << RED << "FLAG 3.1" << ENDC << std::endl;
+				_status_code = 200;
+				_autoindex = true;
+			}
+			else {
+				std::cout << RED << "FLAG 3.2" << ENDC << std::endl;
+				_status_code = 404;
+			}
+		} else {
+			location = _req.get_final_path();
+			file.open(location.c_str(), std::ios::in);
+			if(file.is_open()) {
+				_status_code = 200;
+				// check if its default;
+				while (std::getline(file, tmp_buffer))
+					buffer += tmp_buffer;
+				_content_length = buffer.length();
+				_content_type = _mime_type_detector(location);
+				_content = buffer;
+				std::cout << CYAN << location << _content_length << ", " << _content_type << ", " << _date << ", " << _server_name << ENDC << std::endl;
+			}
+			else
+				_status_code = 404;
+		}
 
 		// autoindex part;
 		//	if (is_directory && autoindex) {
@@ -159,9 +175,6 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 		//		}
 		//		_content += "</body></html>"
 		//	}
-		}
-		else
-			_status_code = 404;
 	}
     if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << RED << "FINISH RESPONSE" << ENDC << std::endl;
@@ -190,26 +203,69 @@ Response::~Response() {
 
 std::string Response::createResponse() {
 	std::string response;
+	std::string html_content;
 	std::ostringstream so;
 	// I am concidering that it will ALLWAYS return AN ERROR for now
+	so << _status_code;
+	if (_status_code == 200 && _req._loc) { // && no index file
+		if (_content.length() > 0) {
+			html_content = _content;
+		} else if (_autoindex) {
+			std::cout << GREEN << "HEREEE!!!!" << ENDC << std::endl;
+			//_req._loc._root_path
+			struct dirent * de;
+		    struct stat st;
+		    struct tm tm_time;
+		    DIR *dr = opendir(_req._loc->_root_path.c_str());
+		    std::cout << WHITE << "PATH" << _req._loc->_root_path << ENDC << std::endl;
+			if (dr == NULL) {
+				_status_code = 404;
+			} else {
+				html_content = "<html>\n<head><title>autoindex</title></head>\n<body>\n";
+				while ((de = readdir(dr)) != NULL) {
+					std::string file_path(_req._loc->_root_path + "/" + de->d_name);
+					int fd = open(file_path.c_str(), O_RDONLY);
+					if (fstat(fd, &st) == -1)
+						continue ;
+					gmtime_r(&(st.st_mtim.tv_sec), &tm_time);
+					std::string s_time(asctime(&tm_time));
+					std::string tmp_s_time(s_time.substr(0, s_time.length() - 1));
+					std::string slash;
+					std::string file_name(de->d_name);
+					if (de->d_type == 4)
+						slash = "/";
+				        //printf("%s%s %s %lld\n", de->d_name, (de->d_type == 4 ? "/" : ""), s_time.c_str(), st.st_size);
+					html_content += "<a href=\"" + file_name + "\">" + de->d_name + " " + slash + " " + tmp_s_time;
+					html_content += "<br>";
+					close (fd);
+			    }
+			    // "<a href=\"some_path/\">folder/</a>"
+				// "<br>"
+				// "<a href=\"some_file\">file</a>"
+			    closedir(dr);
+			    html_content += "\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
+
+				std::cout << CYAN << html_content << ENDC << std::endl;
+			}
+		}
+	}
 	if (_status_code != 200) {
 		_keep_alive = false;
-
-		so << _status_code;
+		
 		std::string html_content;
 		html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
-		response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
-		response += "Date: " + _date;
-		response += "Server: " + _server_name + "\n";
-		response += "Content-Type: text/html\n";
-		so.str(std::string());
-		so << html_content.length();		
-		response += "Content-Length: " + so.str() + "\n"; // html_content.length.itoa,
-		response += "Connection: close\n";
-		response += "\r\n";
-		response += html_content;
-		std::cout << RED << _status_code << ", " << so.str() << "\n" << YELLOW << response << ENDC << std::endl;
 	}
+	response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
+	response += "Date: " + _date;
+	response += "Server: " + _server_name + "\n";
+	response += "Content-Type: text/html\n";
+	so.str(std::string());
+	so << html_content.length();		
+	response += "Content-Length: " + so.str() + "\n";
+	response += "Connection: close\n";
+	response += "\r\n";
+	response += html_content;
+	std::cout << RED << _status_code << ", " << so.str() << "\n" << YELLOW << response << ENDC << std::endl;
 	return (response);
 }
 

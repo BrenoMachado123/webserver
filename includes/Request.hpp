@@ -43,17 +43,19 @@ class Request {
 		Request(std::string const &, Config::ServerConfig const &);
 		~Request();
 
-		int const & get_error_code() const;
-		long const & get_content_length() const;
-		std::string const & get_method() const;
-		std::string const & get_uri_target() const;
-		std::string const & get_http_version() const;
-		std::string const & get_location_root() const;
+		int get_error_code() const;
 		std::string const & get_final_path() const;
-		bool const & get_is_default() const;
-		std::string const & get_default_error_path() const ;
+		bool is_target_dir() const;
+		// long const & get_content_length() const; //?????????????
+		// std::string const & get_method() const; 
+		// std::string const & get_uri_target() const;
+		// std::string const & get_http_version() const;
+		// std::string const & get_location_root() const;
+		// bool const & get_is_default() const; //????
+		// std::string const & get_default_error_path() const ;
+		// Config::ServerConfig const & get_server_confing() const;
 
-		Config::ServerConfig const & get_server_confing() const;
+		Config::ServerConfig::Location * _loc;
 		// std::string & get_error_code() const;
 		// std::string & get_error_code() const;
 		// std::string & get_error_code() const;
