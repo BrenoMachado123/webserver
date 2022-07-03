@@ -120,13 +120,39 @@ void HTTPServer::run() {
 						std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Input From Client: " << v_it->getFd() << " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;
 					char buffer[30000] = {0};
 					int valread = read(fd, buffer, 30000);
+
 					if (valread < 0) {
 						perror("In Read\n");
 						exit(EXIT_FAILURE);
 					}
 					if (valread > 0) {
+						/*
 						std::string _buffer(buffer, valread);
 						v_it->handleRequest(_buffer);
+						*/
+						// std::string content;
+						std::ifstream file;
+						file.open("/home/kali/Downloads/index.jpeg");
+						if (!file.is_open())
+							exit(2);
+						std::filebuf* pbuf = file.rdbuf();
+						std::size_t size = pbuf->pubseekoff (0, file.end, file.in);
+  						pbuf->pubseekpos (0, file.in);
+  						char * buffer = new char[size];
+						pbuf->sgetn (buffer, size);
+						file.close();
+						std::stringstream ss;
+						ss << "HTTP/1.1 200 OK\n";
+						ss << "Date: " << get_local_time();
+						ss << "Server: tobrpu \n";
+						ss << "Content-Type: image/jpeg\n";
+						ss << "Content-Length: " << size << "\n";
+						ss << "Connection: keep-alive\n";
+						ss << "\r\n";
+						ss << buffer;
+						delete[] buffer;
+						std::cout << GREEN << ss.str() << ENDC << std::endl;
+						send(fd, ss.str().c_str(), ss.str().length(), 0);
 					}
 				}
 		   }

@@ -61,7 +61,7 @@ static std::string const _mime_type_detector(std::string const & file_name) {
 		return "application/vnd.oasis.opendocument.spreadsheet";
 	
 	//IMAGE
-	else if(ext == "jpeg")
+	else if(ext == "jpeg" || ext == "jpg")
 		return "image/jpeg";
 	else if(ext == "png")
 		return "image/png";
