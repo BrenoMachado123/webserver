@@ -148,9 +148,8 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 			file.open(location.c_str(), std::ifstream::binary);
 			if(file.is_open()) {
 				_status_code = 200;
-				// check if its default;
 				while (std::getline(file, tmp_buffer))
-					buffer += tmp_buffer;
+					buffer += tmp_buffer + "\n";
 				_content_length = buffer.length();
 				_content_type = _mime_type_detector(location);
 				_content = buffer;
@@ -158,19 +157,6 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 			else
 				_status_code = 404;
 		}
-
-		// autoindex part;
-		//	if (is_directory && autoindex) {
-		//		stream = open_dir_stream(root);
-		//		_content = "<html><head><title>" + _target + "</title></head><body>\n";
-		//		for (every_node_in_dir()) {
-		//			if (is_file)
-		//				_content += "<a href=\"" + abs_path_to_file OR path_to_file + "\"> + " filename "</a>\n"
-		//			else (is_dir)
-		//				_content += "<a href=\"" + abs_path_to_dir OR path_to_dir + "\"> - " filename "/ </a>\n"
-		//		}
-		//		_content += "</body></html>"
-		//	}
 	}
     if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << RED << "FINISH RESPONSE" << ENDC << std::endl;
