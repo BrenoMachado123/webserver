@@ -19,10 +19,11 @@ static std::map<int, std::string> insert_to_map() {
 std::map<int, std::string> Response::_codeMessage = insert_to_map();
 
 static std::string const _mime_type_detector(std::string const & file_name) {
-	//int pos = file_name.find_last_of('.');
-	(void)file_name;
-	//file_name = file_name.substr(pos, file_name.length() - pos);
-	std::string ext = "html";
+	size_t pos(file_name.find_last_of('.'));
+	if (pos == std::string::npos)
+		return "text/html";
+	std::string ext = file_name.substr(pos + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::ft_tolower);
 //TEXT
 	if(ext == "txt")
 		return "text/plain";
@@ -123,7 +124,7 @@ static std::string const _mime_type_detector(std::string const & file_name) {
 }
 
 Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _req(request), _server_config(sc) {
-	std::fstream file;
+	std::ifstream file;
 	std::string tmp_buffer;
 	std::string buffer;
 	std::string location;
@@ -132,23 +133,19 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	_status_code = _req.get_error_code();
 	_date = get_local_time();
 	_server_name = "Breno_Tony_Pulga";
-	std::cout << YELLOW << "Status code " << GREEN << _status_code << ENDC << std::endl;
 	if (_status_code == 0 && _req._loc) {
-		std::cout << RED << "FLAG 1" << ENDC << std::endl;
 		if (_req.is_target_dir()) {
-			std::cout << RED << "FLAG 2" << ENDC << std::endl;
+			// INDEX CHECK
 			if (_req._loc->_autoindex) {
-				std::cout << RED << "FLAG 3.1" << ENDC << std::endl;
 				_status_code = 200;
 				_autoindex = true;
 			}
 			else {
-				std::cout << RED << "FLAG 3.2" << ENDC << std::endl;
 				_status_code = 404;
 			}
 		} else {
 			location = _req.get_final_path();
-			file.open(location.c_str(), std::ios::in);
+			file.open(location.c_str(), std::ifstream::binary);
 			if(file.is_open()) {
 				_status_code = 200;
 				// check if its default;
@@ -157,7 +154,6 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				_content_length = buffer.length();
 				_content_type = _mime_type_detector(location);
 				_content = buffer;
-				std::cout << CYAN << location << _content_length << ", " << _content_type << ", " << _date << ", " << _server_name << ENDC << std::endl;
 			}
 			else
 				_status_code = 404;
@@ -211,19 +207,17 @@ std::string Response::createResponse() {
 		if (_content.length() > 0) {
 			html_content = _content;
 		} else if (_autoindex) {
-			std::cout << GREEN << "HEREEE!!!!" << ENDC << std::endl;
 			//_req._loc._root_path
 			struct dirent * de;
 		    struct stat st;
 		    struct tm tm_time;
-		    DIR *dr = opendir(_req._loc->_root_path.c_str());
-		    std::cout << WHITE << "PATH" << _req._loc->_root_path << ENDC << std::endl;
+		    DIR *dr = opendir(_req.get_final_path().c_str());
 			if (dr == NULL) {
 				_status_code = 404;
 			} else {
-				html_content = "<html>\n<head><title>autoindex</title></head>\n<body>\n";
+				html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>autoindex</title><style>div { display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%;}</style></head>\n<body>\n";
 				while ((de = readdir(dr)) != NULL) {
-					std::string file_path(_req._loc->_root_path + "/" + de->d_name);
+					std::string file_path(_req.get_final_path() + "/" + de->d_name);
 					int fd = open(file_path.c_str(), O_RDONLY);
 					if (fstat(fd, &st) == -1)
 						continue ;
@@ -234,38 +228,31 @@ std::string Response::createResponse() {
 					std::string file_name(de->d_name);
 					if (de->d_type == 4)
 						slash = "/";
-				        //printf("%s%s %s %lld\n", de->d_name, (de->d_type == 4 ? "/" : ""), s_time.c_str(), st.st_size);
-					html_content += "<a href=\"" + file_name + "\">" + de->d_name + " " + slash + " " + tmp_s_time;
-					html_content += "<br>";
+					html_content += "<div><a href=\"" + file_name + slash + "\">" + de->d_name + slash + "</a><span>" + tmp_s_time + "</span></div>";
 					close (fd);
 			    }
-			    // "<a href=\"some_path/\">folder/</a>"
-				// "<br>"
-				// "<a href=\"some_file\">file</a>"
 			    closedir(dr);
 			    html_content += "\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
-
-				std::cout << CYAN << html_content << ENDC << std::endl;
 			}
 		}
 	}
 	if (_status_code != 200) {
 		_keep_alive = false;
-		
-		std::string html_content;
 		html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
 	}
 	response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
 	response += "Date: " + _date;
 	response += "Server: " + _server_name + "\n";
-	response += "Content-Type: text/html\n";
+	response += "Accept-Charset: utf-8\n";
+	response += "Content-Type: " + _content_type + "\n";
 	so.str(std::string());
-	so << html_content.length();		
+	so << html_content.length();
 	response += "Content-Length: " + so.str() + "\n";
 	response += "Connection: close\n";
 	response += "\r\n";
 	response += html_content;
-	std::cout << RED << _status_code << ", " << so.str() << "\n" << YELLOW << response << ENDC << std::endl;
+	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << RED << "RESPONSE:" << std::endl << CYAN << response << ENDC << std::endl;
 	return (response);
 }
 

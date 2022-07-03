@@ -100,11 +100,12 @@ void HTTPServer::run() {
 		}
 		for (n = 0; n < nfds; ++n) {
 			if (isSocketFd(events[n].data.fd)) {
-				std::cout << WHITE << "[" << timestamp_in_ms() << "]" << YELLOW << " ServerSocket Accepting Connection" << ENDC << std::endl;
+				if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+					std::cout << WHITE << "[" << timestamp_in_ms() << "]" << YELLOW << " ServerSocket Accepting Connection" << ENDC << std::endl;
 				acceptConnectionAt(events[n].data.fd);
 			} else {
 				int fd = events[n].data.fd;
-				{
+				if (events[n].events == EPOLLIN) {
 					int big_sock(0);
 					std::vector<Client>::iterator v_it;
 					for (m_it = _clients.begin(); m_it != _clients.end() && big_sock == 0; ++m_it) {
@@ -115,15 +116,18 @@ void HTTPServer::run() {
 						 	}
 						}
 					}
-					std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Input From Client: " << v_it->getFd() << " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;
+					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+						std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Input From Client: " << v_it->getFd() << " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;
 					char buffer[30000] = {0};
 					int valread = read(fd, buffer, 30000);
 					if (valread < 0) {
 						perror("In Read\n");
 						exit(EXIT_FAILURE);
 					}
-					std::string _buffer(buffer, valread);
-					v_it->handleRequest(_buffer);
+					if (valread > 0) {
+						std::string _buffer(buffer, valread);
+						v_it->handleRequest(_buffer);
+					}
 				}
 		   }
 		}
@@ -137,7 +141,8 @@ void HTTPServer::run() {
 	 */
 		for (m_it = _clients.begin(); m_it != _clients.end() ; ++m_it) {
 			for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
-				std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->getTimeToDie() << ENDC << std::endl;
+				if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+					std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->getTimeToDie() << ENDC << std::endl;
 				if (v_it->getTimeToDie() < timestamp || !(v_it->_keep_alive)) {
 					close(v_it->getFd());
 					_clients_to_die.push_back(v_it);

@@ -68,7 +68,7 @@ int Request::get_error_code() const {
 
 bool Request::is_target_dir() const {
 	if (_loc)
-		if (_loc->_target == _uri_target)
+		if (_loc->_target == _uri_target || (*(_uri_target.end() - 1)) == '/' )
 			return (true);
 	return (false);
 }
