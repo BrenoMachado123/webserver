@@ -33,7 +33,6 @@
 #include <map>
 
 #include <stdlib.h>
-
 #include "webserv.hpp"
 
 /**************************Config***+***************************/
@@ -136,7 +135,7 @@ class Config {
 						~Index();
 						virtual void	setDirective(ServerConfig &, int) const;
 					private:
-						std::vector<std::string>	_indexes;
+						std::vector<std::string> _indexes;
 						Index();
 				};
 				class Methods: public Directive {
@@ -167,7 +166,7 @@ class Config {
                     	~Location();
 	                    virtual void	setDirective(ServerConfig &, int) const;
 						std::vector<std::string>	_methods;
-						std::string					_error_path;
+						//std::string					_error_path;
 						std::string					_root_path;
 						std::string					_target;
 						std::vector<std::string>	_indexes;
@@ -222,7 +221,7 @@ class Config {
 				std::string					_ip;
                 int							_port;
 				std::string                 _root_path;
-				std::string                 _error_path;
+				//std::string                 _error_path;
                 std::vector<Location>		_locations;
 				std::vector<std::string>	_indexes;
 				std::vector<std::string>	_names;

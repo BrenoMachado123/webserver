@@ -130,6 +130,8 @@ void HTTPServer::run() {
 					if (valread > 0) {
 						std::string _buffer(buffer, valread);
 						v_it->handleRequest(_buffer);
+					} else {
+						v_it->_keep_alive = false;
 					}
 				}
 		   }

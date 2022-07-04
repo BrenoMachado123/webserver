@@ -132,7 +132,7 @@ Config::~Config() {
 	   std::cout << RED << "Config destroyed" << ENDC << std::endl;
 }
 
-Config::ServerConfig::ServerConfig() : _autoindex(false), _max_body_size(-1), _ip("127.0.0.1"), _port(80), _root_path("www"), _error_path("www/errors") {
+Config::ServerConfig::ServerConfig() : _autoindex(false), _max_body_size(-1), _ip("127.0.0.1"), _port(80), _root_path("www") {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << WHITE << "ServerConfig created [" << _ip << ":" << _port << "]" << ENDC << std::endl;
 }
@@ -357,7 +357,7 @@ Config::ServerConfig::Listen::~Listen() {
 }
 
 Config::ServerConfig::Location::Location(std::string const & content) throw (InvalidDirectiveException):
-    Directive(LOCATION), _error_path("www/default_error/"), _target(content), _max_body_size(-1), _autoindex(false) {
+    Directive(LOCATION), _target(content), _max_body_size(-1), _autoindex(false) {
     /*This constructor takes only one string which should be a valid path
         Location("/etc/www/where_is_the_file {") [VALID]
         Location("/etc trash wrong {") [throw InvalidDirectiveException]
@@ -654,17 +654,16 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
     s << "|**********************************************|"<< std::endl;
     s << "| Server " << param.getIp() << ":" << param.getPort() << std::endl;
     s << "| - root path " << param._root_path << std::endl;
-    s << "| - errorCodeMap<std::string, std::vector<int> > ";
+    s << "| - errors map [" << std::endl;
     std::map<std::string, std::vector<int> >::const_iterator it_m = param._server_errors_map.begin();
     std::vector<int>::const_iterator it_v;
 	for (; it_m != param._server_errors_map.end() ; it_m++) {
-        s << "[" << it_m->first << " ";
+        s << "|     " << it_m->first << ": [";
 		for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++)
             s << *it_v << " ";
         s << "]" << std::endl;
-        std::cout << std::endl;
     }
-    s << "| - error path " << param._error_path << std::endl;
+    std::cout << "|   ]" << std::endl;
     s << "| - server names [";
     std::vector<std::string> s_list(param._names);
     std::vector<std::string>::iterator s_it(s_list.begin());
@@ -679,16 +678,16 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
     for (; it != list.end() ; ++it) {
         s << "|  + target " << it->_target << std::endl;
         s << "|     root path " << it->_root_path << std::endl;
-        s << "| - errorCodeMap<std::string, std::vector<int> > ";
+        s << "|     errors map [" << std::endl;
         std::map<std::string, std::vector<int> >::const_iterator it_m = it->_location_errors_map.begin();
         std::vector<int>::const_iterator it_v;
         for (; it_m !=  it->_location_errors_map.end() ; it_m++) {
-            s << "[" << it_m->first << " ";
+            s << "|       " << it_m->first << ": [";
             for (it_v = (it_m->second).begin() ; it_v != it_m->second.end() ; it_v++)
                 s << *it_v << " ";
-            std::cout << "]";
+            s << "]" << std::endl;
         }
-        std::cout << std::endl;
+        std::cout << "|     ]" << std::endl;
         s << "|     autoindex " << (it->_autoindex == true ? "on" : "off") << std::endl;
         s << "|     max_body_size " << it->_max_body_size << std::endl;
         s << "|     Index [";
@@ -705,7 +704,7 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
         s << "|     CGI [" << std::endl;
         std::vector<Config::ServerConfig::Cgi>::iterator c_it(it->_cgi.begin());
         for (; c_it != it->_cgi.end() ; ++c_it) {
-            s << "|         CGI_conf: " << (c_it->getCgi()).at(0) << " " <<  (c_it->getCgi()).at(1) << std::endl;
+            s << "|      " << (c_it->getCgi()).at(0) << ": " <<  (c_it->getCgi()).at(1) << std::endl;
         }
         s << "|     ]" << std::endl;
     }

@@ -13,17 +13,11 @@ int	main(int ac, char **av)
 		help(av[0]);
 		return (1);
 	}
-	
-	std::cout << GREEN << "TESTING" << ENDC << std::endl;
-
 	try {
 		HTTPServer s(av[1]);
 		s.run();
 	} catch (std::exception & e) {
 		std::cout << RED << "EXCEPTION: " << e.what() << std::endl;
 	}
-	
-	std::cout << GREEN << "FINISHED" << ENDC << std::endl;
-
 	return (0);
 }

@@ -129,19 +129,39 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	std::string buffer;
 	std::string location;
 	std::string extension;
-
+	std::vector<std::string>::iterator i_it;
+	
 	_status_code = _req.get_error_code();
 	_date = get_local_time();
 	_server_name = "Breno_Tony_Pulga";
 	if (_status_code == 0 && _req._loc) {
+		_status_code = 404;
 		if (_req.is_target_dir()) {
-			// INDEX CHECK
-			if (_req._loc->_autoindex) {
+			if (_req.is_target_route()) {
+				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+					std::cout << WHITE << "Try Index: ";
+				for(i_it = _req._loc->_indexes.begin(); i_it != _req._loc->_indexes.end() && !_content.length(); ++i_it) {
+					location = _req._loc->_root_path + *i_it;
+					if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+	    				std::cout << *i_it << " ";
+					file.open(location.c_str(), std::ifstream::binary);
+					if(file.is_open()) {
+	    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+							std::cout << GREEN << "[founded]";
+						_status_code = 200;
+						while (std::getline(file, tmp_buffer))
+							buffer += tmp_buffer + "\n";
+						_content_length = buffer.length();
+						_content_type = _mime_type_detector(location);
+						_content = buffer;
+					}
+				}
+				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+					std::cout << ENDC << std::endl;
+			}
+			if (_req._loc->_autoindex && !_content.length()) {
 				_status_code = 200;
 				_autoindex = true;
-			}
-			else {
-				_status_code = 404;
 			}
 		} else {
 			location = _req.get_final_path();
@@ -155,6 +175,8 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				_content = buffer;
 			}
 			else
+				_status_code = 404;
+			if (!_content.length())
 				_status_code = 404;
 		}
 	}
@@ -187,13 +209,11 @@ std::string Response::createResponse() {
 	std::string response;
 	std::string html_content;
 	std::ostringstream so;
-	// I am concidering that it will ALLWAYS return AN ERROR for now
 	so << _status_code;
 	if (_status_code == 200 && _req._loc) { // && no index file
 		if (_content.length() > 0) {
 			html_content = _content;
 		} else if (_autoindex) {
-			//_req._loc._root_path
 			struct dirent * de;
 		    struct stat st;
 		    struct tm tm_time;
@@ -217,14 +237,21 @@ std::string Response::createResponse() {
 					html_content += "<div><a href=\"" + file_name + slash + "\">" + de->d_name + slash + "</a><span>" + tmp_s_time + "</span></div>";
 					close (fd);
 			    }
-			    closedir(dr);
 			    html_content += "\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
+			    closedir(dr);
 			}
 		}
 	}
 	if (_status_code != 200) {
 		_keep_alive = false;
-		html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
+		if (_req._loc) {
+			; // SEARCH IF THE ERROR IS HERE IN THE LOCATION MAP
+		}
+		if (!html_content.length()) {
+			;// SAERCH HERE IN CASE THERE IS NO LOCATION OR ERROR AND HTML_CONTENTN IS 0
+		}
+		if (!html_content.length())
+			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
 	}
 	response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
 	response += "Date: " + _date;

@@ -1,5 +1,6 @@
 #include "Request.hpp"
 
+// Can we concider that the whole request is sent at once?
 Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	_error_code(0), _server_config(sc), _server_error_codes(_server_config._server_errors_map), _loc(NULL)
 	{			
@@ -9,9 +10,9 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	std::getline(ss, line);
 	line = strtrim(line, " \r\t");
 	_method = line.substr(0, line.find_first_of(" \r\t"));
-	std::transform(_method.begin(), _method.end(), _method.begin(), ::ft_toupper);
 	_uri_target = line.substr(_method.length(), line.find_last_of(" \r\t") - _method.length());
 	_http_version = line.substr(_method.length() + _uri_target.length());
+	std::transform(_method.begin(), _method.end(), _method.begin(), ::ft_toupper);
 	std::transform(_http_version.begin(), _http_version.end(), _http_version.begin(), ::ft_tolower);
 	_uri_target = strtrim(_uri_target, " \r\t");
 	_http_version = strtrim(_http_version, " \r\t");
@@ -37,10 +38,14 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	}
 	if (_uri_target.length() > 8000)
 		_error_code = 414;
+	//Separate the uri, [Path, Query, Fragment]
+	// CHeck if method Exists? -> Bad Request
+	// Check if mandatory HEaders Exist? -> Bad Request
+	// Check if content is ok?
 	else {
 		_loc = _server_config.findLocation(_uri_target);
 		if (!_loc) {
-			_error_code = 400;
+			_error_code = 404;
 			std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration" << ENDC << std::endl;
 		}
 		else {
@@ -71,6 +76,13 @@ int Request::get_error_code() const {
 bool Request::is_target_dir() const {
 	if (_loc)
 		if (_loc->_target == _uri_target || (*(_uri_target.end() - 1)) == '/' )
+			return (true);
+	return (false);
+}
+
+bool Request::is_target_route() const {
+	if (_loc)
+		if (_loc->_target == _uri_target)
 			return (true);
 	return (false);
 }
