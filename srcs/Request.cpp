@@ -80,13 +80,6 @@ bool Request::is_target_dir() const {
 	return (false);
 }
 
-bool Request::is_target_route() const {
-	if (_loc)
-		if (_loc->_target == _uri_target)
-			return (true);
-	return (false);
-}
-
 // std::string const & Request::get_method() const {
 // 	return _method;
 // }

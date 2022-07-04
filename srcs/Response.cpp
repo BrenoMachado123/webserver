@@ -137,28 +137,26 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	if (_status_code == 0 && _req._loc) {
 		_status_code = 404;
 		if (_req.is_target_dir()) {
-			if (_req.is_target_route()) {
+			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << WHITE << "Try Index: ";
+			for(i_it = _req._loc->_indexes.begin(); i_it != _req._loc->_indexes.end() && !_content.length(); ++i_it) {
+				location = _req.get_final_path() + *i_it;
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-					std::cout << WHITE << "Try Index: ";
-				for(i_it = _req._loc->_indexes.begin(); i_it != _req._loc->_indexes.end() && !_content.length(); ++i_it) {
-					location = _req._loc->_root_path + *i_it;
-					if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-	    				std::cout << *i_it << " ";
-					file.open(location.c_str(), std::ifstream::binary);
-					if(file.is_open()) {
-	    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-							std::cout << GREEN << "[founded]";
-						_status_code = 200;
-						while (std::getline(file, tmp_buffer))
-							buffer += tmp_buffer + "\n";
-						_content_length = buffer.length();
-						_content_type = _mime_type_detector(location);
-						_content = buffer;
-					}
+    				std::cout << *i_it << " ";
+				file.open(location.c_str(), std::ifstream::binary);
+				if(file.is_open()) {
+    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+						std::cout << GREEN << "[founded]";
+					_status_code = 200;
+					while (std::getline(file, tmp_buffer)) // PLS REFACTOR THIS, READ FULL FILE AT ONCE OR WITH A BUFFER.... ALSO PUT THIS INSIDE A FUNCTION AND REUSE THE LINES OF CODES WHICH ARE THE SAME BELLOW
+						buffer += tmp_buffer + "\n";
+					_content_length = buffer.length();
+					_content_type = _mime_type_detector(location);
+					_content = buffer;
 				}
-				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-					std::cout << ENDC << std::endl;
 			}
+			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << ENDC << std::endl;
 			if (_req._loc->_autoindex && !_content.length()) {
 				_status_code = 200;
 				_autoindex = true;
@@ -210,7 +208,7 @@ std::string Response::createResponse() {
 	std::string html_content;
 	std::ostringstream so;
 	so << _status_code;
-	if (_status_code == 200 && _req._loc) { // && no index file
+	if (_status_code == 200 && _req._loc) {
 		if (_content.length() > 0) {
 			html_content = _content;
 		} else if (_autoindex) {
@@ -246,6 +244,7 @@ std::string Response::createResponse() {
 		_keep_alive = false;
 		if (_req._loc) {
 			; // SEARCH IF THE ERROR IS HERE IN THE LOCATION MAP
+			//_req._loc.error_map
 		}
 		if (!html_content.length()) {
 			;// SAERCH HERE IN CASE THERE IS NO LOCATION OR ERROR AND HTML_CONTENTN IS 0
