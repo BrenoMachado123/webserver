@@ -17,6 +17,5 @@ uint64_t	timestamp_in_ms(void);
 int 		ft_tolower(int);
 int 		ft_toupper(int);
 char * 		get_local_time(void);
-const std::string get_file_status(void);
 
 #endif

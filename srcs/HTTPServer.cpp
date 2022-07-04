@@ -13,7 +13,8 @@ HTTPServer::HTTPServer(std::string const & file): _config(file) {
 		addSocket(s);
 		std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
 		_clients.insert(p);
-		std::cout << std::endl << *it;
+    	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << std::endl << *it;
 	}
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;
@@ -91,7 +92,8 @@ void HTTPServer::run() {
 	for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it) {
 		std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;;
 	}
-	std::cout << WHITE << "[" << timestamp_in_ms() << "]" << " Use Ctrl-C to stop" << std::endl;
+	timestamp_in_ms();
+	std::cout << WHITE << "Use Ctrl-C to stop" << std::endl;
 	for (;;) {
 		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, 2000);
 		if (nfds == -1) {
@@ -134,7 +136,7 @@ void HTTPServer::run() {
 		}
 		uint64_t timestamp(timestamp_in_ms());
 		std::vector<Client>::iterator v_it;
-		std::vector<std::vector<Client>::iterator> _clients_to_die;
+		std::map<int, std::vector<std::vector<Client>::iterator > > _clients_to_die;
 
 	/*
 	 * @brief This function iterates via map of clients and checks if time passed is higher than "time to die" for the client
@@ -145,12 +147,15 @@ void HTTPServer::run() {
 				if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 					std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->getTimeToDie() << ENDC << std::endl;
 				if (v_it->getTimeToDie() < timestamp || !(v_it->_keep_alive)) {
-					close(v_it->getFd());
-					_clients_to_die.push_back(v_it);
+					_clients_to_die[m_it->first].push_back(v_it);
 				}
 			}
-			for (std::vector<std::vector<Client>::iterator>::iterator c_it = _clients_to_die.begin() ; c_it != _clients_to_die.end() ; c_it++)
-				 m_it->second.erase(*c_it);
+		}
+		for (std::map<int, std::vector<std::vector<Client>::iterator > >::iterator c_it = _clients_to_die.begin() ; c_it != _clients_to_die.end() ; ++c_it) {
+			for (std::vector<std::vector<Client>::iterator >::iterator cc_it = c_it->second.begin(); cc_it != c_it->second.end(); ++cc_it) {
+				close((*cc_it)->getFd());
+				_clients[c_it->first].erase(*cc_it);
+			}
 		}
 	}
 }

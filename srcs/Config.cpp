@@ -212,7 +212,7 @@ Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (InvalidDirecti
 
 Config::ServerConfig::Cgi::~Cgi() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "Cgi Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "Cgi Directive destroyed!" << ENDC << std::endl;
 }
 
 /**
@@ -234,7 +234,7 @@ Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (InvalidD
 
 Config::ServerConfig::CgiBin::~CgiBin() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE << "CgiBin destroyed!" << ENDC << std::endl;
+        std::cout << RED << "CgiBin destroyed!" << ENDC << std::endl;
 }
 
 Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(InvalidDirectiveException):

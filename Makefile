@@ -44,7 +44,7 @@ $(OBJS_D)/%.o:srcs/%.cpp
 
 $(OBJS_DD)/%.o:srcs/%.cpp
 			@mkdir -p $(OBJS_DD)
-			$(CC) -D CONSTRUCTORS_DESTRUCTORS_DEBUG=1 $(CFLAGS) $(INC) -o $@ -c $<
+			$(CC) -D CONSTRUCTORS_DESTRUCTORS_DEBUG=1 $(CFLAGS) -g $(INC) -o $@ -c $<
 
 $(NAME):	$(OBJ)
 			@printf "Compiling $(C_YELLOW)$(NAME)$(C_END) ... \n"

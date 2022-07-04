@@ -36,16 +36,16 @@ uint64_t const & Client::getTimeToDie() const {
 
 
 void Client::handleRequest(std::string const & request) {
+	uint64_t ms_s = timestamp_in_ms();
 	_time_to_die = timestamp_in_ms() + 3000;
 	Request req(request, _socket.getServerConfig());
 	// Request status? Error ? -> Generate Error Response
 	// Status Perfect? Generate Response Evaluate METHOD
 	Response res(req, _socket.getServerConfig());
-
 	std::string response_content(res.createResponse());
 	_keep_alive = res.getKeepAlive();
 	write(_fd, response_content.c_str(), response_content.length());
-	//write(_fd, "Hello World", strlen("Hello World"));
+	std::cout << GREEN << "Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms" << ENDC  << std::endl;
 }
 
 std::ostream& operator<<(std::ostream& s, const Client& param) {

@@ -34,10 +34,11 @@ class Response {
 
 		std::string createResponse(void);
 		bool getKeepAlive(void) const;
+		int getStatusCode(void) const;
+		static std::map<int, std::string> _codeMessage;
 	private:
 		Response();
 		Response(const Response&);
-
 	private:
 		int _status_code;
 		bool _keep_alive;
@@ -49,19 +50,10 @@ class Response {
 		std::string _content;
 		Request const & _req;
 		Config::ServerConfig const & _server_config;
-		static std::map<int, std::string> _codeMessage;
 
 		//bool _check_default_error_code_and_assign_path(int);
 		//static std::string _mime_type_detector(std::string const & file_name);
 };
-
-//map<string, vecotr<int> >
-/*
-{
-	{"path/error/", [400, 401]},
-	{"ErrornewPATH/", [402, 414]},
-}
-*/
 
 std::ostream&	operator<<(std::ostream&, const Response&);
 

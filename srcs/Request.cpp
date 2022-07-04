@@ -15,14 +15,18 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	std::transform(_http_version.begin(), _http_version.end(), _http_version.begin(), ::ft_tolower);
 	_uri_target = strtrim(_uri_target, " \r\t");
 	_http_version = strtrim(_http_version, " \r\t");
-	std::cout << PURPLE << "Method => [" << _method << "], Target => [" << _uri_target << "], HTTP Version => [" << _http_version << "]" << ENDC << std::endl;;	
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << BLUE << "Method => [" << _method << "], Target => [" << _uri_target << "], HTTP Version => [" << _http_version << "]" << ENDC << std::endl;
+	else
+		std::cout << WHITE << "Started " << _method << " \"" << _uri_target << "\"" << " at " << get_local_time(); 
 	while (std::getline(ss, line) && line != "\r\n") {
 		if (line.find(':') != std::string::npos) {
 			std::string name(line.substr(0, line.find(':')));
 			std::string content(line.substr(line.find(':')));
     		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 			_headers[name] = strtrim(content, ": \t");
-			std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
+    		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
 		}
 	}
 	if (_headers.find("content-length") != _headers.end()) {
@@ -43,23 +47,21 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			_location_root = _loc->_root_path;
 			_location_error_codes = _loc->_location_errors_map;
 			_final_path = _location_root + _uri_target.substr(_loc->_target.length());
-			std::cout << YELLOW << "Final Target Path [" << _final_path << "]" << ENDC <<std::endl;
-			if (!_loc->findMethod(_method)) {
+			std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC <<std::endl;
+			if (!_loc->findMethod(_method))
 				_error_code = 405;
-			}
 			else if (_http_version.compare("http/1.1"))
 				_error_code = 505;
 		}
 	}
-	
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-		std::cout << WHITE << "Request Succesfully Parsed" << ENDC << std::endl;
+		std::cout << WHITE << "Request Created" << ENDC << std::endl;
 }
 Request::~Request() {
 	if (_loc)
 		delete (_loc);
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-		std::cout << "Request" << " destroyed" << std::endl;
+		std::cout << RED << "Request destroyed" << std::endl;
 }
 
 int Request::get_error_code() const {

@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-static std::map<int, std::string> insert_to_map() {
+static const std::map<int, std::string> insert_to_map() {
 	std::map<int, std::string> _codeMessage;
 	_codeMessage[200] = "OK";
 	_codeMessage[400] = "Bad Request";
@@ -159,7 +159,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 		}
 	}
     if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-		std::cout << RED << "FINISH RESPONSE" << ENDC << std::endl;
+		std::cout << WHITE << "Response Created " << ENDC << std::endl;
 }
 
 Response::~Response() {
@@ -238,13 +238,18 @@ std::string Response::createResponse() {
 	response += "\r\n";
 	response += html_content;
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-		std::cout << RED << "RESPONSE:" << std::endl << CYAN << response << ENDC << std::endl;
+		std::cout << WHITE << "Server Response:" << std::endl << CYAN << response.substr(0, 500) << YELLOW << (response.size() >= 500 ? (" [...] \n(Showing 500 bytes max)") : "") << ENDC << std::endl;
 	return (response);
 }
 
 bool Response::getKeepAlive(void) const {
 	return (_keep_alive);
 }
+
+int Response::getStatusCode(void) const {
+	return (_status_code);
+}
+
 std::ostream& operator<<(std::ostream& s, const Response& param) {
 	// s << param.CONST_METHOD()
 	(void)param;
