@@ -207,7 +207,8 @@ std::string Response::createResponse() {
 	std::string response;
 	std::string html_content;
 	std::ostringstream so;
-	so << _status_code;
+	std::ifstream file;
+	
 	if (_status_code == 200 && _req._loc) {
 		if (_content.length() > 0) {
 			html_content = _content;
@@ -240,14 +241,64 @@ std::string Response::createResponse() {
 			}
 		}
 	}
+	so << _status_code;
 	if (_status_code != 200) {
 		_keep_alive = false;
+		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << RED << "Render Error => Looking inside error maps for custom error..." << ENDC << std::endl;
 		if (_req._loc) {
-			; // SEARCH IF THE ERROR IS HERE IN THE LOCATION MAP
-			//_req._loc.error_map
+			std::map<std::string, std::vector<int> >::iterator l_it;
+			for (l_it = _req._loc->_location_errors_map.begin(); l_it != _req._loc->_location_errors_map.end() && !html_content.length(); ++l_it) {
+				std::vector<int>::iterator e_it;
+				for (e_it = l_it->second.begin(); e_it != l_it->second.end(); ++e_it) {
+					if (*e_it == _status_code) {
+    					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+							std::cout << YELLOW << "Founded Error in this Error Location path: " << l_it->first << ENDC << std::endl;
+						break ;
+					}
+				}
+				if (e_it != l_it->second.end()) {
+					std::string error_loc = l_it->first + so.str() + ".html";
+    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+						std::cout << YELLOW << "Try to open file: " << error_loc << ENDC << std::endl;
+					file.open(error_loc.c_str(), std::ifstream::binary); // We support only html errors
+					if(file.is_open()) {
+	    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+							std::cout << GREEN << "[File opened render file to display error...]" << ENDC << std::endl;
+						std::string tmp_buffer;
+						while (std::getline(file, tmp_buffer)) // PLS REFACTOR THIS, READ FULL FILE AT ONCE OR WITH A BUFFER.... ALSO PUT THIS INSIDE A FUNCTION AND REUSE THE LINES OF CODES WHICH ARE THE SAME BELLOW
+							html_content += tmp_buffer + "\n";
+						_content_type = "text/html";
+					}
+					break ;
+				}
+			}
 		}
-		if (!html_content.length()) {
-			;// SAERCH HERE IN CASE THERE IS NO LOCATION OR ERROR AND HTML_CONTENTN IS 0
+		std::map<std::string, std::vector<int> >::const_iterator l_it;
+		for (l_it = _server_config._server_errors_map.begin(); l_it != _server_config._server_errors_map.end() && !html_content.length(); ++l_it) {
+			std::vector<int>::const_iterator e_it;
+			for (e_it = l_it->second.begin(); e_it != l_it->second.end(); ++e_it) {
+				if (*e_it == _status_code) {
+					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+						std::cout << YELLOW << "Founded Error in this Error Location path: " << l_it->first << ENDC << std::endl;
+					break ;
+				}
+			}
+			if (e_it != l_it->second.end()) {
+				std::string error_loc = l_it->first + so.str() + ".html";
+				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+					std::cout << YELLOW << "Try to open file: " << error_loc << ENDC << std::endl;
+				file.open(error_loc.c_str(), std::ifstream::binary); // We support only html errors
+				if(file.is_open()) {
+    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+						std::cout << GREEN << "[File opened render file to display error...]" << ENDC << std::endl;
+					std::string tmp_buffer;
+					while (std::getline(file, tmp_buffer)) // PLS REFACTOR THIS, READ FULL FILE AT ONCE OR WITH A BUFFER.... ALSO PUT THIS INSIDE A FUNCTION AND REUSE THE LINES OF CODES WHICH ARE THE SAME BELLOW
+						html_content += tmp_buffer + "\n";
+					_content_type = "text/html";
+				}
+				break ;
+			}
 		}
 		if (!html_content.length())
 			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";

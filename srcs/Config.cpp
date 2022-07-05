@@ -330,11 +330,11 @@ Config::ServerConfig::Listen::Listen(const std::string & content) throw (Invalid
             _ip = "127.0.0.1";
         else
             _ip = ip_str;
-        temp = port_str;
+        stoi_converter << port_str;
+        stoi_converter >> _port;
     }
     else if (isIpValid(content)) {
         temp = content;
-        _port = 80;
         if (!temp.compare("localhost"))
             _ip = "127.0.0.1";
         else if (!temp.compare("*"))

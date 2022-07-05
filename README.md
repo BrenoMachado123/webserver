@@ -58,8 +58,8 @@ server {
 | cgi | cgi | cgi |
 | cgi-bin | cgi-bin | cgi-bin |
 | client_max_body_size | Limit client body size | client_max_body_size #bytes|
-| error_page | Setup default error pages | error_page code1 [code2] ... path |
-| limit_methods | Define a list of accepted HTTP methods for the route (inside location scope) | limit_methods METHOD |
+| error_page | Setup default error pages. You can define one or more error codes. The path where the server searches for the errors should be the last parameter of the directive. Webserv only supports custom HTML error pages. Webserv will look for "error path + error code + .html". The error pages are inherited from the server context to the location context.| error_page code1 [code2] ... path |
+| limit_methods | Define a list of accepted HTTP methods for the route (inside location scope), if not defined any, the default is to accept GET only. | limit_methods METHOD |
 | listen | Choose the port and host of each ’server' | listen host:port |
 | location | Setup routes with one or multiple rules/configuration | location route { ... }|
 | root | root | root |
