@@ -605,8 +605,11 @@ void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_c
 void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == SERVER_CONTEXT)
         serv_conf._server_errors_map[_error_path] = _error_codes;
-    else if (context == LOCATION_CONTEXT)
-        serv_conf._locations.back()._location_errors_map[_error_path] = _error_codes;
+    else if (context == LOCATION_CONTEXT) {
+        std::vector<int>::const_iterator it;
+        for (it = _error_codes.begin(); it != _error_codes.end(); ++it)
+            serv_conf._locations.back()._location_errors_map[_error_path].push_back(*it);
+    }
 }
 
 void Config::ServerConfig::Index::setDirective(ServerConfig & serv_conf, int context) const {

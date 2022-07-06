@@ -248,7 +248,7 @@ std::string Response::createResponse() {
 			std::cout << RED << "Render Error => Looking inside error maps for custom error..." << ENDC << std::endl;
 		if (_req._loc) {
 			std::map<std::string, std::vector<int> >::iterator l_it;
-			for (l_it = _req._loc->_location_errors_map.begin(); l_it != _req._loc->_location_errors_map.end() && !html_content.length(); ++l_it) {
+			for (l_it = _req._loc->_location_errors_map.begin(); l_it != _req._loc->_location_errors_map.end() && html_content.empty(); ++l_it) {
 				std::vector<int>::iterator e_it;
 				for (e_it = l_it->second.begin(); e_it != l_it->second.end(); ++e_it) {
 					if (*e_it == _status_code) {
@@ -261,7 +261,7 @@ std::string Response::createResponse() {
 					std::string error_loc = l_it->first + so.str() + ".html";
     				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 						std::cout << YELLOW << "Try to open file: " << error_loc << ENDC << std::endl;
-					file.open(error_loc.c_str(), std::ifstream::binary); // We support only html errors
+					file.open(error_loc.c_str(), std::ifstream::binary);
 					if(file.is_open()) {
 	    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 							std::cout << GREEN << "[File opened render file to display error...]" << ENDC << std::endl;
@@ -275,12 +275,12 @@ std::string Response::createResponse() {
 			}
 		}
 		std::map<std::string, std::vector<int> >::const_iterator l_it;
-		for (l_it = _server_config._server_errors_map.begin(); l_it != _server_config._server_errors_map.end() && !html_content.length(); ++l_it) {
+		for (l_it = _server_config._server_errors_map.begin(); l_it != _server_config._server_errors_map.end() && html_content.empty(); ++l_it) {
 			std::vector<int>::const_iterator e_it;
 			for (e_it = l_it->second.begin(); e_it != l_it->second.end(); ++e_it) {
 				if (*e_it == _status_code) {
 					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-						std::cout << YELLOW << "Founded Error in this Error Location path: " << l_it->first << ENDC << std::endl;
+						std::cout << YELLOW << "Founded Error in this Error Server path: " << l_it->first << ENDC << std::endl;
 					break ;
 				}
 			}
