@@ -179,7 +179,7 @@ Config::ServerConfig::AutoIndex::AutoIndex(const std::string & content) throw (s
 }
 Config::ServerConfig::AutoIndex::~AutoIndex() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "AutoIndex Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "AutoIndex Directive destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct a Client Max Body Size
@@ -194,17 +194,17 @@ Config::ServerConfig::AutoIndex::~AutoIndex() {
 Config::ServerConfig::ClientMaxBodySize::ClientMaxBodySize(const std::string & content) throw (std::exception):
     Directive(CLIENTMAXBODYSIZE), _max_size(0) {
     if (content.find(SEPARATORS) != std::string::npos)
-        throw InvalidDirectiveException();
+        throw WrongSyntaxException();
     std::stringstream intValue(content);
     intValue >> _max_size;
     if (_max_size < 0)
-        throw WrongSyntaxException();
+        throw InvalidDirectiveException();
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "ClientMaxBodySize created [" << _max_size << "]" << ENDC << std::endl;
 }
 Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "ClientMaxBodySize Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "ClientMaxBodySize Directive destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct a Cgi object
@@ -216,14 +216,14 @@ Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
 Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (std::exception):
     Directive(CGI), _cgi() {
         if (content.empty())
-            throw InvalidDirectiveException();
+            throw WrongSyntaxException();
         _parseCgiContent(_cgi, content);
         if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
             std::cout << WHITE << "Cgi created" << ENDC << std::endl;
 }
 Config::ServerConfig::Cgi::~Cgi() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "Cgi Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "Cgi Directive destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct a CgiBin object
@@ -235,13 +235,13 @@ Config::ServerConfig::Cgi::~Cgi() {
 Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (std::exception):
     Directive(CGIBIN), _path(content) {
         if (_path.empty())
-            throw InvalidDirectiveException();
+            throw WrongSyntaxException();
         if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
             std::cout << WHITE << "CgiBin created!" << ENDC << std::endl;
 }
 Config::ServerConfig::CgiBin::~CgiBin() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "CgiBin destroyed!" << ENDC << std::endl;
+        std::cout << RED << "CgiBin destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct an Error Page
@@ -255,7 +255,9 @@ Config::ServerConfig::CgiBin::~CgiBin() {
 Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(std::exception):
     Directive(ERRORPAGE) {
     size_t found = content.find_last_of(SEPARATORS);
-    if (content.empty()|| found == std::string::npos || !isCodeValid(content.substr(0, found)))
+    if (content.empty() || found == std::string::npos)
+        throw WrongSyntaxException();
+    if (!loadErrorCodes(content.substr(0, found)))
         throw InvalidDirectiveException();
     _error_path = content.substr(found + 1);
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -263,7 +265,7 @@ Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) 
 }
 Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "ErrorPage Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "ErrorPage Directive destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct an Index
@@ -275,7 +277,7 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
 Config::ServerConfig::Index::Index(const std::string & content) throw (std::exception):
     Directive(INDEX) {
     if (content.empty())
-        throw InvalidDirectiveException();
+        throw WrongSyntaxException();
     std::string tmp(content);
     char *token = strtok(const_cast<char*>(tmp.c_str()), SEPARATORS);
     while (token != NULL) {
@@ -287,7 +289,7 @@ Config::ServerConfig::Index::Index(const std::string & content) throw (std::exce
 }
 Config::ServerConfig::Index::~Index() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "Index Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "Index Directive destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct a Method
@@ -326,7 +328,7 @@ Config::ServerConfig::Methods::~Methods() {
 Config::ServerConfig::Listen::Listen(const std::string & content) throw (std::exception):
     Directive(LISTEN), _ip("127.0.0.1"), _port(80) {
     if (content.empty() || content.find_first_of(SEPARATORS) != std::string::npos)
-        throw InvalidDirectiveException();
+        throw WrongSyntaxException();
     std::string temp;
     std::stringstream stoi_converter;
     if (content.find(':') != std::string::npos) {
@@ -363,48 +365,39 @@ Config::ServerConfig::Listen::Listen(const std::string & content) throw (std::ex
 }
 Config::ServerConfig::Listen::~Listen() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
+        std::cout << RED << "Listen destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct a Location
  *  This directive enanbles a new route to the ServerConfig.
  * @param content
- *  Takes a string terminated by '{', the previous content of the string is the name of the location.
+ *  Takes a string terminated by '{', the previous content of the string is the route of the location.
  */
 Config::ServerConfig::Location::Location(std::string const & content) throw (std::exception):
     Directive(LOCATION), _target(content), _max_body_size(-1), _autoindex(false) {
-    /*This constructor takes only one string which should be a valid path
-        Location("/etc/www/where_is_the_file {") [VALID]
-        Location("/etc trash wrong {") [throw InvalidDirectiveException]
-        Location("") [throw InvalidDirectiveException] */
     if (content.empty() || content[content.length() - 1] != '{')
-        throw InvalidDirectiveException();
+        throw WrongSyntaxException();
     _target = _target.substr(0, content.length() - 1);
     _target = strtrim(_target);
     if (_target.empty() || _target.find(SEPARATORS) != std::string::npos)
-        throw InvalidDirectiveException();
+        throw WrongSyntaxException();
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "Location created [" << _target << "]" << ENDC << std::endl;
 }
 Config::ServerConfig::Location::~Location() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "Location Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "Location Directive destroyed" << ENDC << std::endl;
 }
 /*
  * @brief Construct a Root
  *  The root configures the path where the server will look for the resources.
  * @param content
- *  String without separators indicating a path where to look.
- * !!!???????? PROB should make mandatory to end with '/'...
+ *  String without separators indicating a path where to look. Must finish with '/'.
  */
-Config::ServerConfig::Root::Root(const std::string & str) throw (std::exception):
-	Directive(ROOT), _path(str) {
-	/* This constructor takes only one string which should be a valid path
-		Root("/etc/www/root")    [VALID]
-		Root("/etc trash wrong") [throw InvalidDirectiveException]
-		Root("")                 [throw InvalidDirectiveException] */
-	if (str.empty() || str.find(SEPARATORS) != std::string::npos)
-		throw InvalidDirectiveException();
+Config::ServerConfig::Root::Root(const std::string & content) throw (std::exception):
+	Directive(ROOT), _path(content) {
+	if (content.empty() || content.find(SEPARATORS) != std::string::npos || content[content.length() - 1] != '/')
+		throw WrongSyntaxException();
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << WHITE << "Root created [" << _path << "]" << ENDC << std::endl;
 }
@@ -435,7 +428,7 @@ Config::ServerConfig::ServerName::ServerName(const std::string & content) throw 
 }
 Config::ServerConfig::ServerName::~ServerName() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << RED << "ServerName Directive destroyed!" << ENDC << std::endl;
+        std::cout << RED << "ServerName Directive destroyed" << ENDC << std::endl;
 }
 
 /* MEMBER FUNCTIONS */
@@ -510,7 +503,7 @@ int Config::ServerConfig::Directive::getId() const {return (_id);}
 
 std::vector<std::string> Config::ServerConfig::Cgi::getCgi() const { return _cgi; }
 
-bool Config::ServerConfig::ErrorCodePage::isCodeValid(const std::string &content) {
+bool Config::ServerConfig::ErrorCodePage::loadErrorCodes(const std::string &content) {
     std::stringstream stoi_converter;
     int converted_number;
     int loop_counter = 0;

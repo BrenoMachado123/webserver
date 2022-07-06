@@ -27,22 +27,41 @@
 /* ...                                                         */
 /***************************************************************/
 class HTTPServer {
-	private:
-		int _epollfd;
-		std::vector<Socket> _sockets;
-		std::map<int, std::vector<Client> > _clients;
-		Config _config;
-		bool isSocketFd(int);
-		void acceptConnectionAt(int); 
-		HTTPServer(const HTTPServer&);
 	public:
-		HTTPServer(std::string const &);
+		class AcceptException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		};
+		class EpollAddException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		};
+		class EpollCreateException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		};
+		class EpollWaitException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		};
+		class ReadFdException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		};
+		HTTPServer(std::string const &) throw (std::exception);
 		~HTTPServer();
-		void	addSocket(Socket &);
-		void	run();
+		void	addSocket(Socket &) throw (std::exception);
 		int		getEpollFd() const;
 		int		numSockets() const;
+		void	run();
+	private:
+		int									_epollfd;
+		std::vector<Socket>					_sockets;
+		std::map<int, std::vector<Client> >	_clients;
+		Config								_config;
+		void	acceptConnectionAt(int) throw (std::exception); 
+		bool	isSocketFd(int);
+		HTTPServer(const HTTPServer &);
 };
-std::ostream &	operator<<(std::ostream&, const HTTPServer&);
-
+std::ostream &	operator<<(std::ostream &, const HTTPServer&);
 #endif

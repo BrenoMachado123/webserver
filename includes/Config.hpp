@@ -92,13 +92,13 @@ class Config {
 				};
  				class Cgi : public Directive {
 					public:
-						Cgi(const std::string&) throw (std::exception);
+						Cgi(const std::string &) throw (std::exception);
 						virtual ~Cgi();
-						virtual void setDirective(ServerConfig&,int) const;
+						virtual void setDirective(ServerConfig &, int) const;
 						std::vector<std::string> getCgi() const;
 					private:
 						std::vector<std::string> _cgi;
-						void _parseCgiContent(std::vector<std::string>&, const std::string&);
+						void _parseCgiContent(std::vector<std::string> &, const std::string&);
 				};
 				class CgiBin: public Directive {
 					public:
@@ -125,7 +125,7 @@ class Config {
 	                private:
 	                    std::vector<int>	_error_codes;
 	                    std::string			_error_path;
-	                    bool	isCodeValid(const std::string &);
+	                    bool	loadErrorCodes(const std::string &);
 	                    ErrorCodePage();
                 };
 				class Index: public Directive {

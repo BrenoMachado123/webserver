@@ -66,7 +66,6 @@ Config::ServerConfig const & Socket::getServerConfig() const {
 
 int Socket::acceptConnection() {
 	return (accept(_socket_fd, (struct sockaddr *) & _address, (socklen_t *)& _addrlen));
-    //fcntl(conn_sock, F_SETFL, O_NONBLOCK);
 }
 
 std::ostream& operator<<(std::ostream& s, const Socket& param) {
