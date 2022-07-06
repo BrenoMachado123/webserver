@@ -31,19 +31,31 @@ Socket const & Client::getSocket() const {
 	return	(_socket);
 }
 
-void Client::disconnect() {
-	_keep_alive = false;
-}
+void Client::handleRequest() {
+	char		buffer[30000] = {0};
+	int			valread;
+	uint64_t	ms_s;
+	std::string	buf;
 
-void Client::handleRequest(std::string const & request) {
-	uint64_t ms_s = timestamp_in_ms();
-	_time_to_die = ms_s + 3000;
-	Request req(request, _socket.getServerConfig());
-	Response res(req, _socket.getServerConfig());
-	std::string response_content(res.createResponse());
-	write(_fd, response_content.c_str(), response_content.length());
-	_keep_alive = res.getKeepAlive();
-	std::cout << GREEN << "Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms" << ENDC  << std::endl;
+	ms_s = timestamp_in_ms();
+	do {
+		valread = read(_fd, buffer, 30000 - 1);
+		if (valread < 0)
+			break ;
+		std::string tmp(buffer, valread);
+		buf += tmp;
+	} while (valread == 30000 - 1);
+	if (valread > 0) {	
+		_time_to_die = ms_s + 3000;
+		Request req(buf, _socket.getServerConfig());
+		Response res(req, _socket.getServerConfig());
+		std::string response_content(res.createResponse());
+		write(_fd, response_content.c_str(), response_content.length());
+		_keep_alive = res.getKeepAlive();
+		std::cout << GREEN << "Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms" << ENDC  << std::endl;
+	} else {
+		_keep_alive = false;
+	}
 }
 
 bool Client::keepAlive() const {

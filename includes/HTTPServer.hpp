@@ -51,6 +51,7 @@ class HTTPServer {
 		HTTPServer(std::string const &) throw (std::exception);
 		~HTTPServer();
 		void	addSocket(Socket &) throw (std::exception);
+		void	cleanEpollAndClientsList() ;
 		int		getEpollFd() const;
 		int		numSockets() const;
 		void	run();

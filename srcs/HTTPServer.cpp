@@ -87,7 +87,6 @@ int HTTPServer::numSockets() const {
 void HTTPServer::run() {
 	int												n;
 	int												nfds;
-	int												big_sock;
 	struct epoll_event								events[MAX_EVENTS];
 	std::vector<Socket>::iterator					it;
 	std::vector<Client>::iterator					v_it;
@@ -100,7 +99,7 @@ void HTTPServer::run() {
 	std::cout << "* Version: 1.0 (c++98) (\"TBP's Version\")" << std::endl;
 	std::cout << "*          PID: " << getpid() << std::endl;
 	for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it)
-		std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;;
+		std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;
 	timestamp_in_ms();
 	std::cout << WHITE << "Use Ctrl-C to stop" << std::endl;
 	for (;;) {
@@ -112,60 +111,51 @@ void HTTPServer::run() {
 				if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 					std::cout << WHITE << "[" << timestamp_in_ms() << "]" << YELLOW << " ServerSocket Accepting Connection" << ENDC << std::endl;
 				acceptConnectionAt(events[n].data.fd);
-			} else {
-				// IT'S BETTER TO HAVE A FUNCTION TO DO THIS.... NOT HERE.... findClient for example
-				if (events[n].events == EPOLLIN) {
-					for (m_it = _clients.begin(), big_sock = 0; m_it != _clients.end() && big_sock == 0; ++m_it) {
-						for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
-							if (v_it->getFd() == events[n].data.fd) {
-								big_sock = m_it->first;
-								break;
-						 	}
-						}
-					}
-					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-						std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Input From Client: " << v_it->getFd() << " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;
-					char buffer[30000] = {0};
-					int valread = read(v_it->getFd(), buffer, 30000);
-					// SHOULDN'T READ HERE.... THE CLIENT SHOULD HANDLE ALSO THE READ AND DISCONECT ETC... PROB Disconnect function is stupid and later removed
-					if (valread < 0)
-						throw ReadFdException();
-					if (valread > 0) {
-						std::string _buffer(buffer, valread);
-						v_it->handleRequest(_buffer);
-					} else {
-						v_it->disconnect();
+			} else if (events[n].events == EPOLLIN) {
+				for (m_it = _clients.begin(); m_it != _clients.end(); ++m_it) {
+					for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
+						if (v_it->getFd() == events[n].data.fd) {
+							if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+								std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Signal From Client: " << *v_it<< " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;		
+							v_it->handleRequest();
+							break;
+					 	}
 					}
 				}
 		   }
 		}
-
-		uint64_t timestamp(timestamp_in_ms());
-		std::vector<Client>::iterator v_it;
-		std::map<int, std::vector<std::vector<Client>::iterator > > _clients_to_die;
-
-	/*
-	 * @brief This function iterates via map of clients and checks if time passed is higher than "time to die" for the client
-	 * 			If it is then it closes the connection with that client (that was saved in a vector) and erase it from vector.
-	 */
-		for (m_it = _clients.begin(); m_it != _clients.end() ; ++m_it) {
-			for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
-				if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-					std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->timeToDie() << ENDC << std::endl;
-				if (v_it->timeToDie() < timestamp || !(v_it->keepAlive())) {
-					_clients_to_die[m_it->first].push_back(v_it);
-				}
-			}
-		}
-		for (std::map<int, std::vector<std::vector<Client>::iterator > >::iterator c_it = _clients_to_die.begin() ; c_it != _clients_to_die.end() ; ++c_it) {
-			for (std::vector<std::vector<Client>::iterator >::iterator cc_it = c_it->second.begin(); cc_it != c_it->second.end(); ++cc_it) {
-				close((*cc_it)->getFd());
-				_clients[c_it->first].erase(*cc_it);
-			}
-		}
+		cleanEpollAndClientsList();
+		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it)
+				std::cout << CYAN << "Info on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;
+		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << WHITE << "[" << timestamp_in_ms() << "ms] Server Timestamp" << ENDC << std::endl;
 	}
 }
 
+void HTTPServer::cleanEpollAndClientsList() {
+	uint64_t													timestamp;
+	std::vector<Client>::iterator								v_it;
+	std::map<int, std::vector<Client> >::iterator				m_it;
+	std::map<int, std::vector<std::vector<Client>::iterator > >	_clients_to_die;
+
+	timestamp = timestamp_in_ms();
+	for (m_it = _clients.begin(); m_it != _clients.end() ; ++m_it) {
+		for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
+			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->timeToDie() << ENDC << std::endl;
+			if (v_it->timeToDie() < timestamp || !(v_it->keepAlive())) {
+				_clients_to_die[m_it->first].push_back(v_it);
+			}
+		}
+	}
+	for (std::map<int, std::vector<std::vector<Client>::iterator > >::iterator c_it = _clients_to_die.begin() ; c_it != _clients_to_die.end() ; ++c_it) {
+		for (std::vector<std::vector<Client>::iterator >::iterator cc_it = c_it->second.begin(); cc_it != c_it->second.end(); ++cc_it) {
+			close((*cc_it)->getFd());
+			_clients[c_it->first].erase(*cc_it);
+		}
+	}
+}
 
 std::ostream& operator<<(std::ostream& s, const HTTPServer& param) {
 	s << "[epoll - " << param.getEpollFd() << "] # of sockets: " << param.numSockets();

@@ -22,8 +22,7 @@ class Client {
 		~Client();
 		int					getFd() const;
 		Socket const &		getSocket() const;
-		void 				disconnect(); 
-		void				handleRequest(std::string const &);
+		void				handleRequest();
 		bool 				keepAlive() const;
 		uint64_t const &	timeToDie() const;
 };
