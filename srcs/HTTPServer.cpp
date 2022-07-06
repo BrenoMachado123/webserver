@@ -9,12 +9,17 @@ HTTPServer::HTTPServer(std::string const & file): _config(file) {
 	std::vector<Config::ServerConfig> servers = _config._servers;
 	std::vector<Config::ServerConfig>::iterator it;
 	for (it = servers.begin(); it != servers.end(); ++it) {
-		Socket s(it->getIp(), it->getPort(), *it);
-		addSocket(s);
-		std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
-		_clients.insert(p);
-    	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-			std::cout << std::endl << *it;
+		try {
+			Socket s(it->getIp(), it->getPort(), *it);
+			addSocket(s);
+			std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
+			_clients.insert(p);
+    		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << std::endl << *it;
+		} catch (std::exception &e) {
+			std::cout << YELLOW << "[FAILED] " << RED << e.what() << ENDC << std::endl;
+			std::cout << YELLOW << "This Server Configuration contains errors, please review the configuration file" << ENDC << std::endl;
+		}
 	}
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;
@@ -131,7 +136,7 @@ void HTTPServer::run() {
 						std::string _buffer(buffer, valread);
 						v_it->handleRequest(_buffer);
 					} else {
-						v_it->_keep_alive = false;
+						v_it->disconnect();
 					}
 				}
 		   }
@@ -147,8 +152,8 @@ void HTTPServer::run() {
 		for (m_it = _clients.begin(); m_it != _clients.end() ; ++m_it) {
 			for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
 				if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-					std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->getTimeToDie() << ENDC << std::endl;
-				if (v_it->getTimeToDie() < timestamp || !(v_it->_keep_alive)) {
+					std::cout << WHITE << "[" << timestamp << "] " << PURPLE << *v_it << " " << v_it->timeToDie() << ENDC << std::endl;
+				if (v_it->timeToDie() < timestamp || !(v_it->keepAlive())) {
 					_clients_to_die[m_it->first].push_back(v_it);
 				}
 			}

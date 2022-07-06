@@ -20,15 +20,24 @@
 /* from the configuraton file. Listens to port & address */
 /*********************************************************/
 class Socket {
-	private:
-		int _socket_fd;
-    	int _addrlen;
-		int _port;
-		std::string _ip_address;
-    	struct sockaddr_in _address;
-		Config::ServerConfig _server_config;
-		Socket();
 	public:
+		class CantBindException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		} e_bind;
+		class SocketFdException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		} e_sfd;
+		class InvalidIpAddressException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		} e_ip_addr;
+		class CantListenException: public std::exception {
+			public:
+				virtual const char * what() const throw();
+		} e_listen;
+
 		Socket(const std::string &, int, Config::ServerConfig const &);
 		~Socket();
 		Socket(const Socket &);
@@ -41,6 +50,14 @@ class Socket {
 
 		const std::string & getIpAddress() const;
 		struct sockaddr_in getAddress() const;
+	private:
+		int _socket_fd;
+    	int _addrlen;
+		int _port;
+		std::string _ip_address;
+    	struct sockaddr_in _address;
+		Config::ServerConfig _server_config;
+		Socket();
 };
 std::ostream&	operator<<(std::ostream&, const Socket&);
 

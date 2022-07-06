@@ -1,30 +1,28 @@
 #include "Socket.hpp"
 
-Socket::Socket() {}
+const char * Socket::CantBindException::what() const throw() {return ("Cannot bind socket");}
+const char * Socket::SocketFdException::what() const throw() {return ("Socket failed to return a valid fd");}
+const char * Socket::InvalidIpAddressException::what() const throw() {return ("Ip Address is not valid");}
+const char * Socket::CantListenException::what() const throw() {return ("Listen failed");}
 
 Socket::Socket(const std::string & ip, int port, Config::ServerConfig const & sc):
        _port(port), _ip_address(ip), _server_config(sc) {
-	if ((_socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0) {
-        perror("Socket");
-        exit(EXIT_FAILURE);
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG) {
+        std::cout << PURPLE << *this << ENDC << std::endl;
     }
+	if ((_socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) == 0)
+        throw e_sfd;
     _address.sin_family = AF_INET;
     _address.sin_addr.s_addr = inet_addr(_ip_address.c_str());
-    if (_address.sin_addr.s_addr == INADDR_NONE) {
-    	std::cout << RED << "Invalid Ip Address: " << _ip_address << ENDC << std::endl;
-    	exit(EXIT_FAILURE);
-    }
+    if (_address.sin_addr.s_addr == INADDR_NONE)
+    	throw e_ip_addr;
     _address.sin_port = htons(_port);
     _addrlen = sizeof(_address);
     bzero(_address.sin_zero, sizeof(_address.sin_zero));
-    if (bind(_socket_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0) {
-        perror("Bind");
-        exit(EXIT_FAILURE);
-    }
-    if (listen(_socket_fd, 10) < 0) {
-        perror("Listen");
-        exit(EXIT_FAILURE);
-    }
+    if (bind(_socket_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)
+        throw e_bind;
+    if (listen(_socket_fd, 10) < 0)
+        throw e_listen;
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "Socket created" << ENDC << std::endl;
 }

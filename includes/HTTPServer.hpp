@@ -17,8 +17,8 @@
 #include "utils.hpp"
 
 /*************************HTTPServer****************************/
-/* The Engine of the project                                   */
-/* This object represents a webserver                          */
+/* The Engine of the webserv                                   */
+/* This object represents an HTTP webserver                    */
 /* The Webserver is configurated with a configuration file     */
 /* Listens to more than one port                               */
 /* The server is non blocking and it bounces propery if needed */
@@ -34,16 +34,15 @@ class HTTPServer {
 		Config _config;
 		bool isSocketFd(int);
 		void acceptConnectionAt(int); 
-		//void addClientAt(int);
 		HTTPServer(const HTTPServer&);
 	public:
 		HTTPServer(std::string const &);
 		~HTTPServer();
-		void addSocket(Socket &);
-		void run();
-		int getEpollFd() const;
-		int numSockets() const;
+		void	addSocket(Socket &);
+		void	run();
+		int		getEpollFd() const;
+		int		numSockets() const;
 };
-std::ostream&	operator<<(std::ostream&, const HTTPServer&);
+std::ostream &	operator<<(std::ostream&, const HTTPServer&);
 
 #endif

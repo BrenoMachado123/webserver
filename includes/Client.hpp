@@ -11,23 +11,21 @@
 class Client {
 	private:
 		int _fd;
-		Socket & _socket;
+		bool _keep_alive;
 		uint64_t _time_to_die;
+		Socket & _socket;
 		Client();
 	public:
 		Client(int, Socket &);
+		Client(const Client &);
+		Client & operator= (const Client &);
 		~Client();
-		Client(const Client&);
-		Client&	operator= (const Client&);
-		int getFd() const;
-		Socket const &  getSocket() const;
-		void handleRequest(std::string const &);
-		uint64_t const & getTimeToDie() const;
-
-		bool _keep_alive;
+		int					getFd() const;
+		Socket const &		getSocket() const;
+		void 				disconnect(); 
+		void				handleRequest(std::string const &);
+		bool 				keepAlive() const;
+		uint64_t const &	timeToDie() const;
 };
-
-std::ostream&	operator<<(std::ostream&, const Client&);
-
+std::ostream &	operator<<(std::ostream &, const Client &);
 #endif
-

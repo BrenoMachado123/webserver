@@ -1,24 +1,18 @@
 #include "Config.hpp"
 #include "utils.hpp"
 
-/* STATIC CLASS MEMBERS */
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location", "index", "autoindex"};
 const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size", "cgi", "cgi-bin"};
 const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
 const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] = {
-	400, 401, 402, 403, 404, 405, 406, 407, 408, 409,
-	410, 411, 412, 413, 414, 415, 416, 417, 418,
-	421, 422, 423, 424, 425, 426, 428, 429, 431, 451,
-	500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
+	400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
+	421, 422, 423, 424, 425, 426, 428, 429, 431, 451, 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
 };
-/* EXCEPTIONS */
 const char * Config::InvalidConfigurationFileException::what() const throw() {return ("Invalid File, make sure you have permissions, that the file exists and the extension is .conf");}
 const char * Config::InvalidDirectiveException::what() const throw() {return ("Directive is invalid");}
 const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong Directive Syntax");}
-/* CONSTUCTORS & DESTRUCTORS */
 /*
  * @brief Construct a new Config
- * 
  *  The constructor takes a string which should be the configuration file.
  *  It will parse all the directives inside the configuration file.
  *  The parsing is done line by line, one directive per line.
@@ -27,6 +21,7 @@ const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong 
  *    - No context (Outside any scope)
  *    - Server context (Inside the server Scope) [server {...}]
  *    - Location context (Inside the server Scope, inside Location scope) [server {... location {...}}]
+ *
  * @param content 
  *  First check if the file is valid and create a file input stream to read from.
  *  Create a line tmp variable and an integer to keep track of the context [0: No Context, 1: Server context, 2:  Location context].
@@ -40,25 +35,33 @@ const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong 
  *   3   - 
  *  
  *  
- *  
+ *
  */
 Config::Config(std::string const & file_str) throw(std::exception) {
-    std::ifstream file;
+    std::ifstream   file;
+    std::string     tmp;
+    std::string     line;
+    std::string     directive;
+    std::string     directive_content;
+    short int       context(0);
+
     file.open(file_str.c_str(), std::ios::in);
 	if (!file.is_open())
-		throw e_invalid_configuration_file;
-    short int context(0);
-    std::string line;
+		throw InvalidConfigurationFileException();
     while (std::getline(file, line)) {
         line = strtrim(line);
         if (!line.length() || line[0] == '#')
             continue;
-        std::string directive(line.substr(0, line.find_first_of(SEPARATORS)));
-        std::string tmp(line.substr(line.find_first_of(SEPARATORS) + 1));
-        std::string directive_content(strtrim(tmp));
-        if (directive == "}" && directive_content == directive) {
+        directive = line.substr(0, line.find_first_of(SEPARATORS));
+        if (line.find_first_of(SEPARATORS) == std::string::npos) {
+            directive_content = "";
+        } else {
+            tmp = line.substr(line.find_first_of(SEPARATORS) + 1);
+            directive_content = strtrim(tmp);
+        }
+        if (directive == "}" && directive_content.empty()) {
             if (--context < 0)
-                throw e_invalid_directive;
+                throw InvalidDirectiveException();
             continue ;
         }
         if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -73,7 +76,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                     context++;
                 }
                 else
-                    throw e_invalid_directive;
+                    throw InvalidDirectiveException();
                 break ;
             case SERVER_CONTEXT:
                 if (validDirective(directive, _server_directives, SERVER_CONTEXT_DIRECTIVES)) {
@@ -81,47 +84,43 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                         std::cout << GREEN << "[OK]" << ENDC << std::endl;
                     ServerConfig::Directive * _directive;
                     _directive = createDirective(directive, directive_content);
-                    if (_directive != 0)
-                    {
+                    if (_directive != 0) {
                         _directive->setDirective(_servers.back(), context);
                         if (directive == "location")
                             context++;
                         delete (_directive);
                     }
                     else
-                        throw e_wrong_syntax;
-                }
-                else
-                {
-                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-                        std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
-                    throw e_invalid_directive;
-                }
-                break;
-            case LOCATION_CONTEXT:
-                if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES))
-                {
-                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-                        std::cout << GREEN << "[OK]" << ENDC << std::endl;
-                    ServerConfig::Directive * _directive;
-                    _directive = createDirective(directive, directive_content);
-                    if (_directive != 0)
-                    {
-                        _directive->setDirective(_servers.back(), context);
-                        delete (_directive);
-                    }
-                    else
-                        throw e_wrong_syntax;
+                        throw WrongSyntaxException();
                 }
                 else {
                     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
                         std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
-                    throw e_invalid_directive;
+                    throw InvalidDirectiveException();
+                }
+                break;
+            case LOCATION_CONTEXT:
+                if (validDirective(directive, _location_directives, LOCATION_CONTEXT_DIRECTIVES)) {
+                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                        std::cout << GREEN << "[OK]" << ENDC << std::endl;
+                    ServerConfig::Directive * _directive;
+                    _directive = createDirective(directive, directive_content);
+                    if (_directive != 0) {
+                        _directive->setDirective(_servers.back(), context);
+                        delete (_directive);
+                    }
+                    else
+                        throw WrongSyntaxException();
+                }
+                else {
+                    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+                        std::cout << RED << "[INVALID DIRECTIVE]" << ENDC << std::endl;
+                    throw InvalidDirectiveException();
                 }
                 break;
             default:
                 std::cout << ENDC << std::endl;
-                throw e_invalid_directive;
+                throw InvalidDirectiveException();
         }
     }
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -131,34 +130,44 @@ Config::~Config() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << RED << "Config destroyed" << ENDC << std::endl;
 }
-
-Config::ServerConfig::ServerConfig() : _autoindex(false), _max_body_size(-1), _ip("127.0.0.1"), _port(80), _root_path("www") {
+/*
+ * @brief Construct a Server Configuration
+ *  Represents a server configuration from the configuration file.
+ *  Set's all default values on construction.
+ *  It can be setted up accordingly with the directives.
+ */
+Config::ServerConfig::ServerConfig() : _autoindex(false), _max_body_size(0), _ip("127.0.0.1"), _port(80), _root_path("www") {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-	   std::cout << WHITE << "ServerConfig created [" << _ip << ":" << _port << "]" << ENDC << std::endl;
+	   std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
 }
-// Config::ServerConfig::ServerConfig(const ServerConfig & serv_conf):
-//     _ip(serv_conf._ip), _port(serv_conf._port) {
-//     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-//         std::cout << WHITE << "Copy ServerConfig created [" << _ip << ":" << _port << "]" << ENDC << std::endl;
-// }
 Config::ServerConfig::~ServerConfig() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << RED << "ServerConfig destroyed" << ENDC << std::endl;
 }
-
+/*
+ * @brief Construct Directive Abstract Object 
+ *  virtual setDirective will take one Directive implementation and set it up.
+ *  If directives are repeated the last configuration is overwritten,
+ *  except directives that can be repeated.
+ * @param id
+ *  Directive identifier, all macros listed on the Config.hpp. 
+ */
 Config::ServerConfig::Directive::Directive(int id): _id(id) {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-	   std::cout << WHITE << "Directive(" << id << ") created" << ENDC << std::endl;
+        std::cout << WHITE << "Directive(" << id << ") created" << ENDC << std::endl;
 }
 Config::ServerConfig::Directive::~Directive() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << RED << "Directive destroyed" << ENDC << std::endl;
 }
-
-Config::ServerConfig::AutoIndex::AutoIndex(const std::string & content) throw (InvalidDirectiveException):
+/*
+ * @brief Construct an Autoindex
+ *  This directive will determine whether to show a directory listing from the route/location.
+ * @param content 
+ *  The only two valid options are: [on, off]. Anything else is wrong.  
+ */
+Config::ServerConfig::AutoIndex::AutoIndex(const std::string & content) throw (std::exception):
     Directive(AUTOINDEX) {
-    /* Configure webserv to return an automatically generated directory listing instead,
-    include the on parameter to the autoindex directive:.*/
     if (content == "on")
         _option = true;
     else if (content == "off")
@@ -172,18 +181,24 @@ Config::ServerConfig::AutoIndex::~AutoIndex() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "AutoIndex Directive destroyed!" << ENDC << std::endl;
 }
-
-Config::ServerConfig::ClientMaxBodySize::ClientMaxBodySize(const std::string & content) throw (InvalidDirectiveException):
-    Directive(SERVERNAME), _max_size(0) {
-    /*Sets the maximum allowed size of the client request body. 
-    If the size in a request exceeds the configured value, 
-    the 413 (Request Entity Too Large) error is returned to the client.
-    Please be aware that browsers cannot correctly display this error. 
-    Setting size to 0 disables checking of client request body size.*/
+/*
+ * @brief Construct a Client Max Body Size
+ *  Set up a maximum amount bytes to accept from a request. 
+ *  If the size in a request exceeds the configured value, 
+ *  the 413 (Request Entity Too Large) error is returned to the client.
+ *  Please be aware that browsers cannot correctly display this error. 
+ *  Setting size to 0 disables checking of client request body size.
+ * @param content 
+ *   Should be a number without any spaces or letters, just a number.
+ */
+Config::ServerConfig::ClientMaxBodySize::ClientMaxBodySize(const std::string & content) throw (std::exception):
+    Directive(CLIENTMAXBODYSIZE), _max_size(0) {
     if (content.find(SEPARATORS) != std::string::npos)
         throw InvalidDirectiveException();
     std::stringstream intValue(content);
     intValue >> _max_size;
+    if (_max_size < 0)
+        throw WrongSyntaxException();
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "ClientMaxBodySize created [" << _max_size << "]" << ENDC << std::endl;
 }
@@ -191,61 +206,54 @@ Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "ClientMaxBodySize Directive destroyed!" << ENDC << std::endl;
 }
-
-/**
- * @brief Construct a new Cgi object
- * 
+/*
+ * @brief Construct a Cgi object
  *  This constructor takes a string as argument that will be splited to get two arguments: "program extension" and "program path".
  *  Then both will be parsed and pushed to the object. If one of the arguments is missing or one of them is invalid, throws an exception.
- * 
  * @param content 
  *  The string after directive "cgi" is found by the parser.
  */
-Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (InvalidDirectiveException):
+Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (std::exception):
     Directive(CGI), _cgi() {
         if (content.empty())
             throw InvalidDirectiveException();
         _parseCgiContent(_cgi, content);
         if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-            std::cout << WHITE << "Cgi created!" << ENDC << std::endl;
+            std::cout << WHITE << "Cgi created" << ENDC << std::endl;
 }
-
 Config::ServerConfig::Cgi::~Cgi() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "Cgi Directive destroyed!" << ENDC << std::endl;
 }
-
-/**
- * @brief Construct a new CgiBin object
- * 
+/*
+ * @brief Construct a CgiBin object
  *  This constructor takes a string as argument that will be the path of cgi-bin.
  *  If path is empty, throws an exception.
- * 
  * @param content
  *  The string after directive "cgi" is found by the parser.
  */
-Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (InvalidDirectiveException):
+Config::ServerConfig::CgiBin::CgiBin(const std::string& content) throw (std::exception):
     Directive(CGIBIN), _path(content) {
         if (_path.empty())
             throw InvalidDirectiveException();
         if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
             std::cout << WHITE << "CgiBin created!" << ENDC << std::endl;
 }
-
 Config::ServerConfig::CgiBin::~CgiBin() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "CgiBin destroyed!" << ENDC << std::endl;
 }
-
-Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(InvalidDirectiveException):
+/*
+ * @brief Construct an Error Page
+ *  This directive configures a custom error page.
+ *  If the same error is in more than one directive only the first one is used.
+ * @param content
+ *  String with a list of codes followed by the path.
+ *  The path will be used to search for the code.
+ *  The file will be constructed with the error code and .html extension.
+ */
+Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) throw(std::exception):
     Directive(ERRORPAGE) {
-    /* This constructor takes only one string which should be valid error code/s
-    and the URI (page to display in case given error event occures)
-        ErrorCodePage("404 405 ./response.html")    [VALID]
-        ErrorCodePage("500 ./500.html")             [VALID]
-        ErrorCodePage("404 405")                    [throw InvalidDirectiveException]
-        ErrorCodePage("404 405 ./r.html ./el.html") [throw InvalidDirectiveException]
-        ErrorCodePage("./response.html")            [throw InvalidDirectiveException] */
     size_t found = content.find_last_of(SEPARATORS);
     if (content.empty()|| found == std::string::npos || !isCodeValid(content.substr(0, found)))
         throw InvalidDirectiveException();
@@ -257,11 +265,15 @@ Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "ErrorPage Directive destroyed!" << ENDC << std::endl;
 }
-
-Config::ServerConfig::Index::Index(const std::string & content) throw (InvalidDirectiveException):
+/*
+ * @brief Construct an Index
+ *  The index is used to set up a default page to return.
+ *  If the resource is founded it ignores the autoindex if it was on.
+ * @param content
+ *  A string with a list of files to look for in the resource requested.
+ */
+Config::ServerConfig::Index::Index(const std::string & content) throw (std::exception):
     Directive(INDEX) {
-    /*You can list more than one filename in the index directive.
-    Webserv searches for files in the specified order and returns the first one it finds.*/
     if (content.empty())
         throw InvalidDirectiveException();
     std::string tmp(content);
@@ -277,14 +289,14 @@ Config::ServerConfig::Index::~Index() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "Index Directive destroyed!" << ENDC << std::endl;
 }
-
-Config::ServerConfig::Methods::Methods(const std::string & content) throw (InvalidDirectiveException):
+/*
+ * @brief Construct a Method
+ *  A list of the accepted methods for a specific resource.
+ * @param content
+ *  A string with a list of valid methods in CAPITAL letters.
+ */
+Config::ServerConfig::Methods::Methods(const std::string & content) throw (std::exception):
 	Directive(LIMITMETHODS) {
-	/* This constructor takes one string which contains the limit methods that will be assigned. 
-		Methods("GET POST DELETE") [VALID]
-		Methods("GET")             [VALID]
-		Methods("GET GET")         [throw InvalidDirectiveException]
-		Methods("GET POST NIHIL")  [throw InvalidDirectiveException] */
 	char * str = std::strtok(const_cast<char*>(content.c_str()), " ");
 	while (str) {
 		if (!_validMethod(std::string(str)))
@@ -304,17 +316,15 @@ Config::ServerConfig::Methods::~Methods() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "Methods destroyed" << ENDC << std::endl;
 }
-
-Config::ServerConfig::Listen::Listen(const std::string & content) throw (InvalidDirectiveException):
+/*
+ * @brief Construct a Listen
+ *  Configures the ip and port which the server looks for.
+ * @param content
+ *  String with either a number which indicates the port,
+ *  or a valid ip [*.*.*.*], or both separated by a colon (':').
+ */
+Config::ServerConfig::Listen::Listen(const std::string & content) throw (std::exception):
     Directive(LISTEN), _ip("127.0.0.1"), _port(80) {
-    /* This constructor takes only one string which can be the ip_address and port separated by a color or either without any colon
-        Listen("*:80")          [VALID]
-        Listen("124.10.20.30")  [VALID]
-        Listen("localhost:80")  [VALID]
-        Listen("4242")          [VALID]
-        Listen("500000")        [throw InvalidDirectiveException]
-        Listen("42 42")         [throw InvalidDirectiveException]
-        Listen("127,0.4.5")     [throw InvalidDirectiveException] */
     if (content.empty() || content.find_first_of(SEPARATORS) != std::string::npos)
         throw InvalidDirectiveException();
     std::string temp;
@@ -355,8 +365,13 @@ Config::ServerConfig::Listen::~Listen() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "Listen destroyed!" << ENDC << std::endl;
 }
-
-Config::ServerConfig::Location::Location(std::string const & content) throw (InvalidDirectiveException):
+/*
+ * @brief Construct a Location
+ *  This directive enanbles a new route to the ServerConfig.
+ * @param content
+ *  Takes a string terminated by '{', the previous content of the string is the name of the location.
+ */
+Config::ServerConfig::Location::Location(std::string const & content) throw (std::exception):
     Directive(LOCATION), _target(content), _max_body_size(-1), _autoindex(false) {
     /*This constructor takes only one string which should be a valid path
         Location("/etc/www/where_is_the_file {") [VALID]
@@ -375,8 +390,14 @@ Config::ServerConfig::Location::~Location() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "Location Directive destroyed!" << ENDC << std::endl;
 }
-
-Config::ServerConfig::Root::Root(const std::string & str) throw (InvalidDirectiveException):
+/*
+ * @brief Construct a Root
+ *  The root configures the path where the server will look for the resources.
+ * @param content
+ *  String without separators indicating a path where to look.
+ * !!!???????? PROB should make mandatory to end with '/'...
+ */
+Config::ServerConfig::Root::Root(const std::string & str) throw (std::exception):
 	Directive(ROOT), _path(str) {
 	/* This constructor takes only one string which should be a valid path
 		Root("/etc/www/root")    [VALID]
@@ -391,14 +412,18 @@ Config::ServerConfig::Root::~Root() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << RED << "Root destroyed" << ENDC << std::endl;
 }
-
-Config::ServerConfig::ServerName::ServerName(const std::string & content) throw (InvalidDirectiveException):
+/*
+ * @brief Construct a Server Name
+ *  The server name will be connfigured to set up the response Server-Name Header.
+ *  The server name can be determined in the following request processing stage:
+ *  after processing the request line, after processing the Host header field.
+ *  If the server name was not determined after processing the request line or from the Host header field,
+ *  will use the first server configuration which matches the Host.
+ * @param content
+ *  String with a list of server names to use for the Server-Name header.
+ */
+Config::ServerConfig::ServerName::ServerName(const std::string & content) throw (std::exception):
     Directive(SERVERNAME) {
-    /*First, a connection is created in a default server context.
-    Then, the server name can be determined in the following request processing stage:
-    after processing the request line, after processing the Host header field.
-    If the server name was not determined after processing the request line or from the Host header field,
-    will use the empty name as the server name.*/
     std::string tmp(content);
     char *token = strtok(const_cast<char*>(tmp.c_str()), SEPARATORS);
     while (token != NULL) {
@@ -412,7 +437,6 @@ Config::ServerConfig::ServerName::~ServerName() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "ServerName Directive destroyed!" << ENDC << std::endl;
 }
-
 
 /* MEMBER FUNCTIONS */
 bool Config::validDirective(const std::string & str, const std::string * list, int len) const {
@@ -481,9 +505,6 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
         return (0);
     return (new Location(*tmp_it));
 }
-
-// std::string target_location(0, _target.find_last_of("/"));
-// target_location += "/";
 
 int Config::ServerConfig::Directive::getId() const {return (_id);}
 
@@ -571,6 +592,16 @@ void Config::ServerConfig::AutoIndex::setDirective(ServerConfig & serv_conf, int
         serv_conf._locations.back()._autoindex = _option;
 }
 
+void Config::ServerConfig::Cgi::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == LOCATION_CONTEXT)
+        (serv_conf._locations.back()._cgi).push_back(*this);
+}
+
+void Config::ServerConfig::CgiBin::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == LOCATION_CONTEXT)
+        serv_conf._locations.back()._cgi_bin = _path;
+}
+
 void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == SERVER_CONTEXT)
         serv_conf._max_body_size = _max_size;
@@ -578,16 +609,12 @@ void Config::ServerConfig::ClientMaxBodySize::setDirective(ServerConfig & serv_c
         serv_conf._locations.back()._max_body_size = _max_size;
 }
 
-
-// *************************************************
 void Config::ServerConfig::ErrorCodePage::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == SERVER_CONTEXT)
         serv_conf._server_errors_map[_error_path] = _error_codes;
     else if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._location_errors_map[_error_path] = _error_codes;
 }
-// *************************************************
-
 
 void Config::ServerConfig::Index::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == SERVER_CONTEXT)
@@ -624,17 +651,6 @@ void Config::ServerConfig::ServerName::setDirective(ServerConfig & serv_conf, in
     if (context == SERVER_CONTEXT)
         serv_conf._names = _server_names;
 }
-
-void Config::ServerConfig::Cgi::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == LOCATION_CONTEXT)
-        (serv_conf._locations.back()._cgi).push_back(*this);
-}
-
-void Config::ServerConfig::CgiBin::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == LOCATION_CONTEXT)
-        serv_conf._locations.back()._cgi_bin = _path;
-}
-
 // std::string const &Config::ServerConfig::Location::getLocation() const{return _location;}
 // bool &Config::ServerConfig::Location::l_getAutoindex() {return _autoindex;}
 // std::string Config::ServerConfig::Location::l_getRoot() const {return _l_root;}
@@ -643,7 +659,6 @@ void Config::ServerConfig::CgiBin::setDirective(ServerConfig & serv_conf, int co
 // std::vector<std::string> &Config::ServerConfig::Location::l_getMethods() {return _l_methods;}
 
 /* CLASS STATIC FUNCTIONS */
-
 std::ostream& operator<<(std::ostream & s, const Config & param) {
 	s << "Some configuration Text";
 	(void)param;
