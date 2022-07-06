@@ -14,14 +14,14 @@ class Request {
 	private:
 		std::map<std::string, std::string> _headers;
 		int			_error_code;
-	    long		_content_length;
 	    std::string _method;
 	    std::string _uri_target;
 		std::string _location_root;
 		std::string _final_path;
 	    std::string _http_version;
+	    std::string _query;
+	    std::string _content;
 		// std::string _post_content;
-	    // std::string _query;
 	    // std::string _body;
 	    // std::string _transfer_encoding;
 		Config::ServerConfig const & _server_config;

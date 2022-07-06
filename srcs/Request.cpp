@@ -3,7 +3,8 @@
 // Can we concider that the whole request is sent at once?
 Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	_error_code(0), _server_config(sc), _server_error_codes(_server_config._server_errors_map), _loc(NULL)
-	{			
+	{
+	std::cout << RED << request << ENDC << std::endl;
 	std::stringstream ss(request);
 	std::string line;
 	
@@ -26,23 +27,41 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			std::string content(line.substr(line.find(':')));
     		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 			_headers[name] = strtrim(content, ": \t");
-    		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+    		//if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
+		} else {
+			break; // trim and check empty on the loop
 		}
 	}
 	if (_headers.find("content-length") != _headers.end()) {
-		; // TODO 
+		int valread(0);
+		std::stringstream num_ss(_headers["content-length"]);
+		num_ss >> valread;
+		while (std::getline(ss, line)) {
+			_content += line;
+		}
+		_content = _content.substr(0, valread);
+		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << WHITE << "Content [" << valread << "]" << std::endl << PURPLE << _content << ENDC << std::endl;
 	}
-	if (_headers.find("cockies") != _headers.end()) {
+	if (_headers.find("coockies") != _headers.end()) {
 		; // TODO
 	}
 	if (_uri_target.length() > 8000)
 		_error_code = 414;
-	//Separate the uri, [Path, Query, Fragment]
-	// CHeck if method Exists? -> Bad Request
-	// Check if mandatory HEaders Exist? -> Bad Request
-	// Check if content is ok?
 	else {
+		//Separate the uri, [Path, Query, Fragment]
+		// CHeck if method Exists? -> Bad Request
+		// Check if mandatory HEaders Exist? -> Bad Request
+		// Check if content is ok?
+		size_t q_start = _uri_target.find("?");
+		size_t q_end = _uri_target.find("#");
+		if (q_start != std::string::npos) { // Concider the fragment later....
+			_query = _uri_target.substr(q_start, q_end - q_start);
+			_uri_target = _uri_target.substr(0, q_start);
+			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << YELLOW << WHITE << "Query detected [" << WHITE << _query << YELLOW << "]" << ENDC << std::endl;
+		}
 		_loc = _server_config.findLocation(_uri_target);
 		if (!_loc) {
 			_error_code = 404;
@@ -52,7 +71,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			_location_root = _loc->_root_path;
 			_location_error_codes = _loc->_location_errors_map;
 			_final_path = _location_root + _uri_target.substr(_loc->_target.length());
-			std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC <<std::endl;
+			std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC << std::endl;
 			if (!_loc->findMethod(_method))
 				_error_code = 405;
 			else if (_http_version.compare("http/1.1"))

@@ -1,0 +1,39 @@
+body {
+	margin: 0;
+	border: none;
+	box-sizing: border-box;
+	background-color: greenyellow;
+	text-align: center;
+}
+
+.container {
+	display: flex;
+	flex-flow: column;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	border-radius: 0.5rem;
+	height: 100vh;
+}
+
+.container span {
+	font-size: 150%;
+	font-style: bold;
+	text-decoration: underline;
+}
+
+.container .form form {
+	padding-top: 2rem;
+}
+
+.container .form {
+	padding: 2rem;
+	background-color: green;
+	border-radius: 0.5rem;
+}
+
+.container .form form * {
+	margin: auto;
+	display: block;
+	padding: 0.5rem;
+}
