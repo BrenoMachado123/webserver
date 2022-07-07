@@ -39,9 +39,9 @@ class Request {
 		Request(std::string const &, Config::ServerConfig const &);
 		~Request();
 
-		int get_error_code() const;
-		std::string const & get_final_path() const;
-		bool is_target_dir() const;
+		int getErrorCode() const;
+		std::string const & getFinalPath() const;
+		bool isTargetDir() const;
 		// long const & get_content_length() const; //?????????????
 		// std::string const & get_method() const; 
 		// std::string const & get_uri_target() const;

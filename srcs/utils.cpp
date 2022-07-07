@@ -42,3 +42,23 @@ char * get_local_time (void) {
   timeinfo = localtime (&rawtime);
   return (asctime(timeinfo));
 }
+
+const std::string readFile(std::ifstream const & file) {
+  if(file.is_open()) {
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    if (ss.str().empty())
+      return ("This resource is empty...");
+    return (ss.str());
+  }
+  return (0);
+}
+
+bool isDirectory(const std::string & path) {
+  struct stat s;
+
+  if (lstat(path.c_str(), &s) == 0)
+    if (S_ISDIR(s.st_mode))
+      return (true);
+  return (false);
+}

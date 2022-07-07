@@ -3,7 +3,7 @@
 
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location", "index", "autoindex"};
 const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size", "cgi", "cgi-bin"};
-const std::string Config::ServerConfig::Methods::_valid_methods[3] = {"GET", "POST", "DELETE"};
+const std::string Config::ServerConfig::Methods::_valid_methods[4] = {"GET", "POST", "DELETE", "PUT"};
 const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] = {
 	400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
 	421, 422, 423, 424, 425, 426, 428, 429, 431, 451, 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
@@ -431,7 +431,6 @@ Config::ServerConfig::ServerName::~ServerName() {
         std::cout << RED << "ServerName Directive destroyed" << ENDC << std::endl;
 }
 
-/* MEMBER FUNCTIONS */
 bool Config::validDirective(const std::string & str, const std::string * list, int len) const {
 	int i(0);
 	while (i < len)
@@ -441,7 +440,6 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 }
 
 Config::ServerConfig::Directive * Config::createDirective(std::string const & name, std::string const & content) throw(std::exception) {
-
     if (name == "listen") {
         return (new ServerConfig::Listen(content));
     }
@@ -478,16 +476,17 @@ Config::ServerConfig::Directive * Config::createDirective(std::string const & na
     return (0);
 }
 
-int Config::ServerConfig::getPort() const {return _port;}
+int Config::ServerConfig::getPort() const {return (_port);}
 
-std::string const & Config::ServerConfig::getIp() const {return _ip;}
+std::string const & Config::ServerConfig::getIp() const {return (_ip);}
 
 Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string const & target) const {
-    size_t matches(0);
-    std::vector<Location> tmp_locs(_locations);
+    size_t matches;
     std::vector<Location>::iterator l_it;
     std::vector<Location>::iterator tmp_it;
-    for (l_it = tmp_locs.begin(); l_it != tmp_locs.end(); ++l_it) {
+    std::vector<Location> tmp_locs(_locations);
+
+    for (l_it = tmp_locs.begin(), matches = 0; l_it != tmp_locs.end(); ++l_it) {
         int tmp = target.compare(0, l_it->_target.length(), l_it->_target);
         if (tmp == 0 && l_it->_target.length() > matches) {
             matches = l_it->_target.length();
@@ -501,12 +500,14 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
 
 int Config::ServerConfig::Directive::getId() const {return (_id);}
 
-std::vector<std::string> Config::ServerConfig::Cgi::getCgi() const { return _cgi; }
+std::vector<std::string> Config::ServerConfig::Cgi::getCgi() const { return (_cgi); }
 
 bool Config::ServerConfig::ErrorCodePage::loadErrorCodes(const std::string &content) {
     std::stringstream stoi_converter;
     int converted_number;
-    int loop_counter = 0;
+    int loop_counter;
+
+    loop_counter = 0;
     char *token = std::strtok(const_cast<char*>(content.c_str()), SEPARATORS);
     while (token != 0) {
         loop_counter++;
@@ -527,7 +528,7 @@ bool Config::ServerConfig::ErrorCodePage::loadErrorCodes(const std::string &cont
 }
 
 void Config::ServerConfig::Cgi::_parseCgiContent(std::vector<std::string>& _target, const std::string& content) {
-    char* token = std::strtok(const_cast<char*>(content.c_str()), " ");
+    char * token = std::strtok(const_cast<char*>(content.c_str()), " ");
     while (token) {
         _target.push_back(std::string(token));
         token = std::strtok(NULL, SEPARATORS);
@@ -536,11 +537,10 @@ void Config::ServerConfig::Cgi::_parseCgiContent(std::vector<std::string>& _targ
         throw InvalidDirectiveException();
 }
 
-bool Config::ServerConfig::Methods::_validMethod(const std::string& method) {
-    for(size_t i = 0; i < 3; i++) { // i < 3; is just wrong
+bool Config::ServerConfig::Methods::_validMethod(const std::string & method) {
+    for(size_t i = 0; i < 4; i++)
         if (method == _valid_methods[i])
             return true;
-    }
     return false;
 }
 
@@ -553,18 +553,18 @@ bool Config::ServerConfig::Location::findMethod(const std::string& method) const
 }
 
 bool Config::ServerConfig::Listen::isIpValid(const std::string &ip) {
+    int counter, part1, rest;
+    char ch;
+
+    counter = 0;
     if (!ip.compare("0.0.0.0") || !ip.compare("localhost") || !ip.compare("*"))
         return true;
-    int counter = 0;
-    for (u_int16_t i = 0 ; i <= ip.length() ; i++)
+    for (u_int16_t i = 0; i <= ip.length() ; i++)
         if (ip[i] == '.')
             counter++;
     if (counter != 3)
         return false;
-
     std::stringstream stoi_converter(ip);
-    int part1, rest;
-    char ch;
     stoi_converter >> part1 >> ch;
     if (part1 < 1 || part1 > 255 || ch != '.')
         return false;
@@ -654,7 +654,6 @@ void Config::ServerConfig::ServerName::setDirective(ServerConfig & serv_conf, in
 // std::string &Config::ServerConfig::Location::l_getErrorPath() {return _l_errorPath;}
 // std::vector<std::string> &Config::ServerConfig::Location::l_getMethods() {return _l_methods;}
 
-/* CLASS STATIC FUNCTIONS */
 std::ostream& operator<<(std::ostream & s, const Config & param) {
 	s << "Some configuration Text";
 	(void)param;

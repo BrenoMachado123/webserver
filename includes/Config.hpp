@@ -142,7 +142,7 @@ class Config {
 						Methods(const std::string &) throw (std::exception);
 						virtual ~Methods();
 						virtual void	setDirective(ServerConfig &, int) const;
-						static const std::string	_valid_methods[3];
+						static const std::string	_valid_methods[4];
 					private:
 						std::vector<std::string>	_methods;
 						bool	_validMethod(const std::string &);

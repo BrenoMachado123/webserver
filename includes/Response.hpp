@@ -45,14 +45,13 @@ class Response {
 		bool _autoindex;
 		std::string _date;
 		std::string _server_name;
-		std::string _content_length;
 		std::string _content_type;
 		std::string _content;
 		Request const & _req;
 		Config::ServerConfig const & _server_config;
-
 		//bool _check_default_error_code_and_assign_path(int);
 		//static std::string _mime_type_detector(std::string const & file_name);
+		void setMimeType(std::string const &);		
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);

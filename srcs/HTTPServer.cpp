@@ -92,7 +92,7 @@ void HTTPServer::run() {
 	std::vector<Client>::iterator					v_it;
 	std::map<int, std::vector<Client> >::iterator	m_it;
 
-	std::cout << CYAN << std::endl << "=> Booting webserv" << std::endl;
+	std::cout << CYAN << "=> Booting webserv" << std::endl;
 	std::cout << "=> HTTP server starting" << std::endl;
 	std::cout << "=> Run `./webserv server --help` for more startup options" << std::endl;
 	std::cout << "Starting with single thread mode..." << std::endl;

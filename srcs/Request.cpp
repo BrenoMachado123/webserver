@@ -4,7 +4,6 @@
 Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	_error_code(0), _server_config(sc), _server_error_codes(_server_config._server_errors_map), _loc(NULL)
 	{
-	std::cout << RED << request << ENDC << std::endl;
 	std::stringstream ss(request);
 	std::string line;
 	
@@ -19,15 +18,13 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	_http_version = strtrim(_http_version, " \r\t");
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << BLUE << "Method => [" << _method << "], Target => [" << _uri_target << "], HTTP Version => [" << _http_version << "]" << ENDC << std::endl;
-	else
-		std::cout << WHITE << "Started " << _method << " \"" << _uri_target << "\"" << " at " << get_local_time(); 
 	while (std::getline(ss, line) && line != "\r\n") {
 		if (line.find(':') != std::string::npos) {
 			std::string name(line.substr(0, line.find(':')));
 			std::string content(line.substr(line.find(':')));
     		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 			_headers[name] = strtrim(content, ": \t");
-    		//if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+    		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << BLUE << name << " => " << _headers[name] << ENDC << std::endl;
 		} else {
 			break; // trim and check empty on the loop
@@ -71,7 +68,11 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			_location_root = _loc->_root_path;
 			_location_error_codes = _loc->_location_errors_map;
 			_final_path = _location_root + _uri_target.substr(_loc->_target.length());
-			std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC << std::endl;
+			std::string tmp("Started " + _method + " \"" + _uri_target + "\" ");
+			std::cout.width(35); std::cout << std::left << tmp << WHITE << "=>" << CYAN << " Target Path [" << _final_path << "]" << WHITE << " at " << get_local_time(); 
+			//std::cout << std::left << WHITE << "Started " << _method << " \"" << _uri_target << "\"" << GREEN << " ->"; std::cout << CYAN << " Target Path [" << _final_path << "]" << WHITE << " at " << get_local_time(); 
+			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC << std::endl;
 			if (!_loc->findMethod(_method))
 				_error_code = 405;
 			else if (_http_version.compare("http/1.1"))
@@ -88,13 +89,13 @@ Request::~Request() {
 		std::cout << RED << "Request destroyed" << std::endl;
 }
 
-int Request::get_error_code() const {
+int Request::getErrorCode() const {
 	return (_error_code);
 }
 
-bool Request::is_target_dir() const {
+bool Request::isTargetDir() const {
 	if (_loc)
-		if ( (*(_uri_target.end() - 1)) == '/' )
+		if (_loc->_target == _uri_target || (*(_uri_target.end() - 1)) == '/' )
 			return (true);
 	return (false);
 }
@@ -123,7 +124,7 @@ bool Request::is_target_dir() const {
 // 	return _server_config;
 // }
 
-std::string const & Request::get_final_path() const {
+std::string const & Request::getFinalPath() const {
 	return (_final_path);
 }
 
