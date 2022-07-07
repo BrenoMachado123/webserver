@@ -169,8 +169,6 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				_status_code = 200;
 				setMimeType(location);
 			}
-			if (_content.empty())
-				_status_code = 404;
 		}
 	}
 	file.close();
