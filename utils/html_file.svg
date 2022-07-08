@@ -1,11 +1,11 @@
-<svg x="0px" y="0px" viewBox="0 0 303.188 303.188" style="enable-background:new 0 0 303.188 303.188;" xml:space="preserve">
+<svg class="html-file file" x="0px" y="0px" viewBox="0 0 303.188 303.188" style="enable-background:new 0 0 303.188 303.188;" xml:space="preserve">
 <g>
 	<polygon style="fill:#E4E4E4;" points="219.821,0 32.842,0 32.842,303.188 270.346,303.188 270.346,50.525 	"/>
-	<polygon style="fill:#FFA500;" points="227.64,25.263 32.842,25.263 32.842,0 219.821,0 	"/>
+	<polygon class="top-bar" style="fill:#FFA500;" points="227.64,25.263 32.842,25.263 32.842,0 219.821,0 	"/>
 	<g>
 		<path style="fill:#FFA500;" d="M126.116,154.679L77.19,132.95v-8.323l48.925-24.487v14.373l-30.004,13.694l30.004,12.195
 			L126.116,154.679L126.116,154.679z"/>
-		<path style="fill:#FFA500;" d="M173.395,91.526l-26.374,72.734h-16.744l26.374-72.734
+		<path class="html-tag" style="fill:#FFA500;" d="M173.395,91.526l-26.374,72.734h-16.744l26.374-72.734
 			C156.651,91.526,173.395,91.526,173.395,91.526z"/>
 		<path style="fill:#FFA500;" d="M177.072,140.402l30.004-12.195l-30.004-13.694V100.14l48.925,24.487v8.323l-48.925,21.729V140.402
 			z"/>

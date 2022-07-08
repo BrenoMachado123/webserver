@@ -1,6 +1,6 @@
-<svg x="0px" y="0px" viewBox="0 0 303.188 303.188" style="enable-background:new 0 0 303.188 303.188;" xml:space="preserve">
+<svg class="py-file file" x="0px" y="0px" viewBox="0 0 303.188 303.188" style="enable-background:new 0 0 303.188 303.188;" xml:space="preserve">
 <g>
-	<polygon style="fill:#E8E8E8;" points="219.821,0 32.842,0 32.842,303.188 270.346,303.188 270.346,50.525 	"/>
+	<polygon class="top-bar" style="fill:#E8E8E8;" points="219.821,0 32.842,0 32.842,303.188 270.346,303.188 270.346,50.525 	"/>
 	<g>
 		<g>
 			<path style="fill:#004A94;" d="M150.848,67.41c-15.19,0-25.222,6.307-25.222,12.325v19.196h25.222v2.866h-47.284

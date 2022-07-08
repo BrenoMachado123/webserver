@@ -186,17 +186,12 @@ Response::~Response() {
 }
 
 const std::string Response::createAutoindexResponse() {
-	std::string file_icon;
-	std::string css_icon;
-	std::string html_icon;
-	std::string js_icon;
-	std::string py_icon;
-	std::string folder_icon;
-	std::string html_content;
-	std::ifstream icon;
-	struct dirent * de;
-    struct stat st;
-    struct tm tm_time;
+	std::string		file_icon, css_icon, html_icon, js_icon, py_icon, folder_icon, html_content;
+	std::ifstream	icon;
+	DIR				*dr;
+	struct dirent *	de;
+    struct stat		st;
+    struct tm	tm_time;
 
 	readFileString("utils/folder.svg", folder_icon);
 	readFileString("utils/file.svg", file_icon);
@@ -204,16 +199,22 @@ const std::string Response::createAutoindexResponse() {
 	readFileString("utils/js_file.svg", js_icon);
 	readFileString("utils/css_file.svg", css_icon);
 	readFileString("utils/py_file.svg", py_icon);
-
-    DIR *dr = opendir(_req.getFinalPath().c_str());
+    dr = opendir(_req.getFinalPath().c_str());
 	if (dr == NULL) {
 		_status_code = 404;
 	} else {
 		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
 			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
 			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {position: absolute; top: 0; left: 30px;} \
-			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;}</style></head>\n<body>\n";
-		html_content += "<h3>Autoindex for " + _req.getFinalPath() + "</h3><hr>";
+			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
+			a:hover .default-file .pencil { display: block; transform: translate(-20px, -35px); animation: 5s draw ease-in infinite; } @keyframes draw { \
+			0% {transform: translate(-25px, -30px);} 5% {transform: translate(-20px, -35px);} 10% {transform: translate(-15px, -30px);} 15% {transform: translate(-10px, -35px);} 20% {transform: translate(-5px, -30px);} \
+			25% {transform: translate(-0px, -30px);} 30% {transform: translate(-25px, -20px);} 35% {transform: translate(-18px, -25px);} 40% {transform: translate(-11px, -21px);} 45% {transform: translate(-5px, -25px);} \
+			50% {transform: translate(-0px, -22px);} 55% {transform: translate(-24px, -15px);} 60% {transform: translate(-21px, -18px);} 65% {transform: translate(-12px, -12px);} 70% {transform: translate(-7px, -17px);} \
+			75% {transform: translate(-0px, -12px);} 80% {transform: translate(-5px, -23px);} 90% {transform: translate(-25px, -30px);} 100% {transform: translate(-25px, -30px);} } \
+			a:hover .file .top-bar {animation: 2s shrink ease-out;} a:hover .html-file .html-tag {animation: 2s flick ease-out infinite;} \
+			@keyframes flick {to {opacity: 0;}} @keyframes shrink {0% {transform: rotateY(25deg) translate(0px,0px);} 70% {transform: rotateY(65deg) translate(40px,0px);} 90% {transform: rotateY(80deg) translate(150px,0px);} 100% {transform: rotateY(85deg) translate(285px,0px);}} \
+			</style></head>\n<body>\n<h3>Autoindex for " + _req.getFinalPath() + "</h3><hr>";
 		while ((de = readdir(dr)) != NULL) {
 			if (*de->d_name == 0 || (*de->d_name == '.' && *(de->d_name + 1) == 0))
 				continue ;
@@ -288,10 +289,8 @@ const std::string Response::createResponse() {
 					file.open(error_loc.c_str(), std::ifstream::binary);
 					if(file.is_open()) {
 	    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-							std::cout << GREEN << "[File opened render file to display error...]" << ENDC << std::endl;
-						std::string tmp_buffer;
-						while (std::getline(file, tmp_buffer)) // PLS REFACTOR THIS, READ FULL FILE AT ONCE OR WITH A BUFFER.... ALSO PUT THIS INSIDE A FUNCTION AND REUSE THE LINES OF CODES WHICH ARE THE SAME BELLOW
-							html_content += tmp_buffer + "\n";
+							std::cout << GREEN << "[File opened, render file to display error...]" << ENDC << std::endl;
+						readFileStream(file, html_content);
 						_content_type = "text/html";
 					}
 					break ;
@@ -309,16 +308,14 @@ const std::string Response::createResponse() {
 				}
 			}
 			if (e_it != l_it->second.end()) {
-				std::string error_loc = l_it->first + so.str() + ".html";
+				std::string error_loc = l_it->first + so.str() + ".html"; // We support only html errors
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 					std::cout << YELLOW << "Try to open file: " << error_loc << ENDC << std::endl;
-				file.open(error_loc.c_str(), std::ifstream::binary); // We support only html errors
+				file.open(error_loc.c_str(), std::ifstream::binary);
 				if(file.is_open()) {
     				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-						std::cout << GREEN << "[File opened render file to display error...]" << ENDC << std::endl;
-					std::string tmp_buffer;
-					while (std::getline(file, tmp_buffer)) // PLS REFACTOR THIS, READ FULL FILE AT ONCE OR WITH A BUFFER.... ALSO PUT THIS INSIDE A FUNCTION AND REUSE THE LINES OF CODES WHICH ARE THE SAME BELLOW
-						html_content += tmp_buffer + "\n";
+						std::cout << GREEN << "[File opened, render file to display error...]" << ENDC << std::endl;
+					readFileStream(file, html_content);
 					_content_type = "text/html";
 				}
 				break ;

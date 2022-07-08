@@ -1,5 +1,4 @@
-<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 58.707 58.707" style="enable-background:new 0 0 58.707 58.707;" xml:space="preserve">
+<svg class="default-file" x="0px" y="0px" viewBox="0 0 58.707 58.707" style="enable-background:new 0 0 58.707 58.707;" xml:space="preserve">
 <g>
 	<g>
 		<polygon style="fill:#EFEBDE;" points="46.072,14 32.072,0 1.072,0 1.072,58 46.072,58 		"/>
@@ -12,7 +11,7 @@
 		</g>
 		<polygon style="fill:#D5D0BB;" points="32.072,0 32.072,14 46.072,14 		"/>
 	</g>
-	<g>
+	<g class="pencil">
 		<polygon style="fill:#EDDCC7;" points="36.201,49.214 36.194,49.222 34.205,56.511 38.852,51.865 		"/>
 		<path style="fill:#D75A4A;" d="M55.451,35.266l-1.247-1.247c-0.775-0.775-2.032-0.775-2.807,0L47.815,37.6l2.651,2.651
 			L55.451,35.266z"/>

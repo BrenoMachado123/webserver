@@ -1,7 +1,7 @@
-<svg x="0px" y="0px" viewBox="0 0 303.188 303.188" style="enable-background:new 0 0 303.188 303.188;" xml:space="preserve">
+<svg class="css-file file" x="0px" y="0px" viewBox="0 0 303.188 303.188" style="enable-background:new 0 0 303.188 303.188;" xml:space="preserve">
 <g>
 	<polygon style="fill:#E4E4E4;" points="219.821,0 32.842,0 32.842,303.188 270.346,303.188 270.346,50.525 	"/>
-	<polygon style="fill:#004A94;" points="227.64,25.263 32.842,25.263 32.842,0 219.821,0 	"/>
+	<polygon class="top-bar" style="fill:#004A94;" points="227.64,25.263 32.842,25.263 32.842,0 219.821,0 	"/>
 	<g>
 		<path style="fill:#004A94;" d="M100.128,122.335c3.615,0,6.452-0.699,8.511-2.098c2.058-1.398,3.088-3.372,3.088-5.918v-11.976
 			c0-4.37,0.77-7.639,2.309-9.808c1.541-2.169,4.048-3.748,7.521-4.739c3.474-0.99,8.275-1.485,14.406-1.485v13.156
