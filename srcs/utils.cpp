@@ -43,15 +43,25 @@ char * get_local_time (void) {
   return (asctime(timeinfo));
 }
 
-const std::string readFile(std::ifstream const & file) {
+const std::string & readFileStream(std::ifstream const & file, std::string & buffer) {
   if(file.is_open()) {
     std::ostringstream ss;
     ss << file.rdbuf();
     if (ss.str().empty())
-      return ("This resource is empty...");
-    return (ss.str());
+      buffer = "This resource is empty...";
+    else
+      buffer = ss.str();
   }
-  return (0);
+  return (buffer);
+}
+
+const std::string & readFileString(std::string const & file_name, std::string & buffer) {
+  std::ifstream file_stream;
+
+  file_stream.open(file_name.c_str());
+  readFileStream(file_stream, buffer);
+  file_stream.close();
+  return (buffer);
 }
 
 bool isDirectory(const std::string & path) {

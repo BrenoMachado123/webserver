@@ -52,7 +52,7 @@ void Client::handleRequest() {
 		std::string response_content(res.createResponse());
 		write(_fd, response_content.c_str(), response_content.length());
 		_keep_alive = res.getKeepAlive();
-		std::cout << GREEN << "Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms" << ENDC  << std::endl;
+		std::cout << GREEN << " Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms " << WHITE " at " << get_local_time() << ENDC;
 	} else {
 		_keep_alive = false;
 	}

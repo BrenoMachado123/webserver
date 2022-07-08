@@ -68,9 +68,10 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			_location_root = _loc->_root_path;
 			_location_error_codes = _loc->_location_errors_map;
 			_final_path = _location_root + _uri_target.substr(_loc->_target.length());
-			std::string tmp("Started " + _method + " \"" + _uri_target + "\" ");
-			std::cout.width(35); std::cout << std::left << tmp << WHITE << "=>" << CYAN << " Target Path [" << _final_path << "]" << WHITE << " at " << get_local_time(); 
-			//std::cout << std::left << WHITE << "Started " << _method << " \"" << _uri_target << "\"" << GREEN << " ->"; std::cout << CYAN << " Target Path [" << _final_path << "]" << WHITE << " at " << get_local_time(); 
+			if (!CONSTRUCTORS_DESTRUCTORS_DEBUG) {
+				std::string tmp("Started " + _method + " \"" + _uri_target + "\" ");
+				std::cout << WHITE; std::cout.width(35); std::cout << std::left << tmp << WHITE << "=>" << CYAN << " Target Path [" << _final_path << "] "; 
+			}
 			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC << std::endl;
 			if (!_loc->findMethod(_method))

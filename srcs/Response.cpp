@@ -4,6 +4,7 @@ static const std::map<int, std::string> insert_to_map() {
 	std::map<int, std::string> _codeMessage;
 	_codeMessage[200] = "OK";
 	_codeMessage[400] = "Bad Request";
+	_codeMessage[403] = "Forbbiden";
 	_codeMessage[404] = "Not Found";
 	_codeMessage[405] = "Method Not Allowed";
 	_codeMessage[413] = "Payload Too Large";
@@ -149,7 +150,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				if (file.is_open() && !isDirectory(location)) {
     				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 						std::cout << GREEN << "[founded]" << ENDC << std::endl;;
-					_content = readFile(file);
+					readFileStream(file, _content);
 					_status_code = 200;
 					setMimeType(location);
 					break ;
@@ -159,13 +160,16 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				_status_code = 200;
 				_autoindex = true;
 			}
+			else if (_content.empty()) {
+				_status_code = 403;
+			}
 		} else {
 			location = _req.getFinalPath();
 			file.open(location.c_str(), std::ifstream::binary);
 			if(file.is_open() && !isDirectory(location)) {
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 					std::cout << GREEN << "[founded] " << location << ENDC << std::endl;;
-				_content = readFile(file);
+				readFileStream(file, _content);
 				_status_code = 200;
 				setMimeType(location);
 			}
@@ -181,7 +185,74 @@ Response::~Response() {
 		std::cout << "Response" << " destroyed" << std::endl;
 }
 
-std::string Response::createResponse() {
+const std::string Response::createAutoindexResponse() {
+	std::string file_icon;
+	std::string css_icon;
+	std::string html_icon;
+	std::string js_icon;
+	std::string py_icon;
+	std::string folder_icon;
+	std::string html_content;
+	std::ifstream icon;
+	struct dirent * de;
+    struct stat st;
+    struct tm tm_time;
+
+	readFileString("utils/folder.svg", folder_icon);
+	readFileString("utils/file.svg", file_icon);
+	readFileString("utils/html_file.svg", html_icon);
+	readFileString("utils/js_file.svg", js_icon);
+	readFileString("utils/css_file.svg", css_icon);
+	readFileString("utils/py_file.svg", py_icon);
+
+    DIR *dr = opendir(_req.getFinalPath().c_str());
+	if (dr == NULL) {
+		_status_code = 404;
+	} else {
+		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
+			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
+			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {position: absolute; top: 0; left: 30px;} \
+			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;}</style></head>\n<body>\n";
+		html_content += "<h3>Autoindex for " + _req.getFinalPath() + "</h3><hr>";
+		while ((de = readdir(dr)) != NULL) {
+			if (*de->d_name == 0 || (*de->d_name == '.' && *(de->d_name + 1) == 0))
+				continue ;
+			std::string file_path(_req.getFinalPath() + "/" + de->d_name);
+			int fd = open(file_path.c_str(), O_RDONLY);
+			if (fd < 0 || fstat(fd, &st) == -1) {
+				html_content += "<div>Failed to open " + file_path + "</div>";
+				continue ;
+			}
+			gmtime_r(&(st.st_mtim.tv_sec), &tm_time);
+			std::string s_time(asctime(&tm_time));
+			std::string tmp_s_time(s_time.substr(0, s_time.length() - 1));
+			std::string file_name(de->d_name);
+			if (S_ISDIR(st.st_mode))
+				html_content += "<div><a href=\"" + file_name + "/\">" + folder_icon + "<span class=\"file_name\">" + de->d_name + "/</span></a><span class=\"flexible\"><span>" + tmp_s_time + "</span><span> - </span></span></div>";
+			else {
+				std::string & tmp_icon = file_icon;
+				size_t num_file_size(st.st_size);
+				std::stringstream ss;
+				ss << num_file_size;
+				if (file_name.find(".html", file_name.length() - 5) != std::string::npos) 
+					tmp_icon = html_icon;
+				else if (file_name.find(".css", file_name.length() - 4) != std::string::npos) 
+					tmp_icon = css_icon;
+				else if (file_name.find(".js", file_name.length() - 3) != std::string::npos) 
+					tmp_icon = js_icon;
+				else if (file_name.find(".py", file_name.length() - 3) != std::string::npos) 
+					tmp_icon = py_icon;
+				html_content += "<div><a href=\"" + file_name + "\">" + tmp_icon + "<span class=\"file_name\">" + de->d_name + "</span></a><span class=\"flexible\"><span>" + tmp_s_time + "</span><span> " + ss.str() + " Bytes</span></span></div>";
+			}
+			close (fd);
+	    }
+	    html_content += "\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
+	    closedir(dr);
+	}
+	return (html_content);
+}
+
+const std::string Response::createResponse() {
 	std::string response;
 	std::string html_content;
 	std::ostringstream so;
@@ -191,32 +262,7 @@ std::string Response::createResponse() {
 		if (_content.length() > 0) {
 			html_content = _content;
 		} else if (_autoindex) {
-			struct dirent * de;
-		    struct stat st;
-		    struct tm tm_time;
-		    DIR *dr = opendir(_req.getFinalPath().c_str());
-			if (dr == NULL) {
-				_status_code = 404;
-			} else {
-				html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>autoindex</title><style>div { display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%;}</style></head>\n<body>\n";
-				while ((de = readdir(dr)) != NULL) {
-					std::string file_path(_req.getFinalPath() + "/" + de->d_name);
-					int fd = open(file_path.c_str(), O_RDONLY);
-					if (fstat(fd, &st) == -1)
-						continue ;
-					gmtime_r(&(st.st_mtim.tv_sec), &tm_time);
-					std::string s_time(asctime(&tm_time));
-					std::string tmp_s_time(s_time.substr(0, s_time.length() - 1));
-					std::string slash;
-					std::string file_name(de->d_name);
-					if (de->d_type == 4)
-						slash = "/";
-					html_content += "<div><a href=\"" + file_name + slash + "\">" + de->d_name + slash + "</a><span>" + tmp_s_time + "</span></div>";
-					close (fd);
-			    }
-			    html_content += "\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
-			    closedir(dr);
-			}
+			html_content = createAutoindexResponse();
 		}
 	}
 	so << _status_code;

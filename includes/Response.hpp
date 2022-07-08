@@ -32,7 +32,7 @@ class Response {
 		Response(Request const &, Config::ServerConfig const & sc);
 		~Response();
 
-		std::string createResponse(void);
+		const std::string createResponse(void);
 		bool getKeepAlive(void) const;
 		int getStatusCode(void) const;
 		static std::map<int, std::string> _codeMessage;
@@ -52,6 +52,7 @@ class Response {
 		//bool _check_default_error_code_and_assign_path(int);
 		//static std::string _mime_type_detector(std::string const & file_name);
 		void setMimeType(std::string const &);		
+		const std::string createAutoindexResponse(void);
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);
