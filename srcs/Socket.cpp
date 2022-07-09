@@ -19,6 +19,9 @@ Socket::Socket(const std::string & ip, int port, Config::ServerConfig const & sc
     _address.sin_port = htons(_port);
     _addrlen = sizeof(_address);
     bzero(_address.sin_zero, sizeof(_address.sin_zero));
+    int opt = 1;
+    if (setsockopt(_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+        throw e_bind;
     if (bind(_socket_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)
         throw e_bind;
     if (listen(_socket_fd, 10) < 0)

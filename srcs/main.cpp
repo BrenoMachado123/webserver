@@ -17,7 +17,7 @@ int	main(int ac, char **av)
 		HTTPServer s(av[1]);
 		s.run();
 	} catch (std::exception & e) {
-		std::cout << RED << "EXCEPTION: " << e.what() << ENDC << std::endl;
+		std::cout << RED << "Closing webserv | Exception: " << e.what() << ENDC << std::endl;
 	}
 	return (0);
 }

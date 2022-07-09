@@ -332,7 +332,7 @@ const std::string Response::createResponse() {
 	so.str(std::string());
 	so << html_content.length();
 	response += "Content-Length: " + so.str() + "\n";
-	response += "Connection: close\n";
+	response += "Connection: keep-alive\n";
 	response += "\r\n";
 	response += html_content;
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)

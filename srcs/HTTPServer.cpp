@@ -1,5 +1,13 @@
 #include "HTTPServer.hpp"
 
+bool webserv_run = true;
+
+void exit_webserv(int param) {
+	(void)param;
+	webserv_run = false;
+	std::cout << std::endl << YELLOW << "Exit webserv..." << ENDC << std::endl;
+}
+
 const char * HTTPServer::AcceptException::what() const throw() {return ("Failed to accept a connection from the Socket");}
 const char * HTTPServer::EpollAddException::what() const throw() {return ("Epoll Failed to add a file descriptor");}
 const char * HTTPServer::EpollCreateException::what() const throw() {return ("Epoll Failed to return a file descriptor");}
@@ -30,6 +38,22 @@ HTTPServer::HTTPServer(std::string const & file) throw (std::exception) : _confi
 }
 
 HTTPServer::~HTTPServer() {
+	std::vector<Socket>::iterator					it;
+	std::vector<Client>::iterator					v_it;
+	std::map<int, std::vector<Client> >::iterator	m_it;
+
+	for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it) {
+		for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
+			shutdown(v_it->getFd(), SHUT_RDWR);
+			close(v_it->getFd());
+			std::cout << RED << " * Closing Connection: " << WHITE << v_it->getFd() << ENDC << std::endl;
+		}
+	}
+	for (it = _sockets.begin(); it != _sockets.end(); it++) {
+		shutdown(it->getSocketFd(), SHUT_RDWR);
+		close(it->getSocketFd());
+		std::cout << RED << " * Closing Socket: " << WHITE << it->getSocketFd() << ENDC << std::endl;
+	}
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << RED << "HTTPServer" << " destroyed" << ENDC << std::endl;
 }
@@ -40,7 +64,7 @@ void HTTPServer::acceptConnectionAt(int fd) throw (std::exception) {
 	std::vector<Socket>::iterator	it;
 
 	for (it = _sockets.begin(); it != _sockets.end(); it++) {
-		if ((*it).getSocketFd() == fd) {
+		if (it->getSocketFd() == fd) {
 			conn_sock = (*it).acceptConnection();
 			if (conn_sock == -1)
 			   throw AcceptException();
@@ -92,6 +116,7 @@ void HTTPServer::run() {
 	std::vector<Client>::iterator					v_it;
 	std::map<int, std::vector<Client> >::iterator	m_it;
 
+	signal(SIGINT, exit_webserv);
 	std::cout << CYAN << "=> Booting webserv" << std::endl;
 	std::cout << "=> HTTP server starting" << std::endl;
 	std::cout << "=> Run `./webserv server --help` for more startup options" << std::endl;
@@ -102,8 +127,10 @@ void HTTPServer::run() {
 		std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;
 	timestamp_in_ms();
 	std::cout << WHITE << "Use Ctrl-C to stop" << std::endl;
-	for (;;) {
+	while (true) {
 		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, 2000);
+		if (!webserv_run)
+			break;
 		if (nfds == -1)
 		   throw EpollWaitException();
 		for (n = 0; n < nfds; ++n) {
@@ -116,7 +143,7 @@ void HTTPServer::run() {
 					for (v_it = m_it->second.begin(); v_it != m_it->second.end(); ++v_it) {
 						if (v_it->getFd() == events[n].data.fd) {
 							if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-								std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Signal From Client: " << *v_it<< " " << CYAN << "[" << v_it->getSocket() << "]" << ENDC << std::endl;		
+								std::cout << WHITE << "[" << timestamp_in_ms() << "] " << YELLOW << "Signal From Client: " << *v_it<< " " << CYAN << "[" << v_it->getSocket() << CYAN << "]" << ENDC << std::endl;		
 							v_it->handleRequest();
 							break;
 					 	}
@@ -153,6 +180,7 @@ void HTTPServer::cleanEpollAndClientsList() {
 	}
 	for (std::map<int, std::vector<std::vector<Client>::iterator > >::iterator c_it = _clients_to_die.begin() ; c_it != _clients_to_die.end() ; ++c_it) {
 		for (std::vector<std::vector<Client>::iterator >::iterator cc_it = c_it->second.begin(); cc_it != c_it->second.end(); ++cc_it) {
+			shutdown((*cc_it)->getFd(), SHUT_RDWR);
 			close((*cc_it)->getFd());
 			_clients[c_it->first].erase(*cc_it);
 		}
