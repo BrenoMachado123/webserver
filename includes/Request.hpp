@@ -47,8 +47,9 @@ class Request {
 		std::string const & getRemoteHost() const;
 		bool isTargetDir() const;
 		bool isTargetCGI() const;
+		std::string const & getMethod() const;
+		std::string const getCGIBinPath() const; 
 		// long const & get_content_length() const; //?????????????
-		// std::string const & get_method() const; 
 		// std::string const & get_uri_target() const;
 		// std::string const & get_http_version() const;
 		// std::string const & get_location_root() const;

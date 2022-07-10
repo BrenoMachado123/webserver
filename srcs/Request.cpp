@@ -116,12 +116,14 @@ const std::string Request::getCGIFile() const {
 	std::vector<std::string>::iterator	v_it;
 	size_t pos(_uri_target.find_last_of('.'));
 
-	if (_loc && isTargetCGI()) {
+	if (_loc && isTargetCGI() && !_loc->_cgi_map.empty() && pos != std::string::npos) {
 		std::string ext(_uri_target.substr(pos + 1));
+		std::string file_no_ext(_uri_target.substr(0, pos));
 		for (v_it = _loc->_cgi_map[ext].begin(); v_it != _loc->_cgi_map[ext].end(); v_it++) {
-			if (v_it->find(_uri_target))
+			if (v_it->find(file_no_ext) != std::string::npos)
 				return (*v_it);
 		}
+		return (_loc->_cgi_map.begin()->second.front());
 	}
 	return ("");
 } 
@@ -137,14 +139,24 @@ std::string const & Request::getQuery() const {
 std::string const & Request::getRemoteHost() const {
 	return (_headers.find("host")->second);
 }
+
+std::string const & Request::getMethod() const {
+	return (_method);
+}
+
+std::string const Request::getCGIBinPath() const {
+	if (_loc) {
+		if (!_loc->_cgi_bin.empty())
+			return (_loc->_cgi_bin);
+	}
+	return("");
+}
+
 /*
 bool Request::isCGI() const {
 
 }
 */
-// std::string const & Request::get_method() const {
-// 	return _method;
-// }
 
 // std::string const & Request::get_uri_target() const {
 // 	return _uri_target;
