@@ -5,7 +5,7 @@
 
 int main() {
     char* const env[4] = {"PATH=HelloWorld", "QUERY_STRING=?id=123&name=andre#world", "CONTENT_LENGTH=10", NULL};
-    char* const arg[2] = {"www/cgi-bin/c_cgi", NULL};
+    char* const arg[2] = {"/home/jaman/42/webserver/www/cgi-bin/countries.py", NULL};
     int restore_input = dup(STDIN_FILENO);
     FILE * tmp_file_in = tmpfile();
     FILE * tmp_file_out = tmpfile();
@@ -28,7 +28,7 @@ int main() {
     {
        dup2(tmp_fd_in, STDIN_FILENO);
        dup2(tmp_fd_out, STDOUT_FILENO);
-       execve("/home/pulgamecanica/Desktop/my_webserv/www/cgi-bin/c_cgi", arg, env);
+       execve("/home/jaman/42/webserver/www/cgi-bin/countries.py", arg, env);
        perror ("Didn't work");
        exit(2);
     }
