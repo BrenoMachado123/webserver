@@ -152,13 +152,6 @@ void HTTPServer::run() {
 		   }
 		}
 		cleanEpollAndClientsList();
-		/*
-		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-			for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it)
-				std::cout << CYAN << "Info on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;
-		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-			std::cout << WHITE << "[" << timestamp_in_ms() << "ms] Server Timestamp" << ENDC << std::endl;
-		*/
 	}
 }
 

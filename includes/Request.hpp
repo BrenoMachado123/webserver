@@ -40,8 +40,13 @@ class Request {
 		~Request();
 
 		int getErrorCode() const;
+		const std::string getCGIFile() const;
 		std::string const & getFinalPath() const;
+		std::string const & getContent() const;
+		std::string const & getQuery() const;
+		std::string const & getRemoteHost() const;
 		bool isTargetDir() const;
+		bool isTargetCGI() const;
 		// long const & get_content_length() const; //?????????????
 		// std::string const & get_method() const; 
 		// std::string const & get_uri_target() const;

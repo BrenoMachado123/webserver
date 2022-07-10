@@ -12,6 +12,7 @@
 #include <sstream>
 #include <ostream>
 #include <string>
+#include <limits>
 #include <algorithm>
 
 #include <fcntl.h>
@@ -22,6 +23,7 @@
 #include <dirent.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 
 #include "Request.hpp"
 #include "webserv.hpp"
@@ -43,6 +45,7 @@ class Response {
 		int _status_code;
 		bool _keep_alive;
 		bool _autoindex;
+		bool _cgi_response;
 		std::string _date;
 		std::string _server_name;
 		std::string _content_type;

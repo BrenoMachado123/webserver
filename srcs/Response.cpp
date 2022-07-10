@@ -78,6 +78,8 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "image/svg+xml";
 	else if(ext == "webp")
 		_content_type = "image/webp";
+	else if(ext == "webm")
+		_content_type = "video/webm";
 	else if(ext == "bmp")
 		_content_type = "image/bmp";
 	else if(ext == "ico || cur")
@@ -126,7 +128,7 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
 }
 
-Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _req(request), _server_config(sc) {
+Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _cgi_response(false), _req(request), _server_config(sc) {
 	std::ifstream file;
 	std::string tmp_buffer;
 	std::string buffer;
@@ -139,7 +141,91 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	_server_name = "Breno_Tony_Pulga";
 	if (_status_code == 0 && _req._loc) {
 		_status_code = 404;
-		if (_req.isTargetDir()) {
+		if (_req.isTargetCGI()) {
+			location = _req.getCGIFile();
+			file.open(location.c_str(), std::ifstream::binary);
+			if (file.is_open()) {
+				_status_code = 200;
+
+				std::vector<char *> env;
+				std::string tmp;
+				char tmp_str[1000];
+
+				tmp = "PATH=" + location;
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+				
+				tmp = "QUERY_STRING=" + _req.getQuery();
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+				
+				std::stringstream ss;
+				ss << _req.getContent().length();
+				tmp = "CONTENT_LENGTH=" + ss.str();
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				tmp = "REMOTE_HOST=" + _req.getRemoteHost();
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				env.push_back(NULL);
+				
+				std::vector<char *> arg;
+				strcpy(tmp_str, location.c_str());
+				arg.push_back(tmp_str);
+				arg.push_back(NULL);
+    			
+    			int restore_input = dup(STDIN_FILENO);
+    			int restore_output = dup(STDOUT_FILENO);
+			    FILE * tmp_file_in = tmpfile();
+			    FILE * tmp_file_out = tmpfile();
+
+    			if (!tmp_file_in || !tmp_file_out || restore_input < 0) {
+      				_status_code = 500;
+    			} else {
+				    int tmp_fd_in = fileno(tmp_file_in);
+				    int tmp_fd_out = fileno(tmp_file_out);
+				    if (tmp_fd_in < 0) {
+				    	_status_code = 500;
+				    } else {
+		    			write(tmp_fd_in, _req.getContent().c_str(), _req.getContent().length());
+		    			rewind(tmp_file_in);
+		    			int pid = fork();
+		    			if (pid < 0) {
+		    				_status_code = 500;
+		    			} else {
+			    			if (pid == 0) {
+			    				dup2(tmp_fd_in, STDIN_FILENO);
+								dup2(tmp_fd_out, STDOUT_FILENO);
+								execve(location.c_str(), &arg[0], &env[0]);
+								exit(EXIT_FAILURE);
+						    }
+						    int child_status;
+					    	waitpid(pid, &child_status, 0);
+						    close(tmp_fd_in);
+						    rewind(tmp_file_out);
+						    char buff[1024];
+						    int valread = -1;
+						    while(valread != 0) {
+						    	bzero(buff, 1024);
+								valread = read(tmp_fd_out, buff, 1024);
+								if (valread < 0)
+								  _status_code = 500;
+								_content += buff;
+						    }
+						    close(tmp_fd_out);
+						    dup2(restore_input, STDIN_FILENO);
+						    dup2(restore_output, STDOUT_FILENO);
+						    close(restore_input);
+						    close(restore_output);
+							std::cout << YELLOW << " CGI Child Finished with status: " << child_status;
+						    _cgi_response = true;
+						}
+					}
+				}
+			}
+		} else if (_req.isTargetDir()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << WHITE << "Try Index: ";
 			for(i_it = _req._loc->_indexes.begin(); i_it != _req._loc->_indexes.end(); ++i_it) {
@@ -205,7 +291,7 @@ const std::string Response::createAutoindexResponse() {
 	} else {
 		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
 			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
-			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {position: absolute; top: 0; left: 30px;} \
+			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {position: absolute; top: 0; left: 30px; white-space: nowrap;} \
 			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
 			a:hover .default-file .pencil { display: block; transform: translate(-20px, -35px); animation: 5s draw ease-in infinite; } @keyframes draw { \
 			0% {transform: translate(-25px, -30px);} 5% {transform: translate(-20px, -35px);} 10% {transform: translate(-15px, -30px);} 15% {transform: translate(-10px, -35px);} 20% {transform: translate(-5px, -30px);} \
@@ -259,6 +345,19 @@ const std::string Response::createResponse() {
 	std::ostringstream so;
 	std::ifstream file;
 	
+	if (_cgi_response && _status_code == 200) {
+		so << _status_code;
+		response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
+		response += "Date: " + _date;
+		response += "Server: " + _server_name + "\n";
+		response += "Connection: close\n";
+		so.str(std::string());
+		so << _content.length();
+		response += "Content-Length: " + so.str() + "\n";
+		response += _content;
+		_keep_alive = false;
+		return (response);
+	}
 	if (_status_code == 200 && _req._loc) {
 		if (_content.length() > 0) {
 			html_content = _content;

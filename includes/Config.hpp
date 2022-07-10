@@ -95,7 +95,6 @@ class Config {
 						Cgi(const std::string &) throw (std::exception);
 						virtual ~Cgi();
 						virtual void setDirective(ServerConfig &, int) const;
-						std::vector<std::string> getCgi() const;
 					private:
 						std::vector<std::string> _cgi;
 						void _parseCgiContent(std::vector<std::string> &, const std::string&);
@@ -164,16 +163,16 @@ class Config {
                     	Location (std::string const &) throw (std::exception);
                     	virtual ~Location();
 	                    virtual void	setDirective(ServerConfig &, int) const;
+						bool findMethod(std::string const &) const;
 						std::vector<std::string>	_methods;
 						std::string					_root_path;
 						std::string					_target;
 						std::vector<std::string>	_indexes;
 						int							_max_body_size;
 						bool						_autoindex;
-						std::vector<Cgi>			_cgi;
 						std::string					_cgi_bin;
+						std::map<std::string, std::vector<std::string> > _cgi_map;
 						std::map<std::string, std::vector<int> > _location_errors_map;
-						bool findMethod(std::string const &) const ;
 					private:
 						Location();
                 };

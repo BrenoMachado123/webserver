@@ -7,30 +7,36 @@
 <script src="index.js"></script>
 
 <body>
-
    <div class="container">
-      <div class="card">
+      <div class="card" id="card1">
          <div class="form">
-            <span> Cool Form </span>
-            <form action="/some_nonexisting_path" method="post">
-               <label for="lcountries">Choose your Country :</label>
-               
-               <select name="country" id="lcountries">
-                  <option value="pl">Poland</option>
-                  <option value="br">Brasil</option>
-                  <option value="mx">Mexico</option>
-                  <option value="pt">Portugal</option>
-               </select>
-
-               <label for="labe">Age :</label>
-               <input type="number" id="labe" name="age"><br><br>
-
+            <span> Async CGI Form </span>
+            <form action="/www/cgi-bin/c_cgi.c?id=666" method="post" id="cgi-form">   
+               <span>
+                  <label for="lcountries">Choose your Country :</label>
+                  <select name="country" id="lcountries" class="auto-sumbit">
+                     <option value="pl">Poland</option>
+                     <option value="br">Brasil</option>
+                     <option value="mx">Mexico</option>
+                     <option value="pt">Portugal</option>
+                  </select>
+                  <small></small>
+               </span>
+               <span>
+                  <label for="lage">Age :</label>
+                  <input type="number" id="lage" name="age" class="auto-sumbit"><br><br>
+                  <small></small>
+               </span>
                <input type="submit" value="Submit">
             </form>
          </div>
       </div>
+      <div class="card" id="card2">
+         <h2>Async CGI Response with JS fetch</h2>
+         <h4>Fetch: /www/cgi-bin/c_cgi.c?id=666</h4>
+         <div id="fetch-response"></div>
+      </div>
    </div>
-
 </body>
 
 </html>

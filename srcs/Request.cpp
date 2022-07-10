@@ -44,7 +44,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	if (_headers.find("coockies") != _headers.end()) {
 		; // TODO
 	}
-	if (_uri_target.length() > 8000)
+	if (_uri_target.length() > 1024)
 		_error_code = 414;
 	else {
 		//Separate the uri, [Path, Query, Fragment]
@@ -57,7 +57,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			_query = _uri_target.substr(q_start, q_end - q_start);
 			_uri_target = _uri_target.substr(0, q_start);
 			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-				std::cout << YELLOW << WHITE << "Query detected [" << WHITE << _query << YELLOW << "]" << ENDC << std::endl;
+				std::cout << YELLOW << WHITE << "Query detected [" << WHITE << _query << "]" << YELLOW << ENDC << std::endl;
 		}
 		_loc = _server_config.findLocation(_uri_target);
 		if (!_loc) {
@@ -101,6 +101,47 @@ bool Request::isTargetDir() const {
 	return (false);
 }
 
+bool Request::isTargetCGI() const {
+	size_t pos(_uri_target.find('.'));
+	
+	if (_loc && !isTargetDir() && pos != std::string::npos) {
+		std::string ext(_uri_target.substr(pos + 1));
+		if (!(_loc->_cgi_bin.empty()) && (_loc->_cgi_map.find(ext) != _loc->_cgi_map.end()))
+			return (true);
+	}
+	return (false);
+}
+
+const std::string Request::getCGIFile() const {
+	std::vector<std::string>::iterator	v_it;
+	size_t pos(_uri_target.find_last_of('.'));
+
+	if (_loc && isTargetCGI()) {
+		std::string ext(_uri_target.substr(pos + 1));
+		for (v_it = _loc->_cgi_map[ext].begin(); v_it != _loc->_cgi_map[ext].end(); v_it++) {
+			if (v_it->find(_uri_target))
+				return (*v_it);
+		}
+	}
+	return ("");
+} 
+
+std::string const & Request::getContent() const {
+	return (_content);
+}
+
+std::string const & Request::getQuery() const {
+	return (_query);
+}
+
+std::string const & Request::getRemoteHost() const {
+	return (_headers.find("host")->second);
+}
+/*
+bool Request::isCGI() const {
+
+}
+*/
 // std::string const & Request::get_method() const {
 // 	return _method;
 // }

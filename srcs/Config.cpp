@@ -208,13 +208,13 @@ Config::ServerConfig::ClientMaxBodySize::~ClientMaxBodySize() {
 }
 /*
  * @brief Construct a Cgi object
- *  This constructor takes a string as argument that will be splited to get two arguments: "program extension" and "program path".
+ *  This constructor takes a string as argument that will be splited to get two arguments: "program extension" and "list of program paths".
  *  Then both will be parsed and pushed to the object. If one of the arguments is missing or one of them is invalid, throws an exception.
  * @param content 
  *  The string after directive "cgi" is found by the parser.
  */
 Config::ServerConfig::Cgi::Cgi(const std::string& content) throw (std::exception):
-    Directive(CGI), _cgi() {
+    Directive(CGI) {
         if (content.empty())
             throw WrongSyntaxException();
         _parseCgiContent(_cgi, content);
@@ -500,8 +500,6 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
 
 int Config::ServerConfig::Directive::getId() const {return (_id);}
 
-std::vector<std::string> Config::ServerConfig::Cgi::getCgi() const { return (_cgi); }
-
 bool Config::ServerConfig::ErrorCodePage::loadErrorCodes(const std::string &content) {
     std::stringstream stoi_converter;
     int converted_number;
@@ -586,8 +584,9 @@ void Config::ServerConfig::AutoIndex::setDirective(ServerConfig & serv_conf, int
 }
 
 void Config::ServerConfig::Cgi::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == LOCATION_CONTEXT)
-        (serv_conf._locations.back()._cgi).push_back(*this);
+    if (context == LOCATION_CONTEXT) {
+        serv_conf._locations.back()._cgi_map[_cgi[0]].push_back(_cgi[1]);
+    }
 }
 
 void Config::ServerConfig::CgiBin::setDirective(ServerConfig & serv_conf, int context) const {
@@ -712,9 +711,13 @@ std::ostream& operator<<(std::ostream & s, const Config::ServerConfig & param) {
         s << "]" << std::endl;
         s << "|     cgi_bin " << it->_cgi_bin << std::endl;
         s << "|     CGI [" << std::endl;
-        std::vector<Config::ServerConfig::Cgi>::iterator c_it(it->_cgi.begin());
-        for (; c_it != it->_cgi.end() ; ++c_it) {
-            s << "|      " << (c_it->getCgi()).at(0) << ": " <<  (c_it->getCgi()).at(1) << std::endl;
+        std::map<std::string, std::vector<std::string> >::iterator cgi_it;
+        for (cgi_it = it->_cgi_map.begin(); cgi_it != it->_cgi_map.end() ; ++cgi_it) {
+            s << "|      " << cgi_it->first << ": ";
+            std::vector<std::string>::iterator cgi_bin_it;
+            for(cgi_bin_it = cgi_it->second.begin(); cgi_bin_it != cgi_it->second.end(); ++cgi_bin_it) 
+                s << *cgi_bin_it << " ";
+            std::cout << std::endl;
         }
         s << "|     ]" << std::endl;
     }
