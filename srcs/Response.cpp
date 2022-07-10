@@ -169,6 +169,28 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				strcpy(tmp_str, tmp.c_str());
 				env.push_back(strdup(tmp_str));
 
+				tmp = "REQUEST_METHOD=" + _req.getMethod();
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				tmp = "CONTENT_TYPE=application/x-www-form-urlencoded";
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				tmp = "DOCUMENT_ROOT=" + _req.getCGIBinPath();
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				tmp = "PATH_INFO=" + _req.getCGIBinPath();
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				tmp = "HTTP_ACCEPT=application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,charset=utf-8;";
+				strcpy(tmp_str, tmp.c_str());
+				env.push_back(strdup(tmp_str));
+
+				//GATEWAY_INTERFACE=CGI/1.1
+
 				env.push_back(NULL);
 				
 				std::vector<char *> arg;
@@ -219,7 +241,9 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 						    dup2(restore_output, STDOUT_FILENO);
 						    close(restore_input);
 						    close(restore_output);
-							std::cout << YELLOW << " CGI Child Finished with status: " << child_status;
+							std::cout << YELLOW << " CGI Child Finished with status: " << ENDC << child_status;
+							if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+								std::cout << std::endl << "Content" << std::endl << _content << std::endl;
 						    _cgi_response = true;
 						}
 					}
