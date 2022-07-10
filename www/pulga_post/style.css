@@ -23,6 +23,25 @@ body, body .container #card1{
 	background-repeat: no-repeat;
 }
 
+body #flag-box {
+	position: absolute;
+	right: 0;
+	top: 0;
+	display: block;
+	width: 200px;
+	height: 100px;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center;
+	z-index: 1;
+	border-radius: 1rem;
+}
+
+.container .card {
+	position: relative;
+	z-index: 2;
+}
+
 .container #card1 {
 	background-image: url('42bg2.png');
 	border-radius: 0.5rem;

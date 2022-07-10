@@ -16,8 +16,20 @@ function cgi_fetch(form) {
 			let content = new TextDecoder().decode(value); 
 		    console.log(content);
 		    document.getElementById("fetch-response").innerHTML = content;
+		    let flag_box = document.getElementById("flag-box");
+			if (document.getElementById("c_pl")) {
+				flag_box.style.backgroundImage = "url('pl.svg')";
+			}
+			if (document.getElementById("c_br")) {
+				flag_box.style.backgroundImage = "url('br.png')";
+			}
+			if (document.getElementById("c_mx")) {
+				flag_box.style.backgroundImage = "url('mx.png')";
+			}
+			if (document.getElementById("c_pt")) {
+				flag_box.style.backgroundImage = "url('pt.jpg')";
+			}
 		});
-
 	});
 }
 
@@ -70,6 +82,7 @@ function sendForm(event) {
 		cgi_fetch(form);
 	}
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
 

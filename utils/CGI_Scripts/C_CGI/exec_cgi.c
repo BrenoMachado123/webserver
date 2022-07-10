@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 int main ()
 {
@@ -46,6 +47,18 @@ int main ()
       exit(2);
    }
    printf("<h2>Content: %s\n</h2>", buff);
+   if (strlen(buff) >= 10)
+   {
+      if (strncmp(buff + 8, "br", 2) == 0)
+         printf("<span id=\"c_br\"></span>", buff);
+      else if (strncmp(buff + 8, "pl", 2) == 0)
+         printf("<span id=\"c_pl\"></span>", buff);
+      else if (strncmp(buff + 8, "mx", 2) == 0)
+         printf("<span id=\"c_mx\"></span>", buff);
+      else if (strncmp(buff + 8, "pt", 2) == 0)
+         printf("<span id=\"c_pt\"></span>", buff);
+   }
+
    free(buff);
    fflush(stdout);              /* force physical write */
    exit (0);
