@@ -39,13 +39,13 @@ void Client::handleRequest() {
 
 	ms_s = timestamp_in_ms();
 	do {
-		valread = read(_fd, buffer, 30000 - 1);
-		if (valread < 0)
+		valread = read(_fd, buffer, 30000);
+		if (valread <= 0)
 			break ;
 		std::string tmp(buffer, valread);
 		buf += tmp;
-	} while (valread == 30000 - 1);
-	if (valread > 0) {	
+	} while (valread == 30000);
+	if (buf.length() > 0) { // perhaps don't check this? return 408 if response is empty...?	
 		_time_to_die = ms_s + 3000;
 		Request req(buf, _socket.getServerConfig());
 		Response res(req, _socket.getServerConfig());
@@ -54,6 +54,7 @@ void Client::handleRequest() {
 		_keep_alive = res.getKeepAlive();
 		std::cout << GREEN << " Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms " << WHITE " at " << get_local_time() << ENDC;
 	} else {
+		// RESPONSE 408!!!
 		_keep_alive = false;
 	}
 }

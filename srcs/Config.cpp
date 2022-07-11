@@ -21,7 +21,6 @@ const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong 
  *    - No context (Outside any scope)
  *    - Server context (Inside the server Scope) [server {...}]
  *    - Location context (Inside the server Scope, inside Location scope) [server {... location {...}}]
- *
  * @param content 
  *  First check if the file is valid and create a file input stream to read from.
  *  Create a line tmp variable and an integer to keep track of the context [0: No Context, 1: Server context, 2:  Location context].
@@ -32,10 +31,9 @@ const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong 
  *   2.b - Split the string in 2 pieces. [1:directive, 2:directive_content]
  *         The first piece is the line from the begining to the first separator.
  *         The second piece is the line from the first separator to the end. (empty if there is no separator)
- *   3   - 
- *  
- *  
- *
+ *   3.a  - Check for '}' to close the context. And read next line
+ *   3.b  - Based on the context, check for valid directives and create them.
+            After creating the directive, setUp the Directive context.  
  */
 Config::Config(std::string const & file_str) throw(std::exception) {
     std::ifstream   file;

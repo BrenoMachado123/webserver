@@ -2,8 +2,17 @@
 
 const char * Response::CGIFailure::what() const throw() {return ("CGI couldn't be executed.");}
 
-static const std::map<int, std::string> insert_to_map() {
-	std::map<int, std::string> _codeMessage;
+static void push_back_env(std::vector<char *> & vec, std::string const & name, std::string const & value) {
+	if (!name.empty() && !value.empty()) {
+		std::string tmp(value);
+		tmp = name + "=" + strtrim(tmp);
+		if (tmp.length() < 8000)
+			vec.push_back(strdup(tmp.c_str()));
+	}
+}
+
+static const std::map<int, std::string> insert_to_error_map() {
+	std::map<int, std::string>	_codeMessage;
 	_codeMessage[200] = "OK";
 	_codeMessage[400] = "Bad Request";
 	_codeMessage[403] = "Forbbiden";
@@ -18,119 +27,62 @@ static const std::map<int, std::string> insert_to_map() {
 	return (_codeMessage); 
 }
 
-static void push_back_env(std::vector<char *> & vec, std::string const & name, std::string const & value) {
-	if (!name.empty() && !value.empty()) {
-		std::string tmp(value);
-		tmp = name + "=" + strtrim(tmp);
-		if (tmp.length() < 8000)
-			vec.push_back(strdup(tmp.c_str()));
-	}
+static const std::vector<std::pair<std::string, std::string> > insert_to_mime_vec() {
+	std::vector<std::pair<std::string, std::string> > vec;
+
+	vec.push_back(std::make_pair("txt", "text/plain"));
+	vec.push_back(std::make_pair("html", "text/html"));
+	vec.push_back(std::make_pair("css", "text/css"));
+	vec.push_back(std::make_pair("js", "text/javascript"));
+	vec.push_back(std::make_pair("json", "application/json"));
+	vec.push_back(std::make_pair("jsonld", "application/ld+json"));
+	vec.push_back(std::make_pair("xml", "application/xml"));
+	vec.push_back(std::make_pair("pdf", "application/pdf"));
+	vec.push_back(std::make_pair("doc", "application/msword"));
+	vec.push_back(std::make_pair("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+	vec.push_back(std::make_pair("ppt", "application/vnd.ms-powerpoint"));
+	vec.push_back(std::make_pair("pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"));
+	vec.push_back(std::make_pair("odt", "application/vnd.oasis.opendocument.text"));
+	vec.push_back(std::make_pair("xls", "application/vnd.ms-excel"));
+	vec.push_back(std::make_pair("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+	vec.push_back(std::make_pair("odp", "application/vnd.oasis.opendocument.presentation"));
+	vec.push_back(std::make_pair("ods", "application/vnd.oasis.opendocument.spreadsheet")); //
+
+	vec.push_back(std::make_pair("jpeg", "image/jpeg"));
+	vec.push_back(std::make_pair("jpg", "image/jpeg"));
+	vec.push_back(std::make_pair("png", "image/png"));
+	vec.push_back(std::make_pair("apng", "image/apng"));
+	vec.push_back(std::make_pair("avif", "image/avif"));
+	vec.push_back(std::make_pair("gif", "image/gif"));
+	vec.push_back(std::make_pair("svg", "image/svg+xml"));
+	vec.push_back(std::make_pair("webp", "image/webp"));
+	vec.push_back(std::make_pair("webm", "video/webm"));
+	vec.push_back(std::make_pair("bmp", "image/bmp"));
+	vec.push_back(std::make_pair("ico", "image/x-icon"));
+	vec.push_back(std::make_pair("tif", "image/tiff"));
+	vec.push_back(std::make_pair("tiff", "image/tiff"));
+
+	vec.push_back(std::make_pair("mp3", "audio/mpeg"));
+	vec.push_back(std::make_pair("aac", "audio/aac"));
+	vec.push_back(std::make_pair("wav", "audio/wave"));
+	vec.push_back(std::make_pair("flac", "audio/flac"));
+	vec.push_back(std::make_pair("mpeg", "audio/mpeg"));
+	vec.push_back(std::make_pair("mp4", "video/mp4"));
+	vec.push_back(std::make_pair("avi", "video/x-msvideo"));
+	vec.push_back(std::make_pair("3gp", "video/3gpp"));
+
+	vec.push_back(std::make_pair("bz", "application/x-bzip"));
+	vec.push_back(std::make_pair("bz2", "application/x-bzip2"));
+	vec.push_back(std::make_pair("gz", "application/gzip"));
+	vec.push_back(std::make_pair("zip", "application/zip"));
+	vec.push_back(std::make_pair("7z", "application/x-7z-compressed"));
+	vec.push_back(std::make_pair("tar", "application/x-tar"));
+//	vec.push_back(std::make_pair("", "application/octet-stream"));
+	return (vec);
 }
 
-std::map<int, std::string> Response::_codeMessage = insert_to_map();
-
-void Response::setMimeType(std::string const & file_name) {
-	size_t pos(file_name.find_last_of('.'));
-	if (pos == std::string::npos) {
-		_content_type = "text/html";
-		return;
-	}
-	std::string ext = file_name.substr(pos + 1);
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::ft_tolower);
-	//TEXT
-	if(ext == "txt")
-		_content_type = "text/plain";
-	else if(ext == "html")
-		_content_type = "text/html";
-	else if(ext == "css")
-		_content_type = "text/css";
-	else if(ext == "js") //javascript // "; parametre" - charset=/anything/ makes it invalid!
-		_content_type = "text/javascript";
-	else if(ext == "json")
-		_content_type = "application/json";
-	else if(ext == "jsonld")
-		_content_type = "application/ld+json";
-	else if(ext == "xml")
-		_content_type = "application/xml";
-	else if(ext == "pdf")
-		_content_type = "application/pdf";
-	else if(ext == "doc") //DOCUMENTS
-		_content_type = "application/msword";
-	else if(ext == "docx")
-		_content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	else if(ext == "ppt")
-		_content_type = "application/vnd.ms-powerpoint";
-	else if(ext == "pptx")
-		_content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-	else if(ext == "odt")
-		_content_type = "application/vnd.oasis.opendocument.text";
-	else if(ext == "xls")
-		_content_type = "application/vnd.ms-excel";
-	else if(ext == "xlsx")
-		_content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	else if(ext == "odp")
-		_content_type = "application/vnd.oasis.opendocument.presentation";
-	else if(ext == "ods")
-		_content_type = "application/vnd.oasis.opendocument.spreadsheet";
-	//IMAGE
-	else if(ext == "jpeg" || ext == "jpg")
-		_content_type = "image/jpeg";
-	else if(ext == "png")
-		_content_type = "image/png";
-	else if(ext == "apng")
-		_content_type = "image/apng";
-	else if(ext == "avif")
-		_content_type = "image/avif";
-	else if(ext == "gif")
-		_content_type = "image/gif";
-	else if(ext == "svg")
-		_content_type = "image/svg+xml";
-	else if(ext == "webp")
-		_content_type = "image/webp";
-	else if(ext == "webm")
-		_content_type = "video/webm";
-	else if(ext == "bmp")
-		_content_type = "image/bmp";
-	else if(ext == "ico || cur")
-		_content_type = "image/x-icon";
-	else if(ext == "tif" || ext == "tiff")
-		_content_type = "image/tiff";
-	//SOUND
-	else if(ext == "mp3")
-		_content_type = "audio/mpeg";
-	else if(ext == "aac")
-		_content_type = "audio/aac";
-	else if(ext == "wav")
-		_content_type = "audio/wave";
-	//VIDEO
-	else if(ext == "flac")
-		_content_type = "audio/flac";
-	else if(ext == "mpeg")
-		_content_type = "audio/mpeg";
-	else if(ext == "mp4")
-		_content_type = "video/mp4";
-	else if(ext == "avi")
-		_content_type = "video/x-msvideo";
-	//AUDIO-VIDEO
-	else if(ext == "3gp")
-		_content_type = "video/3gpp; audio/3gpp"; // - audio if file does not contain video
-	//ARCHIVES
-	else if(ext == "bz")
-		_content_type = "application/x-bzip";
-	else if(ext == "bz2")
-		_content_type = "application/x-bzip2";
-	else if(ext == "gz")
-		_content_type = "application/gzip";
-	else if(ext == "zip")
-		_content_type = "application/zip";
-	else if(ext == "7z")
-		_content_type = "application/x-7z-compressed";
-	else if(ext == "tar")
-		_content_type = "application/x-tar";
-	//DEFAULT
-	else 
-		_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
-}
+std::map<int, std::string> Response::_codeMessage = insert_to_error_map();
+std::vector<std::pair<std::string, std::string> > Response::_mime_types = insert_to_mime_vec();
 
 Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _cgi_response(false), _req(request), _server_config(sc) {
 	std::string		location;
@@ -143,6 +95,8 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	if (_status_code == 0 && _req._loc) {
 		_status_code = 404;
 		if (_req.isTargetCGI()) {
+			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+				std::cout << YELLOW << "CGI location" << std::endl;
 			location = _req.getCGIFile();
 			file.open(location.c_str(), std::ifstream::binary);
 			if (file.is_open() && !isDirectory(location)) {
@@ -167,13 +121,14 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 					break ;
 				}
 			}
-			// try server indexes
-			if (_req._loc->_autoindex && _content.empty()) {
-				_status_code = 200;
-				_autoindex = true;
-			}
-			else if (_content.empty()) {
-				_status_code = 403;
+				// try server indexes
+			if (_status_code != 200) {
+				if (_req._loc->_autoindex && isDirectory(_req.getFinalPath())) {
+					_status_code = 200;
+					_autoindex = true;
+				} else if (isDirectory(_req.getFinalPath())) {
+					_status_code = 403;
+				}
 			}
 		} else {
 			location = _req.getFinalPath();
@@ -197,6 +152,25 @@ Response::~Response() {
 		std::cout << "Response" << " destroyed" << std::endl;
 }
 
+void Response::setMimeType(std::string const & file_name) {
+	size_t pos(file_name.find_last_of('.'));
+
+	if (pos != std::string::npos) {
+		std::string ext = file_name.substr(pos + 1);
+	    std::transform(ext.begin(), ext.end(), ext.begin(), ::ft_tolower);
+
+		std::vector<std::pair<std::string, std::string> >::iterator it;
+		for (it = _mime_types.begin(); it != _mime_types.end(); ++it) {
+			if (it->first == ext) {
+				_content_type = it->second;
+				return;
+			}
+		}
+	}
+	//_content_type = "text/html";
+	_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
+}
+
 int Response::execCGI() throw (std::exception) {
 	std::vector<char *> env;
 	std::vector<char *> arg;
@@ -217,7 +191,7 @@ int Response::execCGI() throw (std::exception) {
 	push_back_env(env, "PATH_TRANSLATED", _req.getCGIBinPath());
 	push_back_env(env, "QUERY_STRING", _req.getQuery());
 	//push_back_env(env, "REMOTE_ADDR", "");
-	push_back_env(env, "REMOTE_HOST", _req.getRemoteHost());
+	push_back_env(env, "REMOTE_HOST", _server_config.getIp());
 	//push_back_env(env, "REMOTE_IDENT", "");
 	//push_back_env(env, "REMOTE_PORT", "");
 	//push_back_env(env, "REMOTE_USER", "");
@@ -227,7 +201,9 @@ int Response::execCGI() throw (std::exception) {
 	push_back_env(env, "SCRIPT_NAME", _req.getCGIFile());
 	push_back_env(env, "SERVER_ADMIN", "pulgamecanica11@gmail.com");
 	push_back_env(env, "SERVER_NAME", "BRTOAN");
-	push_back_env(env, "SERVER_PORT", "4242");
+	ss.str(std::string());
+	ss << _server_config.getPort();
+	push_back_env(env, "SERVER_PORT", ss.str());
 	push_back_env(env, "SERVER_PROTOCOL", "HTTP/1.1");
 	push_back_env(env, "SERVER_SOFTWARE", "Webserv42.0 (Linux)");
 	env.push_back(NULL);
@@ -283,10 +259,10 @@ int Response::execCGI() throw (std::exception) {
 const std::string Response::createAutoindexResponse() {
 	std::string		file_icon, css_icon, html_icon, js_icon, py_icon, folder_icon, html_content;
 	std::ifstream	icon;
-	DIR				*dr;
+	DIR	*			dr;
 	struct dirent *	de;
     struct stat		st;
-    struct tm	tm_time;
+    struct tm		tm_time;
 
 	readFileString("utils/folder.svg", folder_icon);
 	readFileString("utils/file.svg", file_icon);

@@ -38,6 +38,7 @@ class Response {
 		bool getKeepAlive(void) const;
 		int getStatusCode(void) const;
 		static std::map<int, std::string> _codeMessage;
+		static std::vector<std::pair<std::string, std::string> > _mime_types;
 	private:
 		Response();
 		Response(const Response&);
