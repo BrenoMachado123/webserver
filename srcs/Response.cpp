@@ -27,62 +27,62 @@ static const std::map<int, std::string> insert_to_error_map() {
 	return (_codeMessage); 
 }
 
-static const std::vector<std::pair<std::string, std::string> > insert_to_mime_vec() {
-	std::vector<std::pair<std::string, std::string> > vec;
+static const std::map<std::string, std::string> insert_to_mime_map() {
+	std::map<std::string, std::string> mime_map;
 
-	vec.push_back(std::make_pair("txt", "text/plain"));
-	vec.push_back(std::make_pair("html", "text/html"));
-	vec.push_back(std::make_pair("css", "text/css"));
-	vec.push_back(std::make_pair("js", "text/javascript"));
-	vec.push_back(std::make_pair("json", "application/json"));
-	vec.push_back(std::make_pair("jsonld", "application/ld+json"));
-	vec.push_back(std::make_pair("xml", "application/xml"));
-	vec.push_back(std::make_pair("pdf", "application/pdf"));
-	vec.push_back(std::make_pair("doc", "application/msword"));
-	vec.push_back(std::make_pair("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
-	vec.push_back(std::make_pair("ppt", "application/vnd.ms-powerpoint"));
-	vec.push_back(std::make_pair("pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"));
-	vec.push_back(std::make_pair("odt", "application/vnd.oasis.opendocument.text"));
-	vec.push_back(std::make_pair("xls", "application/vnd.ms-excel"));
-	vec.push_back(std::make_pair("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-	vec.push_back(std::make_pair("odp", "application/vnd.oasis.opendocument.presentation"));
-	vec.push_back(std::make_pair("ods", "application/vnd.oasis.opendocument.spreadsheet")); //
+	mime_map["txt"]		= "text/plain";
+	mime_map["html"]	= "text/html";
+	mime_map["css"]		= "text/css";
+	mime_map["js"]		= "text/javascript";
+	mime_map["json"]	= "application/json";
+	mime_map["jsonld"]	= "application/ld+json";
+	mime_map["xml"]		= "application/xml";
+	mime_map["pdf"]		= "application/pdf";
+	mime_map["doc"]		= "application/msword";
+	mime_map["docx"]	= "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	mime_map["ppt"]		= "application/vnd.ms-powerpoint";
+	mime_map["pptx"]	= "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+	mime_map["odt"]		= "application/vnd.oasis.opendocument.text";
+	mime_map["xls"]		= "application/vnd.ms-excel";
+	mime_map["xlsx"]	= "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	mime_map["odp"]		= "application/vnd.oasis.opendocument.presentation";
+	mime_map["ods"]		= "application/vnd.oasis.opendocument.spreadsheet";
 
-	vec.push_back(std::make_pair("jpeg", "image/jpeg"));
-	vec.push_back(std::make_pair("jpg", "image/jpeg"));
-	vec.push_back(std::make_pair("png", "image/png"));
-	vec.push_back(std::make_pair("apng", "image/apng"));
-	vec.push_back(std::make_pair("avif", "image/avif"));
-	vec.push_back(std::make_pair("gif", "image/gif"));
-	vec.push_back(std::make_pair("svg", "image/svg+xml"));
-	vec.push_back(std::make_pair("webp", "image/webp"));
-	vec.push_back(std::make_pair("webm", "video/webm"));
-	vec.push_back(std::make_pair("bmp", "image/bmp"));
-	vec.push_back(std::make_pair("ico", "image/x-icon"));
-	vec.push_back(std::make_pair("tif", "image/tiff"));
-	vec.push_back(std::make_pair("tiff", "image/tiff"));
+	mime_map["jpeg"]	= "image/jpeg";
+	mime_map["jpg"]		= "image/jpeg";
+	mime_map["png"]		= "image/png";
+	mime_map["apng"]	= "image/apng";
+	mime_map["avif"]	= "image/avif";
+	mime_map["gif"]		= "image/gif";
+	mime_map["svg"]		= "image/svg+xml";
+	mime_map["webp"]	= "image/webp";
+	mime_map["webm"]	= "video/webm";
+	mime_map["bmp"]		= "image/bmp";
+	mime_map["ico"]		= "image/x-icon";
+	mime_map["tif"]		= "image/tiff";
+	mime_map["tiff"]	= "image/tiff";
 
-	vec.push_back(std::make_pair("mp3", "audio/mpeg"));
-	vec.push_back(std::make_pair("aac", "audio/aac"));
-	vec.push_back(std::make_pair("wav", "audio/wave"));
-	vec.push_back(std::make_pair("flac", "audio/flac"));
-	vec.push_back(std::make_pair("mpeg", "audio/mpeg"));
-	vec.push_back(std::make_pair("mp4", "video/mp4"));
-	vec.push_back(std::make_pair("avi", "video/x-msvideo"));
-	vec.push_back(std::make_pair("3gp", "video/3gpp"));
+	mime_map["mp3"]		= "audio/mpeg";
+	mime_map["aac"]		= "audio/aac";
+	mime_map["wav"]		= "audio/wave";
+	mime_map["flac"]	= "audio/flac";
+	mime_map["mpeg"]	= "audio/mpeg";
+	mime_map["mp4"]		= "video/mp4";
+	mime_map["avi"]		= "video/x-msvideo";
+	mime_map["3gp"]		= "video/3gpp";
 
-	vec.push_back(std::make_pair("bz", "application/x-bzip"));
-	vec.push_back(std::make_pair("bz2", "application/x-bzip2"));
-	vec.push_back(std::make_pair("gz", "application/gzip"));
-	vec.push_back(std::make_pair("zip", "application/zip"));
-	vec.push_back(std::make_pair("7z", "application/x-7z-compressed"));
-	vec.push_back(std::make_pair("tar", "application/x-tar"));
+	mime_map["bz"]		= "application/x-bzip";
+	mime_map["bz2"]		= "application/x-bzip2";
+	mime_map["gz"]		= "application/gzip";
+	mime_map["zip"]		= "application/zip";
+	mime_map["7z"]		= "application/x-7z-compressed";
+	mime_map["tar"]		= "application/x-tar";
 //	vec.push_back(std::make_pair("", "application/octet-stream"));
-	return (vec);
+	return (mime_map);
 }
 
 std::map<int, std::string> Response::_codeMessage = insert_to_error_map();
-std::vector<std::pair<std::string, std::string> > Response::_mime_types = insert_to_mime_vec();
+std::map<std::string, std::string> Response::_mime_types = insert_to_mime_map();
 
 Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _cgi_response(false), _req(request), _server_config(sc) {
 	std::string		location;
@@ -123,7 +123,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 			}
 				// try server indexes
 			if (_status_code != 200) {
-				if (_req._loc->_autoindex && isDirectory(_req.getFinalPath())) {
+				if (_req._loc->_autoindex) {
 					_status_code = 200;
 					_autoindex = true;
 				} else if (isDirectory(_req.getFinalPath())) {
@@ -158,20 +158,18 @@ void Response::setMimeType(std::string const & file_name) {
 	if (pos != std::string::npos) {
 		std::string ext = file_name.substr(pos + 1);
 	    std::transform(ext.begin(), ext.end(), ext.begin(), ::ft_tolower);
-
-		std::vector<std::pair<std::string, std::string> >::iterator it;
-		for (it = _mime_types.begin(); it != _mime_types.end(); ++it) {
-			if (it->first == ext) {
-				_content_type = it->second;
-				return;
-			}
-		}
+	    if (_mime_types.find(ext) != _mime_types.end()) {
+	    	_content_type = _mime_types[ext];
+	    	return ;
+	    } else {
+			_content_type = "text/html";
+	    }
+	} else {
+		_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
 	}
-	//_content_type = "text/html";
-	_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
 }
 
-int Response::execCGI() throw (std::exception) {
+int Response::execCGI() {
 	std::vector<char *> env;
 	std::vector<char *> arg;
 	std::stringstream ss;

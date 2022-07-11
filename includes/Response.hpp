@@ -38,7 +38,7 @@ class Response {
 		bool getKeepAlive(void) const;
 		int getStatusCode(void) const;
 		static std::map<int, std::string> _codeMessage;
-		static std::vector<std::pair<std::string, std::string> > _mime_types;
+		static std::map<std::string, std::string> _mime_types;
 	private:
 		Response();
 		Response(const Response&);
@@ -55,7 +55,7 @@ class Response {
 		Config::ServerConfig const & _server_config;
 		//bool _check_default_error_code_and_assign_path(int);
 		//static std::string _mime_type_detector(std::string const & file_name);
-		int execCGI(void) throw (std::exception);
+		int execCGI(void);
 		void setMimeType(std::string const &);
 		const std::string createAutoindexResponse(void);
 		const std::string CGIResponse(void);
