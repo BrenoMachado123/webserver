@@ -40,17 +40,20 @@ class Request {
 		~Request();
 
 		int getErrorCode() const;
-		const std::string getCGIFile() const;
+		bool isTargetDir() const;
+		bool isTargetCGI() const;
 		std::string const & getFinalPath() const;
 		std::string const & getContent() const;
 		std::string const & getQuery() const;
-		std::string const & getRemoteHost() const;
-		bool isTargetDir() const;
-		bool isTargetCGI() const;
 		std::string const & getMethod() const;
-		std::string const getCGIBinPath() const; 
+		std::string const & getUriTarget() const;
+		const std::string getCGIBinPath() const; 
+		const std::string getCGIFile() const;
+		const std::string getContentType() const;
+		const std::string getUserAgent() const;
+		const std::string getRemoteHost() const;
+		const std::string getAcceptedEncoding() const;
 		// long const & get_content_length() const; //?????????????
-		// std::string const & get_uri_target() const;
 		// std::string const & get_http_version() const;
 		// std::string const & get_location_root() const;
 		// bool const & get_is_default() const; //????

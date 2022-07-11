@@ -112,6 +112,30 @@ bool Request::isTargetCGI() const {
 	return (false);
 }
 
+std::string const & Request::getContent() const {
+	return (_content);
+}
+
+std::string const & Request::getQuery() const {
+	return (_query);
+}
+
+std::string const & Request::getMethod() const {
+	return (_method);
+}
+
+std::string const & Request::getUriTarget() const {
+	return (_uri_target);
+}
+
+const std::string Request::getCGIBinPath() const {
+	if (_loc) {
+		if (!_loc->_cgi_bin.empty())
+			return (_loc->_cgi_bin);
+	}
+	return("");
+}
+
 const std::string Request::getCGIFile() const {
 	std::vector<std::string>::iterator	v_it;
 	size_t pos(_uri_target.find_last_of('.'));
@@ -128,28 +152,28 @@ const std::string Request::getCGIFile() const {
 	return ("");
 } 
 
-std::string const & Request::getContent() const {
-	return (_content);
+const std::string Request::getAcceptedEncoding() const {
+	if (_headers.find("accept-encoding") != _headers.end())
+		return (_headers.find("accept-encoding")->second);
+	return ("");
 }
 
-std::string const & Request::getQuery() const {
-	return (_query);
+const std::string Request::getRemoteHost() const {
+	if (_headers.find("host") != _headers.end())
+		return (_headers.find("host")->second);
+	return ("");
 }
 
-std::string const & Request::getRemoteHost() const {
-	return (_headers.find("host")->second);
+const std::string Request::getUserAgent() const {
+	if (_headers.find("user-agent") != _headers.end())
+		return(_headers.find("user-agent")->second);
+	return ("");
 }
 
-std::string const & Request::getMethod() const {
-	return (_method);
-}
-
-std::string const Request::getCGIBinPath() const {
-	if (_loc) {
-		if (!_loc->_cgi_bin.empty())
-			return (_loc->_cgi_bin);
-	}
-	return("");
+const std::string Request::getContentType() const {
+	if (_headers.find("content-type") != _headers.end())
+		return(_headers.find("content-type")->second);
+	return ("");
 }
 
 /*
@@ -158,9 +182,6 @@ bool Request::isCGI() const {
 }
 */
 
-// std::string const & Request::get_uri_target() const {
-// 	return _uri_target;
-// }
 
 // std::string const & Request::get_http_version() const {
 // 	return _http_version;

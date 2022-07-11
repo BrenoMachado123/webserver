@@ -19,10 +19,10 @@ print ("<title>Dropdown Box - Sixth CGI Program</title>", end='\n')
 print ("</head>", end='\n')
 print ("<body>", end='\n')
 if (subject == "Mexico"):
-    print ("<img src=\"/content/4242/content/mexico.jpg\">", end='\n')
+    print ("<img src=\"/random/content/mexico.jpg\">", end='\n')
 elif (subject == "Brasil"):
-    print ("<img src=\"/content/4242/content/brasil.jpg\">", end='\n')
+    print ("<img src=\"/random/content/brasil.jpg\">", end='\n')
 else:
-    print ("<img src=\"/content/4242/content/Polen.webp\">", end='\n')
+    print ("<img src=\"/random/content/Polen.webp\">", end='\n')
 print ("</body>", end='\n')
 print ("</html>", end='\n')

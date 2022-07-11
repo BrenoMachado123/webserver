@@ -1,5 +1,7 @@
 #include "Response.hpp"
 
+const char * Response::CGIFailure::what() const throw() {return ("CGI couldn't be executed.");}
+
 static const std::map<int, std::string> insert_to_map() {
 	std::map<int, std::string> _codeMessage;
 	_codeMessage[200] = "OK";
@@ -13,8 +15,16 @@ static const std::map<int, std::string> insert_to_map() {
 	_codeMessage[431] = "Request Header Fields Too Large";
 	_codeMessage[500] = "Internal Server Error";
 	_codeMessage[505] = "HTTP Version Not Supported";
-
 	return (_codeMessage); 
+}
+
+static void push_back_env(std::vector<char *> & vec, std::string const & name, std::string const & value) {
+	if (!name.empty() && !value.empty()) {
+		std::string tmp(value);
+		tmp = name + "=" + strtrim(tmp);
+		if (tmp.length() < 8000)
+			vec.push_back(strdup(tmp.c_str()));
+	}
 }
 
 std::map<int, std::string> Response::_codeMessage = insert_to_map();
@@ -27,7 +37,7 @@ void Response::setMimeType(std::string const & file_name) {
 	}
 	std::string ext = file_name.substr(pos + 1);
     std::transform(ext.begin(), ext.end(), ext.begin(), ::ft_tolower);
-//TEXT
+	//TEXT
 	if(ext == "txt")
 		_content_type = "text/plain";
 	else if(ext == "html")
@@ -62,7 +72,6 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "application/vnd.oasis.opendocument.presentation";
 	else if(ext == "ods")
 		_content_type = "application/vnd.oasis.opendocument.spreadsheet";
-	
 	//IMAGE
 	else if(ext == "jpeg" || ext == "jpg")
 		_content_type = "image/jpeg";
@@ -86,7 +95,6 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "image/x-icon";
 	else if(ext == "tif" || ext == "tiff")
 		_content_type = "image/tiff";
-
 	//SOUND
 	else if(ext == "mp3")
 		_content_type = "audio/mpeg";
@@ -94,7 +102,6 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "audio/aac";
 	else if(ext == "wav")
 		_content_type = "audio/wave";
-
 	//VIDEO
 	else if(ext == "flac")
 		_content_type = "audio/flac";
@@ -104,11 +111,9 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "video/mp4";
 	else if(ext == "avi")
 		_content_type = "video/x-msvideo";
-	
 	//AUDIO-VIDEO
 	else if(ext == "3gp")
 		_content_type = "video/3gpp; audio/3gpp"; // - audio if file does not contain video
-	
 	//ARCHIVES
 	else if(ext == "bz")
 		_content_type = "application/x-bzip";
@@ -122,19 +127,15 @@ void Response::setMimeType(std::string const & file_name) {
 		_content_type = "application/x-7z-compressed";
 	else if(ext == "tar")
 		_content_type = "application/x-tar";
-
-	//DEFAULT    h
-	else // else if(file_name == "bin") - any kind of data
+	//DEFAULT
+	else 
 		_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
 }
 
 Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _cgi_response(false), _req(request), _server_config(sc) {
-	std::ifstream file;
-	std::string tmp_buffer;
-	std::string buffer;
-	std::string location;
-	std::string extension;
-	std::vector<std::string>::iterator i_it;
+	std::string		location;
+	std::ifstream	file;
+	std::vector<std::string>::iterator	i_it;
 	
 	_status_code = _req.getErrorCode();
 	_date = get_local_time();
@@ -144,110 +145,10 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 		if (_req.isTargetCGI()) {
 			location = _req.getCGIFile();
 			file.open(location.c_str(), std::ifstream::binary);
-			if (file.is_open()) {
-				_status_code = 200;
-
-				std::vector<char *> env;
-				std::string tmp;
-				char tmp_str[1000];
-
-				tmp = "PATH=" + location;
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-				
-				tmp = "QUERY_STRING=" + _req.getQuery();
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-				
-				std::stringstream ss;
-				ss << _req.getContent().length();
-				tmp = "CONTENT_LENGTH=" + ss.str();
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				tmp = "REMOTE_HOST=" + _req.getRemoteHost();
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				tmp = "REQUEST_METHOD=" + _req.getMethod();
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				tmp = "CONTENT_TYPE=application/x-www-form-urlencoded";
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				tmp = "DOCUMENT_ROOT=" + _req.getCGIBinPath();
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				tmp = "PATH_INFO=" + _req.getCGIBinPath();
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				tmp = "HTTP_ACCEPT=application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,charset=utf-8;";
-				strcpy(tmp_str, tmp.c_str());
-				env.push_back(strdup(tmp_str));
-
-				//GATEWAY_INTERFACE=CGI/1.1
-
-				env.push_back(NULL);
-				
-				std::vector<char *> arg;
-				strcpy(tmp_str, location.c_str());
-				arg.push_back(tmp_str);
-				arg.push_back(NULL);
-    			
-    			int restore_input = dup(STDIN_FILENO);
-    			int restore_output = dup(STDOUT_FILENO);
-			    FILE * tmp_file_in = tmpfile();
-			    FILE * tmp_file_out = tmpfile();
-
-    			if (!tmp_file_in || !tmp_file_out || restore_input < 0) {
-      				_status_code = 500;
-    			} else {
-				    int tmp_fd_in = fileno(tmp_file_in);
-				    int tmp_fd_out = fileno(tmp_file_out);
-				    if (tmp_fd_in < 0) {
-				    	_status_code = 500;
-				    } else {
-		    			write(tmp_fd_in, _req.getContent().c_str(), _req.getContent().length());
-		    			rewind(tmp_file_in);
-		    			int pid = fork();
-		    			if (pid < 0) {
-		    				_status_code = 500;
-		    			} else {
-			    			if (pid == 0) {
-			    				dup2(tmp_fd_in, STDIN_FILENO);
-								dup2(tmp_fd_out, STDOUT_FILENO);
-								execve(location.c_str(), &arg[0], &env[0]);
-								exit(EXIT_FAILURE);
-						    }
-						    int child_status;
-					    	waitpid(pid, &child_status, 0);
-						    close(tmp_fd_in);
-						    rewind(tmp_file_out);
-						    char buff[1024];
-						    int valread = -1;
-						    while(valread != 0) {
-						    	bzero(buff, 1024);
-								valread = read(tmp_fd_out, buff, 1024);
-								if (valread < 0)
-								  _status_code = 500;
-								_content += buff;
-						    }
-						    close(tmp_fd_out);
-						    dup2(restore_input, STDIN_FILENO);
-						    dup2(restore_output, STDOUT_FILENO);
-						    close(restore_input);
-						    close(restore_output);
-							std::cout << YELLOW << " CGI Child Finished with status: " << ENDC << child_status;
-							if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-								std::cout << std::endl << "Content" << std::endl << _content << std::endl;
-						    _cgi_response = true;
-						}
-					}
-				}
+			if (file.is_open() && !isDirectory(location)) {
+				_status_code = execCGI();
+				if (_status_code <= 0)
+					_status_code = 500;
 			}
 		} else if (_req.isTargetDir()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -266,6 +167,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 					break ;
 				}
 			}
+			// try server indexes
 			if (_req._loc->_autoindex && _content.empty()) {
 				_status_code = 200;
 				_autoindex = true;
@@ -295,6 +197,89 @@ Response::~Response() {
 		std::cout << "Response" << " destroyed" << std::endl;
 }
 
+int Response::execCGI() throw (std::exception) {
+	std::vector<char *> env;
+	std::vector<char *> arg;
+	std::stringstream ss;
+
+	ss << _req.getContent().length();
+	push_back_env(env, "PATH", _req.getCGIFile());
+	//push_back_env(env, "AUTH_TYPE", "");
+	push_back_env(env, "CONTENT_LENGTH", ss.str());
+	push_back_env(env, "CONTENT_TYPE", "application/x-www-form-urlencoded"); //+ _req.getContentType());
+	push_back_env(env, "DOCUMENT_ROOT", _req.getCGIBinPath());
+	push_back_env(env, "GATEWAY_INTERFACE", "CGI/1.1");
+	push_back_env(env, "HTTP_ACCEPT", "application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,text/plain,charset=utf-8;");
+	//push_back_env(env, "HTTP_COOKIE", "");
+	//push_back_env(env, "HTTP_PRAGMA", "");
+	push_back_env(env, "HTTP_USER_AGENT", _req.getUserAgent());
+	push_back_env(env, "PATH_INFO", _req.getCGIBinPath());
+	push_back_env(env, "PATH_TRANSLATED", _req.getCGIBinPath());
+	push_back_env(env, "QUERY_STRING", _req.getQuery());
+	//push_back_env(env, "REMOTE_ADDR", "");
+	push_back_env(env, "REMOTE_HOST", _req.getRemoteHost());
+	//push_back_env(env, "REMOTE_IDENT", "");
+	//push_back_env(env, "REMOTE_PORT", "");
+	//push_back_env(env, "REMOTE_USER", "");
+	push_back_env(env, "REQUEST_METHOD", _req.getMethod());
+	push_back_env(env, "REQUEST_URI", _req.getUriTarget());
+	push_back_env(env, "SCRIPT_FILENAME", _req.getCGIFile());
+	push_back_env(env, "SCRIPT_NAME", _req.getCGIFile());
+	push_back_env(env, "SERVER_ADMIN", "pulgamecanica11@gmail.com");
+	push_back_env(env, "SERVER_NAME", "BRTOAN");
+	push_back_env(env, "SERVER_PORT", "4242");
+	push_back_env(env, "SERVER_PROTOCOL", "HTTP/1.1");
+	push_back_env(env, "SERVER_SOFTWARE", "Webserv42.0 (Linux)");
+	env.push_back(NULL);
+	arg.push_back(strdup(_req.getCGIFile().c_str()));
+	arg.push_back(NULL);
+
+	int restore_input = dup(STDIN_FILENO);
+	int restore_output = dup(STDOUT_FILENO);
+	FILE * tmp_file_in = tmpfile();
+	FILE * tmp_file_out = tmpfile();
+	if (!tmp_file_in || !tmp_file_out || restore_input < 0)
+		return (-1);
+    int tmp_fd_in = fileno(tmp_file_in);
+    int tmp_fd_out = fileno(tmp_file_out);
+	if (tmp_fd_in < 0)
+		return (-1);
+	write(tmp_fd_in, _req.getContent().c_str(), _req.getContent().length());
+	rewind(tmp_file_in);
+	int pid = fork();
+	if (pid < 0)
+		return (-1);
+	if (pid == 0) {
+		dup2(tmp_fd_in, STDIN_FILENO);
+		dup2(tmp_fd_out, STDOUT_FILENO);
+		execve(_req.getCGIFile().c_str(), &arg[0], &env[0]);
+		exit(EXIT_FAILURE);
+    }
+    int child_status;
+	waitpid(pid, &child_status, 0);
+    close(tmp_fd_in);
+    rewind(tmp_file_out);
+    char buff[1024];
+    int valread = -1;
+    while(valread != 0) {
+    	bzero(buff, 1024);
+		valread = read(tmp_fd_out, buff, 1024);
+		if (valread < 0)
+			return (-1);
+		_content += buff;
+    }
+    close(tmp_fd_out);
+    dup2(restore_input, STDIN_FILENO);
+    dup2(restore_output, STDOUT_FILENO);
+    close(restore_input);
+    close(restore_output);
+	std::cout << YELLOW << " CGI Child Finished with status: " << ENDC << child_status;
+	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << std::endl << "Content" << std::endl << _content << std::endl;
+    _cgi_response = true;
+	return (200);
+}
+
 const std::string Response::createAutoindexResponse() {
 	std::string		file_icon, css_icon, html_icon, js_icon, py_icon, folder_icon, html_content;
 	std::ifstream	icon;
@@ -311,7 +296,7 @@ const std::string Response::createAutoindexResponse() {
 	readFileString("utils/py_file.svg", py_icon);
     dr = opendir(_req.getFinalPath().c_str());
 	if (dr == NULL) {
-		_status_code = 404;
+		_status_code = 403;
 	} else {
 		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
 			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
@@ -363,6 +348,23 @@ const std::string Response::createAutoindexResponse() {
 	return (html_content);
 }
 
+const std::string Response::CGIResponse() {
+	std::string response;
+	std::stringstream ss;
+
+	ss << _status_code;
+	response += "HTTP/1.1 " + ss.str() + " " + _codeMessage[_status_code] + "\n";
+	response += "Date: " + _date;
+	response += "Server: " + _server_name + "\n";
+	response += "Connection: close\n";
+	ss.str(std::string());
+	ss << _content.length();
+	response += "Content-Length: " + ss.str() + "\n";
+	response += _content;
+	return (response);
+}
+
+
 const std::string Response::createResponse() {
 	std::string response;
 	std::string html_content;
@@ -370,17 +372,8 @@ const std::string Response::createResponse() {
 	std::ifstream file;
 	
 	if (_cgi_response && _status_code == 200) {
-		so << _status_code;
-		response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
-		response += "Date: " + _date;
-		response += "Server: " + _server_name + "\n";
-		response += "Connection: close\n";
-		so.str(std::string());
-		so << _content.length();
-		response += "Content-Length: " + so.str() + "\n";
-		response += _content;
 		_keep_alive = false;
-		return (response);
+		return (CGIResponse());
 	}
 	if (_status_code == 200 && _req._loc) {
 		if (_content.length() > 0) {

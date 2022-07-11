@@ -60,7 +60,7 @@ $(NAME)_debug: $(OBJ_DEBUG)
 test:	all
 		@printf "$(C_BLUE)Testing $(C_YELLOW)$(NAME)$(C_END)\n"
 		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
-		@./$(NAME) "conf_files/configuration.conf"
+		@./$(NAME) "utils/conf_files/configuration.conf"
 		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
 		@printf "\n$(C_BLUE)Finished Test...$(C_END)\n"
 		@$(MAKE) show
@@ -69,7 +69,7 @@ test:	all
 debug:	re_debug
 		@printf "$(C_BLUE)Debugging $(C_YELLOW)$(NAME)$(C_END)\n"
 		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
-		@./$(NAME) "conf_files/configuration.conf"
+		@./$(NAME) "utils/conf_files/configuration.conf"
 		@printf "\n$(C_BLUE)********************************************$(C_END)\n"
 		@printf "\n$(C_BLUE)Finished Test...$(C_END)\n"
 		@$(MAKE) show
