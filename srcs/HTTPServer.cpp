@@ -82,7 +82,7 @@ void HTTPServer::acceptConnectionAt(int fd) throw (std::exception) {
 
 void HTTPServer::addSocket(Socket & s) throw (std::exception) {
 	struct epoll_event	ev;
-	
+
 	ev.events = EPOLLIN;
 	ev.data.fd = s.getSocketFd();
 	if (epoll_ctl(_epollfd, EPOLL_CTL_ADD, s.getSocketFd(), &ev) == -1)

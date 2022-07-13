@@ -3,6 +3,21 @@ Let's create a simple server using C++
 
 ***
 
+### TODO
+
+  - File Upload
+  - Limit Body Size
+  - Default Method GET
+  - PUT & DELETE actions
+  - Redirections
+  - Coockies
+
+### BUGS
+
+  - Autoindex is on
+  - Location root doesn't exist
+  - Should Return 404 not found -> returns 403 Forbidden
+  
 ### RFC's
 
 [HTTP Semantics RFC](https://www.rfc-editor.org/rfc/rfc9110.pdf)

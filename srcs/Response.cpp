@@ -96,7 +96,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 		_status_code = 404;
 		if (_req.isTargetCGI()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-				std::cout << YELLOW << "CGI location" << std::endl;
+				std::cout << YELLOW << "CGI location " << _req.getCGIFile() << std::endl;
 			location = _req.getCGIFile();
 			file.open(location.c_str(), std::ifstream::binary);
 			if (file.is_open() && !isDirectory(location)) {
@@ -233,15 +233,21 @@ int Response::execCGI() {
 	waitpid(pid, &child_status, 0);
     close(tmp_fd_in);
     rewind(tmp_file_out);
-    char buff[1024];
-    int valread = -1;
-    while(valread != 0) {
-    	bzero(buff, 1024);
-		valread = read(tmp_fd_out, buff, 1024);
-		if (valread < 0)
-			return (-1);
-		_content += buff;
+    if (child_status != 0){
+    	_content = "ERROR!!!";
+    	return (500);
     }
+    else {
+	    char buff[1024];
+	    int valread = -1;
+	    while(valread != 0) {
+	    	bzero(buff, 1024);
+			valread = read(tmp_fd_out, buff, 1024);
+			if (valread < 0)
+				return (-1);
+			_content += buff;
+	    }
+	}
     close(tmp_fd_out);
     dup2(restore_input, STDIN_FILENO);
     dup2(restore_output, STDOUT_FILENO);
@@ -287,7 +293,7 @@ const std::string Response::createAutoindexResponse() {
 		while ((de = readdir(dr)) != NULL) {
 			if (*de->d_name == 0 || (*de->d_name == '.' && *(de->d_name + 1) == 0))
 				continue ;
-			std::string file_path(_req.getFinalPath() + "/" + de->d_name);
+			std::string file_path(_req.getFinalPath() + de->d_name);
 			int fd = open(file_path.c_str(), O_RDONLY);
 			if (fd < 0 || fstat(fd, &st) == -1) {
 				html_content += "<div>Failed to open " + file_path + "</div>";
