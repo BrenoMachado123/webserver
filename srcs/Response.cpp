@@ -336,6 +336,7 @@ const std::string Response::CGIResponse() {
 	response += "HTTP/1.1 " + ss.str() + " " + _codeMessage[_status_code] + "\n";
 	response += "Date: " + _date;
 	response += "Server: " + _server_name + "\n";
+	response += "Access-Control-Allow-Origin: *\n";
 	response += "Connection: close\n";
 	ss.str(std::string());
 	ss << _content.length();
