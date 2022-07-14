@@ -5,6 +5,10 @@
 #  define CONSTRUCTORS_DESTRUCTORS_DEBUG 0
 # endif
 
+# ifndef DEBUG_MSG
+#  define DEBUG_MSG 0
+# endif
+
 #include "colors.hpp"
 #include <iostream>
 

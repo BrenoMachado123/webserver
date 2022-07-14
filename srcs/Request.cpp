@@ -171,3 +171,8 @@ const std::string Request::getContentType() const {
 		return(_headers.find("content-type")->second);
 	return ("");
 }
+
+std::ostream &	operator<<(std::ostream & ss, const Request & req) {
+	ss << "Status: " << req.getErrorCode() << ", Resource: " << req.getFinalPath() << (req.getCGIFile().empty() ? "" : (", CGI File Target: " + req.getCGIFile())); 
+	return (ss);
+}

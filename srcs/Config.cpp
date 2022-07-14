@@ -259,7 +259,7 @@ Config::ServerConfig::ErrorCodePage::ErrorCodePage(const std::string & content) 
         throw InvalidDirectiveException();
     _error_path = content.substr(found + 1);
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-        std::cout << WHITE <<"ErrorCode created [" << _error_path << "]" << std::endl;
+        std::cout << WHITE << "ErrorCode created [" << _error_path << "]" << std::endl;
 }
 Config::ServerConfig::ErrorCodePage::~ErrorCodePage() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)

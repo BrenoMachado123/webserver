@@ -278,9 +278,9 @@ const std::string Response::createAutoindexResponse() {
 	if (dr == NULL) {
 		_status_code = 403;
 	} else {
-		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
+		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
 			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
-			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {position: absolute; top: 0; left: 30px; white-space: nowrap;} \
+			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {top: 0; left: 30px; white-space: nowrap;} \
 			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
 			a:hover .default-file .pencil { display: block; transform: translate(-20px, -35px); animation: 5s draw ease-in infinite; } @keyframes draw { \
 			0% {transform: translate(-25px, -30px);} 5% {transform: translate(-20px, -35px);} 10% {transform: translate(-15px, -30px);} 15% {transform: translate(-10px, -35px);} 20% {transform: translate(-5px, -30px);} \
@@ -339,7 +339,12 @@ const std::string Response::CGIResponse() {
 	response += "Access-Control-Allow-Origin: *\n";
 	response += "Connection: close\n";
 	ss.str(std::string());
-	ss << _content.length();
+	size_t c_start = _content.find_first_of("\n");
+	if (c_start == std::string::npos)
+		c_start = 0;
+	std::string tmp = _content.substr(c_start);
+	tmp = strtrim(tmp);
+	ss << tmp.length();
 	response += "Content-Length: " + ss.str() + "\n";
 	response += _content;
 	return (response);
@@ -418,8 +423,10 @@ const std::string Response::createResponse() {
 				break ;
 			}
 		}
-		if (!html_content.length())
+		if (!html_content.length()) {
+			_content_type = "text/html";
 			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
+		}
 	}
 	response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
 	response += "Date: " + _date;

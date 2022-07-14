@@ -6,6 +6,7 @@ import cgi, cgitb
 # Create instance of FieldStorage 
 form = cgi.FieldStorage() 
 
+# print ("Content-Length: 2000")
 print ("Content-type:text/html\r\n\r\n")
 print ("<html>")
 print ("<head>")

@@ -52,10 +52,13 @@ void Client::handleRequest() {
 		std::string response_content(res.createResponse());
 		write(_fd, response_content.c_str(), response_content.length());
 		_keep_alive = res.getKeepAlive();
-		std::cout << GREEN << " Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms " << WHITE " at " << get_local_time() << ENDC;
+		if (DEBUG_MSG || CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << WHITE << "\n====> Request <====" << std::endl << YELLOW << buf << WHITE << "====>Request Debug Info<====\n" << YELLOW << req << std::endl << std::endl << WHITE << "====> Response <====\n" << YELLOW << response_content.substr(0, 1000) << RED << (response_content.length() > 1000 ? ("...\n[SHOWING 1000 bytes maximum]\n") : "") << ENDC <<std::endl;
+		else
+			std::cout << GREEN << " Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms " << WHITE " at " << get_local_time() << ENDC;
 	} else {
 		// RESPONSE 408!!!
-		_keep_alive = false;
+		//_keep_alive = false;
 	}
 }
 
