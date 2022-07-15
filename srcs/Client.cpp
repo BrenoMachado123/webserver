@@ -50,12 +50,26 @@ void Client::handleRequest() {
 		Request req(buf, _socket.getServerConfig());
 		Response res(req, _socket.getServerConfig());
 		std::string response_content(res.createResponse());
+		/*
+		std::string response_content;
+		{
+			response_content += "HTTP/1.1 302 Found\n";
+			response_content += "Date: Fri Jul 15 19:13:29 2022\n";
+			response_content += "Server: Breno_Tony_Pulga\n";
+			response_content += "Accept-Charset: utf-8\n";
+			response_content += "Location: https://www.google.com\n";
+			response_content += "Connection: close\n";
+			write(_fd, response_content.c_str(), response_content.length());
+			_keep_alive = false;
+		}
+		*/
 		write(_fd, response_content.c_str(), response_content.length());
 		_keep_alive = res.getKeepAlive();
 		if (DEBUG_MSG || CONSTRUCTORS_DESTRUCTORS_DEBUG)
 			std::cout << WHITE << "\n====> Request <====" << std::endl << YELLOW << buf << WHITE << "====>Request Debug Info<====\n" << YELLOW << req << std::endl << std::endl << WHITE << "====> Response <====\n" << YELLOW << response_content.substr(0, 1000) << RED << (response_content.length() > 1000 ? ("...\n[SHOWING 1000 bytes maximum]\n") : "") << ENDC <<std::endl;
-		else
+		else {
 			std::cout << GREEN << " Completed " << res.getStatusCode() << " " << Response::_codeMessage[res.getStatusCode()] << " in " << timestamp_in_ms() - ms_s << "ms " << WHITE " at " << get_local_time() << ENDC;
+		}
 	} else {
 		// RESPONSE 408!!!
 		//_keep_alive = false;

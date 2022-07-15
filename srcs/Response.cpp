@@ -94,6 +94,9 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	_server_name = "Breno_Tony_Pulga";
 	if (_status_code == 0 && _req._loc) {
 		_status_code = 404;
+		//if (_req.isRedirection()) {
+		//	_status_code = _req._loc.getRedirectionCode();
+		//}
 		if (_req.isTargetCGI()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << YELLOW << "CGI location " << _req.getCGIFile() << std::endl;
@@ -357,6 +360,9 @@ const std::string Response::createResponse() {
 	std::ostringstream so;
 	std::ifstream file;
 	
+	//if (isRedirectionStatusCode(_status_code)) {
+	//	return (redirectionResponse())
+	//}
 	if (_cgi_response && _status_code == 200) {
 		_keep_alive = false;
 		return (CGIResponse());
