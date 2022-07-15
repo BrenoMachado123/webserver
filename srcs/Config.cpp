@@ -84,8 +84,10 @@ Config::Config(std::string const & file_str) throw(std::exception) {
                     _directive = createDirective(directive, directive_content);
                     if (_directive != 0) {
                         _directive->setDirective(_servers.back(), context);
-                        if (directive == "location")
+                        if (directive == "location") {
+                            _servers.back().setDefaults();
                             context++;
+                        }
                         delete (_directive);
                     }
                     else
@@ -497,6 +499,18 @@ Config::ServerConfig::Directive * Config::createDirective(std::string const & na
 
 int Config::ServerConfig::getPort() const {return (_port);}
 
+void Config::ServerConfig::setDefaults() {
+    Config::ServerConfig::Location & loc = _locations.back();
+
+    loc._autoindex = _autoindex;
+    loc._max_body_size = _max_body_size;
+    loc._root_path = _root_path;
+    loc._indexes = _indexes;
+    loc._location_errors_map = _server_errors_map;
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << "Setted Defaults" << std::endl;
+}
+
 std::string const & Config::ServerConfig::getIp() const {return (_ip);}
 
 Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string const & target) const {
@@ -650,8 +664,9 @@ void Config::ServerConfig::Listen::setDirective(ServerConfig & serv_conf, int co
 }
 
 void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == SERVER_CONTEXT)
+    if (context == SERVER_CONTEXT) {
         serv_conf._locations.push_back(*this);
+    }
 }
 
 void Config::ServerConfig::Redirect::setDirective(ServerConfig & serv_conf, int context) const {
@@ -675,6 +690,7 @@ void Config::ServerConfig::Upload::setDirective(ServerConfig & serv_conf, int co
     if (context == LOCATION_CONTEXT)
         serv_conf._locations.back()._upload_path = _upload_path;
 }
+
 // std::string const &Config::ServerConfig::Location::getLocation() const{return _location;}
 // bool &Config::ServerConfig::Location::l_getAutoindex() {return _autoindex;}
 // std::string Config::ServerConfig::Location::l_getRoot() const {return _l_root;}

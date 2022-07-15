@@ -1,0 +1,17 @@
+server {
+	listen					8081
+	server_name				defaults www.defaults.com
+	root					www/
+	autoindex				on
+	client_max_body_size	128
+	index					index.html index.htm
+
+	location /page1 {
+
+	}
+
+	location /page2/ {
+
+	}	
+
+}

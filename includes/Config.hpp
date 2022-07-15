@@ -215,6 +215,7 @@ class Config {
 				ServerConfig();
 				~ServerConfig();
 				Location *			findLocation(std::string const &) const;
+				void				setDefaults(void);
 				int					getPort() const;
 				std::string const &	getIp() const;
 				// std::string & getRoot();
