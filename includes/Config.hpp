@@ -169,6 +169,7 @@ class Config {
 						std::string					_target;
 						std::vector<std::string>	_indexes;
 						int							_max_body_size;
+						int							_redirect_status;
 						bool						_autoindex;
 						std::string					_cgi_bin;
 						std::string					_upload_path;

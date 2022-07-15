@@ -390,7 +390,7 @@ Config::ServerConfig::Listen::~Listen() {
  *  Takes a string terminated by '{', the previous content of the string is the route of the location.
  */
 Config::ServerConfig::Location::Location(std::string const & content) throw (std::exception):
-    Directive(LOCATION), _target(content), _max_body_size(-1), _autoindex(false) {
+    Directive(LOCATION), _target(content), _max_body_size(-1), _redirect_status(0), _autoindex(false) {
     if (content.empty() || content[content.length() - 1] != '{')
         throw WrongSyntaxException();
     _target = _target.substr(0, content.length() - 1);
@@ -410,9 +410,19 @@ Config::ServerConfig::Location::~Location() {
  *
  */
 Config::ServerConfig::Redirect::Redirect(const std::string & content) throw (std::exception):
-    Directive(REDIRECT), _redirect_uri(content) {
-    if (content.empty() || content.find(SEPARATORS) != std::string::npos)
+    Directive(REDIRECT) {
+    std::string tmp;
+    std::stringstream ss;
+
+    ss << content.substr(0, 3);
+    ss >> _status_code;
+    if (_redirect_status_codes.find(_status_code) == _redirect_status_codes.end())
         throw WrongSyntaxException();
+    tmp = content.substr(3);
+    tmp = strtrim(tmp);
+    if (tmp.empty() || tmp.find(SEPARATORS) != std::string::npos)
+        throw WrongSyntaxException();
+    _redirect_uri = tmp;
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "Redirect created [" << _redirect_uri<< "]" << ENDC << std::endl;
 }
@@ -505,7 +515,7 @@ Config::ServerConfig::Directive * Config::createDirective(std::string const & na
         return (new ServerConfig::Cgi(content));
     else if (name == "cgi-bin")
         return (new ServerConfig::CgiBin(content));
-    else if (name == "render")
+    else if (name == "redirect")
         return (new ServerConfig::Redirect(content));
     else if (name == "upload")
         return (new ServerConfig::Upload(content));
@@ -685,8 +695,10 @@ void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int 
 }
 
 void Config::ServerConfig::Redirect::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == LOCATION_CONTEXT)
+    if (context == LOCATION_CONTEXT) {
         serv_conf._locations.back()._redirect_uri = _redirect_uri;
+        serv_conf._locations.back()._redirect_status = _status_code;
+    }
 }
 
 void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int context) const {
