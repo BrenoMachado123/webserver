@@ -13,9 +13,9 @@
 # define SERVERNAME			10
 # define UPLOAD				11
 # define INDEX				12
-# define RETURN_D			13
+# define REDIRECT			13
 # define SERVER_CONTEXT_DIRECTIVES		8
-# define LOCATION_CONTEXT_DIRECTIVES	8
+# define LOCATION_CONTEXT_DIRECTIVES	10
 # define TOTAL_DIRECTIVES	13
 # define ALL_ERROR_CODES	40
 # define PORT_MAX			65535
@@ -171,11 +171,21 @@ class Config {
 						int							_max_body_size;
 						bool						_autoindex;
 						std::string					_cgi_bin;
+						std::string					_upload_path;
+						std::string					_redirect_uri;
 						std::map<std::string, std::vector<std::string> > _cgi_map;
 						std::map<std::string, std::vector<int> > _location_errors_map;
 					private:
 						Location();
                 };
+				class Redirect: public Directive {
+					public:
+						Redirect(const std::string &) throw (std::exception);
+						virtual ~Redirect();
+						virtual void	setDirective(ServerConfig &, int) const;
+					private:
+						std::string _redirect_uri;
+				};
 				class Root: public Directive {
 					public:
 						Root(const std::string &) throw (std::exception);
@@ -193,6 +203,14 @@ class Config {
 					private:
 						std::vector<std::string>	_server_names;
 						ServerName();
+				};
+				class Upload: public Directive {
+					public:
+						Upload(const std::string &) throw (std::exception);
+						virtual ~Upload();
+						virtual void	setDirective(ServerConfig &, int) const;
+					private:
+						std::string	_upload_path;
 				};
 				ServerConfig();
 				~ServerConfig();

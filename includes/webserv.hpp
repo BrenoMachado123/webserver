@@ -9,6 +9,8 @@
 #  define DEBUG_MSG 0
 # endif
 
+#define TIME_TO_DIE 50000
+
 #include "colors.hpp"
 #include <iostream>
 

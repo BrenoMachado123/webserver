@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(int fd, Socket & s): _fd(fd), _keep_alive(true), _time_to_die(timestamp_in_ms() + 3000), _socket(s) {
+Client::Client(int fd, Socket & s): _fd(fd), _keep_alive(true), _time_to_die(timestamp_in_ms() + TIME_TO_DIE), _socket(s) {
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Client created" << std::endl;
 }
@@ -46,7 +46,7 @@ void Client::handleRequest() {
 		buf += tmp;
 	} while (valread == 30000);
 	if (buf.length() > 0) { // perhaps don't check this? return 408 if response is empty...?	
-		_time_to_die = ms_s + 3000;
+		_time_to_die = ms_s + TIME_TO_DIE;
 		Request req(buf, _socket.getServerConfig());
 		Response res(req, _socket.getServerConfig());
 		std::string response_content(res.createResponse());

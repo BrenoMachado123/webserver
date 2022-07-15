@@ -2,7 +2,7 @@
 #include "utils.hpp"
 
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location", "index", "autoindex"};
-const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size", "cgi", "cgi-bin"};
+const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size", "cgi", "cgi-bin", "upload", "redirect"};
 const std::string Config::ServerConfig::Methods::_valid_methods[4] = {"GET", "POST", "DELETE", "PUT"};
 const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] = {
 	400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
@@ -387,6 +387,23 @@ Config::ServerConfig::Location::~Location() {
         std::cout << RED << "Location Directive destroyed" << ENDC << std::endl;
 }
 /*
+ * @brief Construct a Server Name
+ *  
+ * @param content
+ *
+ */
+Config::ServerConfig::Redirect::Redirect(const std::string & content) throw (std::exception):
+    Directive(REDIRECT), _redirect_uri(content) {
+    if (content.empty() || content.find(SEPARATORS) != std::string::npos)
+        throw WrongSyntaxException();
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << WHITE << "Redirect created [" << _redirect_uri<< "]" << ENDC << std::endl;
+}
+Config::ServerConfig::Redirect::~Redirect() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+        std::cout << RED << "Redirect Directive destroyed" << ENDC << std::endl;
+}
+/*
  * @brief Construct a Root
  *  The root configures the path where the server will look for the resources.
  * @param content
@@ -428,6 +445,17 @@ Config::ServerConfig::ServerName::~ServerName() {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << RED << "ServerName Directive destroyed" << ENDC << std::endl;
 }
+Config::ServerConfig::Upload::Upload(const std::string & content) throw (std::exception):
+    Directive(ROOT), _upload_path(content) {
+    if (content.empty() || content.find(SEPARATORS) != std::string::npos || content[content.length() - 1] != '/')
+        throw WrongSyntaxException();
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+       std::cout << WHITE << "Upload created [" << _upload_path << "]" << ENDC << std::endl;
+}
+Config::ServerConfig::Upload::~Upload() {
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
+       std::cout << RED << "Upload destroyed" << ENDC << std::endl;
+}
 
 bool Config::validDirective(const std::string & str, const std::string * list, int len) const {
 	int i(0);
@@ -438,39 +466,32 @@ bool Config::validDirective(const std::string & str, const std::string * list, i
 }
 
 Config::ServerConfig::Directive * Config::createDirective(std::string const & name, std::string const & content) throw(std::exception) {
-    if (name == "listen") {
+    if (name == "listen")
         return (new ServerConfig::Listen(content));
-    }
-    else if (name == "error_page") {
+    else if (name == "error_page")
         return (new ServerConfig::ErrorCodePage(content));
-    }
-    else if (name == "root") {
+    else if (name == "root")
         return (new ServerConfig::Root(content));
-    }
-    else if (name == "limit_methods") {
+    else if (name == "limit_methods")
         return (new ServerConfig::Methods(content));
-    }
-    else if (name == "location") {
+    else if (name == "location")
         return (new ServerConfig::Location(content));
-    }
-    else if (name == "server_name") {
+    else if (name == "server_name")
         return (new ServerConfig::ServerName(content));
-    }
-    else if (name == "client_max_body_size")  {
+    else if (name == "client_max_body_size")
         return (new ServerConfig::ClientMaxBodySize(content));
-    }
-    else if (name == "index") {
+    else if (name == "index")
         return (new ServerConfig::Index(content));
-    }
-    else if (name == "autoindex") {
+    else if (name == "autoindex")
         return (new ServerConfig::AutoIndex(content));
-    }
-    else if (name == "cgi") {
+    else if (name == "cgi")
         return (new ServerConfig::Cgi(content));
-    }
-    else if (name == "cgi-bin") {
+    else if (name == "cgi-bin")
         return (new ServerConfig::CgiBin(content));
-    }
+    else if (name == "render")
+        return (new ServerConfig::Redirect(content));
+    else if (name == "upload")
+        return (new ServerConfig::Upload(content));
     return (0);
 }
 
@@ -633,6 +654,11 @@ void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int 
         serv_conf._locations.push_back(*this);
 }
 
+void Config::ServerConfig::Redirect::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == LOCATION_CONTEXT)
+        serv_conf._locations.back()._redirect_uri = _redirect_uri;
+}
+
 void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == SERVER_CONTEXT)
         serv_conf._root_path = _path;
@@ -643,6 +669,11 @@ void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int cont
 void Config::ServerConfig::ServerName::setDirective(ServerConfig & serv_conf, int context) const {
     if (context == SERVER_CONTEXT)
         serv_conf._names = _server_names;
+}
+
+void Config::ServerConfig::Upload::setDirective(ServerConfig & serv_conf, int context) const {
+    if (context == LOCATION_CONTEXT)
+        serv_conf._locations.back()._upload_path = _upload_path;
 }
 // std::string const &Config::ServerConfig::Location::getLocation() const{return _location;}
 // bool &Config::ServerConfig::Location::l_getAutoindex() {return _autoindex;}
