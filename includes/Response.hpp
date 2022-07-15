@@ -59,6 +59,8 @@ class Response {
 		void setMimeType(std::string const &);
 		const std::string createAutoindexResponse(void);
 		const std::string CGIResponse(void);
+
+		void _populateCgiEnviroment(std::vector<char *>&, std::string&, std::string);
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);

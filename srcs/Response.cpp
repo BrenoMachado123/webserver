@@ -1,4 +1,5 @@
 #include "Response.hpp"
+#include "populate_utils.hpp"
 
 const char * Response::CGIFailure::what() const throw() {return ("CGI couldn't be executed.");}
 
@@ -13,70 +14,13 @@ static void push_back_env(std::vector<char *> & vec, std::string const & name, s
 
 static const std::map<int, std::string> insert_to_error_map() {
 	std::map<int, std::string>	_codeMessage;
-	_codeMessage[200] = "OK";
-	_codeMessage[400] = "Bad Request";
-	_codeMessage[403] = "Forbbiden";
-	_codeMessage[404] = "Not Found";
-	_codeMessage[405] = "Method Not Allowed";
-	_codeMessage[413] = "Payload Too Large";
-	_codeMessage[414] = "URI Too Long";
-	_codeMessage[415] = "Unsupported Media Type";
-	_codeMessage[431] = "Request Header Fields Too Large";
-	_codeMessage[500] = "Internal Server Error";
-	_codeMessage[505] = "HTTP Version Not Supported";
+	populate_error_map(_codeMessage);
 	return (_codeMessage); 
 }
 
 static const std::map<std::string, std::string> insert_to_mime_map() {
 	std::map<std::string, std::string> mime_map;
-
-	mime_map["txt"]		= "text/plain";
-	mime_map["html"]	= "text/html";
-	mime_map["css"]		= "text/css";
-	mime_map["js"]		= "text/javascript";
-	mime_map["json"]	= "application/json";
-	mime_map["jsonld"]	= "application/ld+json";
-	mime_map["xml"]		= "application/xml";
-	mime_map["pdf"]		= "application/pdf";
-	mime_map["doc"]		= "application/msword";
-	mime_map["docx"]	= "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	mime_map["ppt"]		= "application/vnd.ms-powerpoint";
-	mime_map["pptx"]	= "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-	mime_map["odt"]		= "application/vnd.oasis.opendocument.text";
-	mime_map["xls"]		= "application/vnd.ms-excel";
-	mime_map["xlsx"]	= "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	mime_map["odp"]		= "application/vnd.oasis.opendocument.presentation";
-	mime_map["ods"]		= "application/vnd.oasis.opendocument.spreadsheet";
-
-	mime_map["jpeg"]	= "image/jpeg";
-	mime_map["jpg"]		= "image/jpeg";
-	mime_map["png"]		= "image/png";
-	mime_map["apng"]	= "image/apng";
-	mime_map["avif"]	= "image/avif";
-	mime_map["gif"]		= "image/gif";
-	mime_map["svg"]		= "image/svg+xml";
-	mime_map["webp"]	= "image/webp";
-	mime_map["webm"]	= "video/webm";
-	mime_map["bmp"]		= "image/bmp";
-	mime_map["ico"]		= "image/x-icon";
-	mime_map["tif"]		= "image/tiff";
-	mime_map["tiff"]	= "image/tiff";
-
-	mime_map["mp3"]		= "audio/mpeg";
-	mime_map["aac"]		= "audio/aac";
-	mime_map["wav"]		= "audio/wave";
-	mime_map["flac"]	= "audio/flac";
-	mime_map["mpeg"]	= "audio/mpeg";
-	mime_map["mp4"]		= "video/mp4";
-	mime_map["avi"]		= "video/x-msvideo";
-	mime_map["3gp"]		= "video/3gpp";
-
-	mime_map["bz"]		= "application/x-bzip";
-	mime_map["bz2"]		= "application/x-bzip2";
-	mime_map["gz"]		= "application/gzip";
-	mime_map["zip"]		= "application/zip";
-	mime_map["7z"]		= "application/x-7z-compressed";
-	mime_map["tar"]		= "application/x-tar";
+	populate_mime_map(mime_map);
 //	vec.push_back(std::make_pair("", "application/octet-stream"));
 	return (mime_map);
 }
@@ -175,36 +119,10 @@ int Response::execCGI() {
 	std::stringstream ss;
 
 	ss << _req.getContent().length();
-	push_back_env(env, "PATH", _req.getCGIFile());
-	//push_back_env(env, "AUTH_TYPE", "");
-	push_back_env(env, "CONTENT_LENGTH", ss.str());
-	push_back_env(env, "CONTENT_TYPE", "application/x-www-form-urlencoded"); //+ _req.getContentType());
-	push_back_env(env, "DOCUMENT_ROOT", _req.getCGIBinPath());
-	push_back_env(env, "GATEWAY_INTERFACE", "CGI/1.1");
-	push_back_env(env, "HTTP_ACCEPT", "application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,text/plain,charset=utf-8;");
-	//push_back_env(env, "HTTP_COOKIE", "");
-	//push_back_env(env, "HTTP_PRAGMA", "");
-	push_back_env(env, "HTTP_USER_AGENT", _req.getUserAgent());
-	push_back_env(env, "PATH_INFO", _req.getCGIBinPath());
-	push_back_env(env, "PATH_TRANSLATED", _req.getCGIBinPath());
-	push_back_env(env, "QUERY_STRING", _req.getQuery());
-	//push_back_env(env, "REMOTE_ADDR", "");
-	push_back_env(env, "REMOTE_HOST", _server_config.getIp());
-	//push_back_env(env, "REMOTE_IDENT", "");
-	//push_back_env(env, "REMOTE_PORT", "");
-	//push_back_env(env, "REMOTE_USER", "");
-	push_back_env(env, "REQUEST_METHOD", _req.getMethod());
-	push_back_env(env, "REQUEST_URI", _req.getUriTarget());
-	push_back_env(env, "SCRIPT_FILENAME", _req.getCGIFile());
-	push_back_env(env, "SCRIPT_NAME", _req.getCGIFile());
-	push_back_env(env, "SERVER_ADMIN", "pulgamecanica11@gmail.com");
-	push_back_env(env, "SERVER_NAME", "BRTOAN");
+	std::string content_length = ss.str();
 	ss.str(std::string());
 	ss << _server_config.getPort();
-	push_back_env(env, "SERVER_PORT", ss.str());
-	push_back_env(env, "SERVER_PROTOCOL", "HTTP/1.1");
-	push_back_env(env, "SERVER_SOFTWARE", "Webserv42.0 (Linux)");
-	env.push_back(NULL);
+	_populateCgiEnviroment(env, content_length, ss.str());
 	arg.push_back(strdup(_req.getCGIFile().c_str()));
 	arg.push_back(NULL);
 
@@ -261,35 +179,20 @@ int Response::execCGI() {
 }
 
 const std::string Response::createAutoindexResponse() {
-	std::string		file_icon, css_icon, html_icon, js_icon, py_icon, folder_icon, html_content;
+	std::string		tmp_icon, html_content;
+	std::map<std::string, std::string> icons;
 	std::ifstream	icon;
 	DIR	*			dr;
 	struct dirent *	de;
     struct stat		st;
     struct tm		tm_time;
 
-	readFileString("utils/folder.svg", folder_icon);
-	readFileString("utils/file.svg", file_icon);
-	readFileString("utils/html_file.svg", html_icon);
-	readFileString("utils/js_file.svg", js_icon);
-	readFileString("utils/css_file.svg", css_icon);
-	readFileString("utils/py_file.svg", py_icon);
+	populate_icons_map(icons);
     dr = opendir(_req.getFinalPath().c_str());
 	if (dr == NULL) {
 		_status_code = 403;
 	} else {
-		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
-			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
-			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {top: 0; left: 30px; white-space: nowrap;} \
-			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
-			a:hover .default-file .pencil { display: block; transform: translate(-20px, -35px); animation: 5s draw ease-in infinite; } @keyframes draw { \
-			0% {transform: translate(-25px, -30px);} 5% {transform: translate(-20px, -35px);} 10% {transform: translate(-15px, -30px);} 15% {transform: translate(-10px, -35px);} 20% {transform: translate(-5px, -30px);} \
-			25% {transform: translate(-0px, -30px);} 30% {transform: translate(-25px, -20px);} 35% {transform: translate(-18px, -25px);} 40% {transform: translate(-11px, -21px);} 45% {transform: translate(-5px, -25px);} \
-			50% {transform: translate(-0px, -22px);} 55% {transform: translate(-24px, -15px);} 60% {transform: translate(-21px, -18px);} 65% {transform: translate(-12px, -12px);} 70% {transform: translate(-7px, -17px);} \
-			75% {transform: translate(-0px, -12px);} 80% {transform: translate(-5px, -23px);} 90% {transform: translate(-25px, -30px);} 100% {transform: translate(-25px, -30px);} } \
-			a:hover .file .top-bar {animation: 2s shrink ease-out;} a:hover .html-file .html-tag {animation: 2s flick ease-out infinite;} \
-			@keyframes flick {to {opacity: 0;}} @keyframes shrink {0% {transform: rotateY(25deg) translate(0px,0px);} 70% {transform: rotateY(65deg) translate(40px,0px);} 90% {transform: rotateY(80deg) translate(150px,0px);} 100% {transform: rotateY(85deg) translate(285px,0px);}} \
-			</style></head>\n<body>\n<h3>Autoindex for " + _req.getFinalPath() + "</h3><hr>";
+		define_html_content(html_content, _req.getFinalPath());
 		while ((de = readdir(dr)) != NULL) {
 			if (*de->d_name == 0 || (*de->d_name == '.' && *(de->d_name + 1) == 0))
 				continue ;
@@ -304,21 +207,31 @@ const std::string Response::createAutoindexResponse() {
 			std::string tmp_s_time(s_time.substr(0, s_time.length() - 1));
 			std::string file_name(de->d_name);
 			if (S_ISDIR(st.st_mode))
-				html_content += "<div><a href=\"" + file_name + "/\">" + folder_icon + "<span class=\"file_name\">" + de->d_name + "/</span></a><span class=\"flexible\"><span>" + tmp_s_time + "</span><span> - </span></span></div>";
+				html_content += "<div><a href=\"" + file_name + "/\">" + icons["folder"]
+				+ "<span class=\"file_name\">" + de->d_name + "/</span></a><span class=\"flexible\"><span>"
+				+ tmp_s_time + "</span><span> - </span></span></div>";
 			else {
-				std::string & tmp_icon = file_icon;
+				std::string & tmp_icon = icons["file"];
 				size_t num_file_size(st.st_size);
 				std::stringstream ss;
 				ss << num_file_size;
-				if (file_name.find(".html", file_name.length() - 5) != std::string::npos) 
-					tmp_icon = html_icon;
-				else if (file_name.find(".css", file_name.length() - 4) != std::string::npos) 
-					tmp_icon = css_icon;
-				else if (file_name.find(".js", file_name.length() - 3) != std::string::npos) 
-					tmp_icon = js_icon;
-				else if (file_name.find(".py", file_name.length() - 3) != std::string::npos) 
-					tmp_icon = py_icon;
-				html_content += "<div><a href=\"" + file_name + "\">" + tmp_icon + "<span class=\"file_name\">" + de->d_name + "</span></a><span class=\"flexible\"><span>" + tmp_s_time + "</span><span> " + ss.str() + " Bytes</span></span></div>";
+				// I don't know how the code behaves in the old implementation using find(".something"), so if the following line cause errors, please undo it.
+				size_t pos = file_name.find(".");
+				if (pos != std::string::npos) {
+					std::string file_type = file_name.substr(pos);
+					std::cout << " --------=========>  " << file_type << std::endl;
+					if (file_type == ".html") 
+						tmp_icon = icons["html"];
+					else if (file_type == ".css") 
+						tmp_icon = icons["css"];
+					else if (file_type == ".js") 
+						tmp_icon = icons[".js"];
+					else if (file_type == ".py") 
+						tmp_icon = icons["py"];
+				}
+				// ----------------------------------------
+				html_content += "<div><a href=\"" + file_name + "\">" + tmp_icon + "<span class=\"file_name\">" + de->d_name
+					+ "</span></a><span class=\"flexible\"><span>"+ tmp_s_time + "</span><span> " + ss.str() + " Bytes</span></span></div>";
 			}
 			close (fd);
 	    }
@@ -442,6 +355,37 @@ const std::string Response::createResponse() {
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Server Response:" << std::endl << CYAN << response.substr(0, 500) << YELLOW << (response.size() >= 500 ? (" [...] \n(Showing 500 bytes max)") : "") << ENDC << std::endl;
 	return (response);
+}
+
+void Response::_populateCgiEnviroment(std::vector<char *>& env, std::string& content_length,std::string server_port) {
+	push_back_env(env, "PATH", _req.getCGIFile());
+	//push_back_env(env, "AUTH_TYPE", "");
+	push_back_env(env, "CONTENT_LENGTH", content_length);
+	push_back_env(env, "CONTENT_TYPE", "application/x-www-form-urlencoded"); //+ _req.getContentType());
+	push_back_env(env, "DOCUMENT_ROOT", _req.getCGIBinPath());
+	push_back_env(env, "GATEWAY_INTERFACE", "CGI/1.1");
+	push_back_env(env, "HTTP_ACCEPT", "application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,text/plain,charset=utf-8;");
+	//push_back_env(env, "HTTP_COOKIE", "");
+	//push_back_env(env, "HTTP_PRAGMA", "");
+	push_back_env(env, "HTTP_USER_AGENT", _req.getUserAgent());
+	push_back_env(env, "PATH_INFO", _req.getCGIBinPath());
+	push_back_env(env, "PATH_TRANSLATED", _req.getCGIBinPath());
+	push_back_env(env, "QUERY_STRING", _req.getQuery());
+	//push_back_env(env, "REMOTE_ADDR", "");
+	push_back_env(env, "REMOTE_HOST", _server_config.getIp());
+	//push_back_env(env, "REMOTE_IDENT", "");
+	//push_back_env(env, "REMOTE_PORT", "");
+	//push_back_env(env, "REMOTE_USER", "");
+	push_back_env(env, "REQUEST_METHOD", _req.getMethod());
+	push_back_env(env, "REQUEST_URI", _req.getUriTarget());
+	push_back_env(env, "SCRIPT_FILENAME", _req.getCGIFile());
+	push_back_env(env, "SCRIPT_NAME", _req.getCGIFile());
+	push_back_env(env, "SERVER_ADMIN", "pulgamecanica11@gmail.com");
+	push_back_env(env, "SERVER_NAME", "BRTOAN");
+	push_back_env(env, "SERVER_PORT", server_port);
+	push_back_env(env, "SERVER_PROTOCOL", "HTTP/1.1");
+	push_back_env(env, "SERVER_SOFTWARE", "Webserv42.0 (Linux)");
+	env.push_back(NULL);
 }
 
 bool Response::getKeepAlive(void) const {

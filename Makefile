@@ -12,6 +12,7 @@ SRC	=	srcs/main.cpp\
 		srcs/Response.cpp\
 		srcs/Request.cpp\
 		srcs/Client.cpp\
+		srcs/populate_utils.cpp\
 
 CFLAGS	=	-Wall -Wextra -Werror -std=c++98 -pedantic
 
