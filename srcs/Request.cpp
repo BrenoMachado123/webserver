@@ -7,6 +7,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	std::stringstream ss(request);
 	std::string line;
 	
+//finding 1st line of the request: method, uri, http
 	std::getline(ss, line);
 	line = strtrim(line, " \r\t");
 	_method = line.substr(0, line.find_first_of(" \r\t"));
@@ -18,6 +19,8 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	_http_version = strtrim(_http_version, " \r\t");
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << BLUE << "Method => [" << _method << "], Target => [" << _uri_target << "], HTTP Version => [" << _http_version << "]" << ENDC << std::endl;
+
+//finding the rest of the message (headders)
 	while (std::getline(ss, line) && line != "\r\n") {
 		if (line.find(':') != std::string::npos) {
 			std::string name(line.substr(0, line.find(':')));
@@ -30,6 +33,8 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 			break;
 		}
 	}
+
+//if content length is find, populate _content (for post method, and probably upload)
 	if (_headers.find("content-length") != _headers.end()) {
 		int valread(0);
 		std::stringstream num_ss(_headers["content-length"]);
@@ -49,19 +54,19 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 	else {
 		size_t q_start = _uri_target.find("?");
 		size_t q_end = _uri_target.find("#"); // Concider the fragment later....
-		if (q_start != std::string::npos) {
+		if (q_start != std::string::npos) { // splitting the string from uri and query
 			_query = _uri_target.substr(q_start, q_end - q_start);
 			_uri_target = _uri_target.substr(0, q_start);
 			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << WHITE << "Query detected [" << _query << "]" << ENDC << std::endl;
 		}
-		_loc = _server_config.findLocation(_uri_target);
+		_loc = _server_config.findLocation(_uri_target); // this finds on which location we are currently working. Maybe given location doesnt support that method?
 		if (!_loc) {
 			_error_code = 404;
 			std::cout << RED << "Wrong target [" << _uri_target << "], couldn't find any configuration" << ENDC << std::endl;
 		}
 		else {
-			_final_path = _loc->_root_path + _uri_target.substr(_loc->_target.length());
+			_final_path = _loc->_root_path + _uri_target.substr(_loc->_target.length()); // constructing the final target path from root in the location and part after domain/location/THIS IS COPIED
 			if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << WHITE << "Final Target Path " << CYAN << "[" << _final_path << "]" << ENDC << std::endl;
 			else{

@@ -94,7 +94,17 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	_server_name = "Breno_Tony_Pulga";
 	if (_status_code == 0 && _req._loc) {
 		_status_code = 404;
-		if (_req.isTargetCGI()) {
+		if (_req.getMethod() == "DELETE") {
+			file.open(_req.getFinalPath().c_str(), std::fstream::binary);
+			if (remove(_req.getFinalPath().c_str()) == 0)
+		//valid path to a file or empty folder//
+				_status_code = 200;
+			else if (_req.isTargetDir() && file.is_open())
+		//if it was not deleted i check if it is directory and if that dir exist(could be deleted previously). If it is it means it was not empty and i change the error for 400 bad request
+				_status_code = 400;
+		//otherwise do nothing so error stays 404
+		}
+		else if (_req.isTargetCGI()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << YELLOW << "CGI location " << _req.getCGIFile() << std::endl;
 			location = _req.getCGIFile();
@@ -132,6 +142,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 			}
 		} else {
 			location = _req.getFinalPath();
+			std::cout << RED << _status_code << " " << location << std::endl; 
 			file.open(location.c_str(), std::ifstream::binary);
 			if(file.is_open() && !isDirectory(location)) {
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -368,15 +379,25 @@ const std::string Response::createResponse() {
 			html_content = createAutoindexResponse();
 		}
 	}
+	if (_status_code == 200 && _req.getMethod() == "DELETE") {
+		file.open("www/errors/200.html", std::ifstream::binary);
+		if (file.is_open()) {
+			readFileStream(file, html_content);
+			_content_type = "text/html";
+		} 
+	}
 	so << _status_code;
 	if (_status_code != 200) {
 		_keep_alive = false;
 		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 			std::cout << RED << "Render Error => Looking inside error maps for custom error..." << ENDC << std::endl;
+	//Searching for default error path for a code inside location directive
 		if (_req._loc) {
 			std::map<std::string, std::vector<int> >::iterator l_it;
+		//searching if code has default error path. for every element of the map...
 			for (l_it = _req._loc->_location_errors_map.begin(); l_it != _req._loc->_location_errors_map.end() && html_content.empty(); ++l_it) {
 				std::vector<int>::iterator e_it;
+			//for every int in the vector of that map
 				for (e_it = l_it->second.begin(); e_it != l_it->second.end(); ++e_it) {
 					if (*e_it == _status_code) {
     					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -384,7 +405,9 @@ const std::string Response::createResponse() {
 						break ;
 					}
 				}
+			//if found int is not out of the scope
 				if (e_it != l_it->second.end()) {
+			//subscribing error location that is saved in map and corresponds to int (error code) we have found
 					std::string error_loc = l_it->first + so.str() + ".html";
     				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 						std::cout << YELLOW << "Try to open file: " << error_loc << ENDC << std::endl;
@@ -399,9 +422,12 @@ const std::string Response::createResponse() {
 				}
 			}
 		}
+	//Searching for default error path for a code inside server context
 		std::map<std::string, std::vector<int> >::const_iterator l_it;
+		//searching if code has default error path. for every element of the map...
 		for (l_it = _server_config._server_errors_map.begin(); l_it != _server_config._server_errors_map.end() && html_content.empty(); ++l_it) {
 			std::vector<int>::const_iterator e_it;
+		//for every int in the vector of that map
 			for (e_it = l_it->second.begin(); e_it != l_it->second.end(); ++e_it) {
 				if (*e_it == _status_code) {
 					if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -409,6 +435,7 @@ const std::string Response::createResponse() {
 					break ;
 				}
 			}
+		//if found int is not out of the scope
 			if (e_it != l_it->second.end()) {
 				std::string error_loc = l_it->first + so.str() + ".html"; // We support only html errors
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -423,6 +450,7 @@ const std::string Response::createResponse() {
 				break ;
 			}
 		}
+	// populate variables with error
 		if (!html_content.length()) {
 			_content_type = "text/html";
 			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
