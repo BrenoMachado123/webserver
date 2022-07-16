@@ -169,6 +169,7 @@ class Config {
 						std::string					_target;
 						std::vector<std::string>	_indexes;
 						int							_max_body_size;
+						int							_redirect_status;
 						bool						_autoindex;
 						std::string					_cgi_bin;
 						std::string					_upload_path;
@@ -183,8 +184,10 @@ class Config {
 						Redirect(const std::string &) throw (std::exception);
 						virtual ~Redirect();
 						virtual void	setDirective(ServerConfig &, int) const;
+						static std::map<int, std::string> _redirect_status_codes;
 					private:
-						std::string _redirect_uri;
+						int			_status_code; 
+						std::string	_redirect_uri;
 				};
 				class Root: public Directive {
 					public:

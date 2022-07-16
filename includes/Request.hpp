@@ -33,6 +33,7 @@ class Request {
 		int getErrorCode() const;
 		bool isTargetDir() const;
 		bool isTargetCGI() const;
+		bool isTargetRedirect() const;
 		std::string const & getFinalPath() const;
 		std::string const & getContent() const;
 		std::string const & getQuery() const;

@@ -78,7 +78,7 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 		}
 	}
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-		std::cout << WHITE << "Request Created" << ENDC << std::endl;
+		std::cout << WHITE << "Request Created " << _error_code << ENDC << std::endl;
 }
 Request::~Request() {
 	if (_loc)
@@ -94,6 +94,13 @@ int Request::getErrorCode() const {
 bool Request::isTargetDir() const {
 	if (_loc)
 		if (_loc->_target == _uri_target || (*(_uri_target.end() - 1)) == '/' )
+			return (true);
+	return (false);
+}
+
+bool Request::isTargetRedirect() const {
+	if (_loc)
+		if (_loc->_target == _uri_target && _loc->_redirect_status != 0 && !_loc->_redirect_uri.empty())
 			return (true);
 	return (false);
 }

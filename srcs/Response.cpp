@@ -26,7 +26,9 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 	_status_code = _req.getErrorCode();
 	_date = get_local_time();
 	_server_name = "Breno_Tony_Pulga";
-	if (_status_code == 0 && _req._loc) {
+	if (_req.isTargetRedirect()) {
+		_status_code = _req._loc->_redirect_status;
+	} else if (_status_code == 0 && _req._loc) {
 		_status_code = 404;
 		if (_req.isTargetCGI()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
@@ -163,6 +165,20 @@ const std::string Response::CGIResponse() {
 	return (response);
 }
 
+const std::string Response::createRedirectionResponse() {
+	std::string response_content;
+	std::stringstream ss;
+
+	ss << _status_code;
+	response_content += "HTTP/1.1 " + ss.str() + " " + Config::ServerConfig::Redirect::_redirect_status_codes[_status_code] + "\n";
+	response_content += "Date:" + _date;
+	response_content += "Server: Breno_Tony_Pulga\n";
+	response_content += "Location: " + _req._loc->_redirect_uri +"\n";
+	response_content += "Connection: close\n";
+	_keep_alive = false;
+	std::cout << CYAN << "REDIRECTING TO: " << _req._loc->_redirect_uri << ENDC;
+	return (response_content);
+}
 
 const std::string Response::createResponse() {
 	std::string response;
@@ -170,6 +186,9 @@ const std::string Response::createResponse() {
 	std::ostringstream so;
 	std::ifstream file;
 	
+	if (_req.isTargetRedirect()) {
+		return (createRedirectionResponse());
+	}
 	if (_cgi_response && _status_code == 200) {
 		_keep_alive = false;
 		return (CGIResponse());

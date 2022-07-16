@@ -1,6 +1,19 @@
 #include "Config.hpp"
 #include "utils.hpp"
 
+static const std::map<int, std::string> genRedirectStatusCodes() {
+    std::map<int, std::string> map;
+
+    map[300] = "Multiple Choice";
+    map[301] = "Moved Permanently";
+    map[302] = "Found";
+    map[303] = "See Other";
+    map[304] = "Not Modified";
+    map[307] = "Temporary Redirect";
+    map[308] = "Permanent Redirect";
+    return (map);
+}
+
 const std::string Config::_server_directives[SERVER_CONTEXT_DIRECTIVES] = {"root", "listen", "server_name", "error_page", "client_max_body_size", "location", "index", "autoindex"};
 const std::string Config::_location_directives[LOCATION_CONTEXT_DIRECTIVES] = {"root", "index", "limit_methods", "autoindex", "error_page", "client_max_body_size", "cgi", "cgi-bin", "upload", "redirect"};
 const std::string Config::ServerConfig::Methods::_valid_methods[4] = {"GET", "POST", "DELETE", "PUT"};
@@ -8,6 +21,8 @@ const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] =
 	400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
 	421, 422, 423, 424, 425, 426, 428, 429, 431, 451, 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
 };
+std::map<int, std::string> Config::ServerConfig::Redirect::_redirect_status_codes = genRedirectStatusCodes();
+
 const char * Config::InvalidConfigurationFileException::what() const throw() {return ("Invalid File, make sure you have permissions, that the file exists and the extension is .conf");}
 const char * Config::InvalidDirectiveException::what() const throw() {return ("Directive is invalid");}
 const char * Config::WrongSyntaxException::what() const throw() {return ("Wrong Directive Syntax");}
@@ -51,6 +66,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
         if (!line.length() || line[0] == '#')
             continue;
         directive = line.substr(0, line.find_first_of(SEPARATORS));
+        directive = strtrim(directive); //DIRECTIVE TRIMED
         if (line.find_first_of(SEPARATORS) == std::string::npos) {
             directive_content = "";
         } else {
@@ -374,7 +390,7 @@ Config::ServerConfig::Listen::~Listen() {
  *  Takes a string terminated by '{', the previous content of the string is the route of the location.
  */
 Config::ServerConfig::Location::Location(std::string const & content) throw (std::exception):
-    Directive(LOCATION), _target(content), _max_body_size(-1), _autoindex(false) {
+    Directive(LOCATION), _target(content), _max_body_size(-1), _redirect_status(0), _autoindex(false) {
     if (content.empty() || content[content.length() - 1] != '{')
         throw WrongSyntaxException();
     _target = _target.substr(0, content.length() - 1);
@@ -390,14 +406,23 @@ Config::ServerConfig::Location::~Location() {
 }
 /*
  * @brief Construct a Server Name
- *  
  * @param content
  *
  */
 Config::ServerConfig::Redirect::Redirect(const std::string & content) throw (std::exception):
-    Directive(REDIRECT), _redirect_uri(content) {
-    if (content.empty() || content.find(SEPARATORS) != std::string::npos)
+    Directive(REDIRECT) {
+    std::string tmp;
+    std::stringstream ss;
+
+    ss << content.substr(0, 3);
+    ss >> _status_code;
+    if (_redirect_status_codes.find(_status_code) == _redirect_status_codes.end())
         throw WrongSyntaxException();
+    tmp = content.substr(3);
+    tmp = strtrim(tmp);
+    if (tmp.empty() || tmp.find(SEPARATORS) != std::string::npos)
+        throw WrongSyntaxException();
+    _redirect_uri = tmp;
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << WHITE << "Redirect created [" << _redirect_uri<< "]" << ENDC << std::endl;
 }
@@ -490,7 +515,7 @@ Config::ServerConfig::Directive * Config::createDirective(std::string const & na
         return (new ServerConfig::Cgi(content));
     else if (name == "cgi-bin")
         return (new ServerConfig::CgiBin(content));
-    else if (name == "render")
+    else if (name == "redirect")
         return (new ServerConfig::Redirect(content));
     else if (name == "upload")
         return (new ServerConfig::Upload(content));
@@ -670,8 +695,10 @@ void Config::ServerConfig::Location::setDirective(ServerConfig & serv_conf, int 
 }
 
 void Config::ServerConfig::Redirect::setDirective(ServerConfig & serv_conf, int context) const {
-    if (context == LOCATION_CONTEXT)
+    if (context == LOCATION_CONTEXT) {
         serv_conf._locations.back()._redirect_uri = _redirect_uri;
+        serv_conf._locations.back()._redirect_status = _status_code;
+    }
 }
 
 void Config::ServerConfig::Root::setDirective(ServerConfig & serv_conf, int context) const {

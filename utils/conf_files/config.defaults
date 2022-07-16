@@ -7,7 +7,7 @@ server {
 	index					index.html index.htm
 
 	location /page1 {
-
+	
 	}
 
 	location /page2/ {

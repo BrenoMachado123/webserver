@@ -59,10 +59,16 @@ class Response {
 		//static std::string _mime_type_detector(std::string const & file_name);
 		int execCGI(void);
 		void setMimeType(std::string const &);
+<<<<<<< HEAD
 		const std::string createAutoindexResponse(void);
 		const std::string CGIResponse(void);
 		bool _defineLocMimeType(std::string);
 		std::string _writeResponse(size_t, std::string&, bool);
+=======
+		const std::string	createAutoindexResponse(void);
+		const std::string	createRedirectionResponse(void);
+		const std::string	CGIResponse(void);
+>>>>>>> aae10fe2baff787cfe37e73320f93c1b8ba403ae
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);
