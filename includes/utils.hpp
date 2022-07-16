@@ -21,5 +21,6 @@ char * 				get_local_time(void);
 const std::string &	readFileStream(std::ifstream const &, std::string & buff);
 const std::string &	readFileString(std::string const &, std::string & buff);
 bool 				isDirectory(const std::string & path);
+bool                transferFdToContent(int fd, std::string& target);
 
 #endif

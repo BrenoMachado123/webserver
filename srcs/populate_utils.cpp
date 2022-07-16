@@ -14,7 +14,7 @@ void populate_error_map(std::map<int, std::string>& target) {
 	target[505] = "HTTP Version Not Supported";
 }
 
-void populate_target(std::map<std::string, std::string>& target) {
+void populate_mime_map(std::map<std::string, std::string>& target) {
     target["txt"]		= "text/plain";
 	target["html"]      = "text/html";
 	target["css"]		= "text/css";
@@ -65,7 +65,7 @@ void populate_target(std::map<std::string, std::string>& target) {
 }
 
 void define_html_content(std::string& target, const std::string& final_path) {
-    html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
+    target = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
 	div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
 	svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {top: 0; left: 30px; white-space: nowrap;} \
 	.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
@@ -80,10 +80,10 @@ void define_html_content(std::string& target, const std::string& final_path) {
 }
 
 void populate_icons_map(std::map<std::string, std::string>& target) {
-    target["folder"] = readFileString("utils/folder.svg");
-    target["file"] = readFileString("utils/file.svg");
-    target["html"] = readFileString("utils/html_file.svg");
-    target["js"] = readFileString("utils/js_file.svg");
-    target["css"] = readFileString("utils/css_file.svg");
-    target["py"] = readFileString("utils/py_file.svg");
+    readFileString("utils/folder.svg", target["folder"]);
+	readFileString("utils/file.svg", target["file"]);
+	readFileString("utils/html_file.svg", target["html"]);
+	readFileString("utils/js_file.svg", target["js"]);
+	readFileString("utils/css_file.svg", target["css"]);
+	readFileString("utils/py_file.svg", target["py"]);
 }

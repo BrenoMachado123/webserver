@@ -25,6 +25,8 @@
 #include "webserv.hpp"
 #include "utils.hpp"
 
+#include "CGIExecution.hpp"
+
 class Response {
 	public:
 		class CGIFailure: public std::exception {
@@ -59,8 +61,8 @@ class Response {
 		void setMimeType(std::string const &);
 		const std::string createAutoindexResponse(void);
 		const std::string CGIResponse(void);
-
-		void _populateCgiEnviroment(std::vector<char *>&, std::string&, std::string);
+		bool _defineLocMimeType(std::string);
+		std::string _writeResponse(size_t, std::string&, bool);
 };
 
 std::ostream&	operator<<(std::ostream&, const Response&);
