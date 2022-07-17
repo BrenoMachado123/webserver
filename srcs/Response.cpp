@@ -1,83 +1,17 @@
 #include "Response.hpp"
+#include "populate_utils.hpp"
 
 const char * Response::CGIFailure::what() const throw() {return ("CGI couldn't be executed.");}
 
-static void push_back_env(std::vector<char *> & vec, std::string const & name, std::string const & value) {
-	if (!name.empty() && !value.empty()) {
-		std::string tmp(value);
-		tmp = name + "=" + strtrim(tmp);
-		if (tmp.length() < 8000)
-			vec.push_back(strdup(tmp.c_str()));
-	}
-}
-
 static const std::map<int, std::string> insert_to_error_map() {
 	std::map<int, std::string>	_codeMessage;
-	_codeMessage[200] = "OK";
-	_codeMessage[400] = "Bad Request";
-	_codeMessage[403] = "Forbbiden";
-	_codeMessage[404] = "Not Found";
-	_codeMessage[405] = "Method Not Allowed";
-	_codeMessage[413] = "Payload Too Large";
-	_codeMessage[414] = "URI Too Long";
-	_codeMessage[415] = "Unsupported Media Type";
-	_codeMessage[431] = "Request Header Fields Too Large";
-	_codeMessage[500] = "Internal Server Error";
-	_codeMessage[505] = "HTTP Version Not Supported";
+	populate_error_map(_codeMessage);
 	return (_codeMessage); 
 }
 
 static const std::map<std::string, std::string> insert_to_mime_map() {
 	std::map<std::string, std::string> mime_map;
-
-	mime_map["txt"]		= "text/plain";
-	mime_map["html"]	= "text/html";
-	mime_map["css"]		= "text/css";
-	mime_map["js"]		= "text/javascript";
-	mime_map["json"]	= "application/json";
-	mime_map["jsonld"]	= "application/ld+json";
-	mime_map["xml"]		= "application/xml";
-	mime_map["pdf"]		= "application/pdf";
-	mime_map["doc"]		= "application/msword";
-	mime_map["docx"]	= "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-	mime_map["ppt"]		= "application/vnd.ms-powerpoint";
-	mime_map["pptx"]	= "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-	mime_map["odt"]		= "application/vnd.oasis.opendocument.text";
-	mime_map["xls"]		= "application/vnd.ms-excel";
-	mime_map["xlsx"]	= "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	mime_map["odp"]		= "application/vnd.oasis.opendocument.presentation";
-	mime_map["ods"]		= "application/vnd.oasis.opendocument.spreadsheet";
-
-	mime_map["jpeg"]	= "image/jpeg";
-	mime_map["jpg"]		= "image/jpeg";
-	mime_map["png"]		= "image/png";
-	mime_map["apng"]	= "image/apng";
-	mime_map["avif"]	= "image/avif";
-	mime_map["gif"]		= "image/gif";
-	mime_map["svg"]		= "image/svg+xml";
-	mime_map["webp"]	= "image/webp";
-	mime_map["webm"]	= "video/webm";
-	mime_map["bmp"]		= "image/bmp";
-	mime_map["ico"]		= "image/x-icon";
-	mime_map["tif"]		= "image/tiff";
-	mime_map["tiff"]	= "image/tiff";
-
-	mime_map["mp3"]		= "audio/mpeg";
-	mime_map["aac"]		= "audio/aac";
-	mime_map["wav"]		= "audio/wave";
-	mime_map["flac"]	= "audio/flac";
-	mime_map["mpeg"]	= "audio/mpeg";
-	mime_map["mp4"]		= "video/mp4";
-	mime_map["avi"]		= "video/x-msvideo";
-	mime_map["3gp"]		= "video/3gpp";
-
-	mime_map["bz"]		= "application/x-bzip";
-	mime_map["bz2"]		= "application/x-bzip2";
-	mime_map["gz"]		= "application/gzip";
-	mime_map["zip"]		= "application/zip";
-	mime_map["7z"]		= "application/x-7z-compressed";
-	mime_map["tar"]		= "application/x-tar";
-//	vec.push_back(std::make_pair("", "application/octet-stream"));
+	populate_mime_map(mime_map);
 	return (mime_map);
 }
 
@@ -102,28 +36,25 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 			location = _req.getCGIFile();
 			file.open(location.c_str(), std::ifstream::binary);
 			if (file.is_open() && !isDirectory(location)) {
-				_status_code = execCGI();
+				CGIExecution cgi_script(_req, _server_config.getIp(),_server_config.getPort());
+				_status_code = cgi_script.run(_content);
 				if (_status_code <= 0)
 					_status_code = 500;
+				else if (_status_code == 200)
+					_cgi_response = true;
 			}
 		} else if (_req.isTargetDir()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << WHITE << "Try Index: ";
 			for(i_it = _req._loc->_indexes.begin(); i_it != _req._loc->_indexes.end(); ++i_it) {
-				location = _req.getFinalPath() + *i_it;
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
     				std::cout << *i_it << " ";
-				file.open(location.c_str(), std::ifstream::binary);
-				if (file.is_open() && !isDirectory(location)) {
+				if (_defineLocMimeType((_req.getFinalPath() + *i_it))) {
     				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 						std::cout << GREEN << "[founded]" << ENDC << std::endl;;
-					readFileStream(file, _content);
-					_status_code = 200;
-					setMimeType(location);
 					break ;
 				}
 			}
-				// try server indexes
 			if (_status_code != 200) {
 				if (_req._loc->_autoindex) {
 					_status_code = 200;
@@ -133,19 +64,11 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				}
 			}
 		} else {
-			location = _req.getFinalPath();
-			file.open(location.c_str(), std::ifstream::binary);
-			if(file.is_open() && !isDirectory(location)) {
-				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-					std::cout << GREEN << "[founded] " << location << ENDC << std::endl;;
-				readFileStream(file, _content);
-				_status_code = 200;
-				setMimeType(location);
-			}
+			_defineLocMimeType(_req.getFinalPath());
 		}
 	}
 	file.close();
-    if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+    if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Response Created " << ENDC << std::endl;
 }
 
@@ -171,127 +94,21 @@ void Response::setMimeType(std::string const & file_name) {
 	}
 }
 
-int Response::execCGI() {
-	std::vector<char *> env;
-	std::vector<char *> arg;
-	std::stringstream ss;
-
-	ss << _req.getContent().length();
-	push_back_env(env, "PATH", _req.getCGIFile());
-	//push_back_env(env, "AUTH_TYPE", "");
-	push_back_env(env, "CONTENT_LENGTH", ss.str());
-	push_back_env(env, "CONTENT_TYPE", "application/x-www-form-urlencoded"); //+ _req.getContentType());
-	push_back_env(env, "DOCUMENT_ROOT", _req.getCGIBinPath());
-	push_back_env(env, "GATEWAY_INTERFACE", "CGI/1.1");
-	push_back_env(env, "HTTP_ACCEPT", "application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,text/plain,charset=utf-8;");
-	//push_back_env(env, "HTTP_COOKIE", "");
-	//push_back_env(env, "HTTP_PRAGMA", "");
-	push_back_env(env, "HTTP_USER_AGENT", _req.getUserAgent());
-	push_back_env(env, "PATH_INFO", _req.getCGIBinPath());
-	push_back_env(env, "PATH_TRANSLATED", _req.getCGIBinPath());
-	push_back_env(env, "QUERY_STRING", _req.getQuery());
-	//push_back_env(env, "REMOTE_ADDR", "");
-	push_back_env(env, "REMOTE_HOST", _server_config.getIp());
-	//push_back_env(env, "REMOTE_IDENT", "");
-	//push_back_env(env, "REMOTE_PORT", "");
-	//push_back_env(env, "REMOTE_USER", "");
-	push_back_env(env, "REQUEST_METHOD", _req.getMethod());
-	push_back_env(env, "REQUEST_URI", _req.getUriTarget());
-	push_back_env(env, "SCRIPT_FILENAME", _req.getCGIFile());
-	push_back_env(env, "SCRIPT_NAME", _req.getCGIFile());
-	push_back_env(env, "SERVER_ADMIN", "pulgamecanica11@gmail.com");
-	push_back_env(env, "SERVER_NAME", "BRTOAN");
-	ss.str(std::string());
-	ss << _server_config.getPort();
-	push_back_env(env, "SERVER_PORT", ss.str());
-	push_back_env(env, "SERVER_PROTOCOL", "HTTP/1.1");
-	push_back_env(env, "SERVER_SOFTWARE", "Webserv42.0 (Linux)");
-	env.push_back(NULL);
-	arg.push_back(strdup(_req.getCGIFile().c_str()));
-	arg.push_back(NULL);
-
-	int restore_input = dup(STDIN_FILENO);
-	int restore_output = dup(STDOUT_FILENO);
-	FILE * tmp_file_in = tmpfile();
-	FILE * tmp_file_out = tmpfile();
-	if (!tmp_file_in || !tmp_file_out || restore_input < 0)
-		return (-1);
-    int tmp_fd_in = fileno(tmp_file_in);
-    int tmp_fd_out = fileno(tmp_file_out);
-	if (tmp_fd_in < 0)
-		return (-1);
-	write(tmp_fd_in, _req.getContent().c_str(), _req.getContent().length());
-	rewind(tmp_file_in);
-	int pid = fork();
-	if (pid < 0)
-		return (-1);
-	if (pid == 0) {
-		dup2(tmp_fd_in, STDIN_FILENO);
-		dup2(tmp_fd_out, STDOUT_FILENO);
-		execve(_req.getCGIFile().c_str(), &arg[0], &env[0]);
-		exit(EXIT_FAILURE);
-    }
-    int child_status;
-	waitpid(pid, &child_status, 0);
-    close(tmp_fd_in);
-    rewind(tmp_file_out);
-    if (child_status != 0){
-    	_content = "ERROR!!!";
-    	return (500);
-    }
-    else {
-	    char buff[1024];
-	    int valread = -1;
-	    while(valread != 0) {
-	    	bzero(buff, 1024);
-			valread = read(tmp_fd_out, buff, 1024);
-			if (valread < 0)
-				return (-1);
-			_content += buff;
-	    }
-	}
-    close(tmp_fd_out);
-    dup2(restore_input, STDIN_FILENO);
-    dup2(restore_output, STDOUT_FILENO);
-    close(restore_input);
-    close(restore_output);
-	std::cout << YELLOW << " CGI Child Finished with status: " << ENDC << child_status;
-	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
-		std::cout << std::endl << "Content" << std::endl << _content << std::endl;
-    _cgi_response = true;
-	return (200);
-}
-
 const std::string Response::createAutoindexResponse() {
-	std::string		file_icon, css_icon, html_icon, js_icon, py_icon, folder_icon, html_content;
+	std::string		tmp_icon, html_content;
+	std::map<std::string, std::string> icons;
 	std::ifstream	icon;
 	DIR	*			dr;
 	struct dirent *	de;
     struct stat		st;
     struct tm		tm_time;
 
-	readFileString("utils/folder.svg", folder_icon);
-	readFileString("utils/file.svg", file_icon);
-	readFileString("utils/html_file.svg", html_icon);
-	readFileString("utils/js_file.svg", js_icon);
-	readFileString("utils/css_file.svg", css_icon);
-	readFileString("utils/py_file.svg", py_icon);
+	populate_icons_map(icons);
     dr = opendir(_req.getFinalPath().c_str());
 	if (dr == NULL) {
 		_status_code = 403;
 	} else {
-		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
-			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
-			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {top: 0; left: 30px; white-space: nowrap;} \
-			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
-			a:hover .default-file .pencil { display: block; transform: translate(-20px, -35px); animation: 5s draw ease-in infinite; } @keyframes draw { \
-			0% {transform: translate(-25px, -30px);} 5% {transform: translate(-20px, -35px);} 10% {transform: translate(-15px, -30px);} 15% {transform: translate(-10px, -35px);} 20% {transform: translate(-5px, -30px);} \
-			25% {transform: translate(-0px, -30px);} 30% {transform: translate(-25px, -20px);} 35% {transform: translate(-18px, -25px);} 40% {transform: translate(-11px, -21px);} 45% {transform: translate(-5px, -25px);} \
-			50% {transform: translate(-0px, -22px);} 55% {transform: translate(-24px, -15px);} 60% {transform: translate(-21px, -18px);} 65% {transform: translate(-12px, -12px);} 70% {transform: translate(-7px, -17px);} \
-			75% {transform: translate(-0px, -12px);} 80% {transform: translate(-5px, -23px);} 90% {transform: translate(-25px, -30px);} 100% {transform: translate(-25px, -30px);} } \
-			a:hover .file .top-bar {animation: 2s shrink ease-out;} a:hover .html-file .html-tag {animation: 2s flick ease-out infinite;} \
-			@keyframes flick {to {opacity: 0;}} @keyframes shrink {0% {transform: rotateY(25deg) translate(0px,0px);} 70% {transform: rotateY(65deg) translate(40px,0px);} 90% {transform: rotateY(80deg) translate(150px,0px);} 100% {transform: rotateY(85deg) translate(285px,0px);}} \
-			</style></head>\n<body>\n<h3>Autoindex for " + _req.getFinalPath() + "</h3><hr>";
+		define_html_content(html_content, _req.getFinalPath());
 		while ((de = readdir(dr)) != NULL) {
 			if (*de->d_name == 0 || (*de->d_name == '.' && *(de->d_name + 1) == 0))
 				continue ;
@@ -306,21 +123,28 @@ const std::string Response::createAutoindexResponse() {
 			std::string tmp_s_time(s_time.substr(0, s_time.length() - 1));
 			std::string file_name(de->d_name);
 			if (S_ISDIR(st.st_mode))
-				html_content += "<div><a href=\"" + file_name + "/\">" + folder_icon + "<span class=\"file_name\">" + de->d_name + "/</span></a><span class=\"flexible\"><span>" + tmp_s_time + "</span><span> - </span></span></div>";
+				html_content += "<div><a href=\"" + file_name + "/\">" + icons["folder"]
+				+ "<span class=\"file_name\">" + de->d_name + "/</span></a><span class=\"flexible\"><span>"
+				+ tmp_s_time + "</span><span> - </span></span></div>";
 			else {
-				std::string & tmp_icon = file_icon;
+				std::string & tmp_icon = icons["file"];
 				size_t num_file_size(st.st_size);
 				std::stringstream ss;
 				ss << num_file_size;
-				if (file_name.find(".html", file_name.length() - 5) != std::string::npos) 
-					tmp_icon = html_icon;
-				else if (file_name.find(".css", file_name.length() - 4) != std::string::npos) 
-					tmp_icon = css_icon;
-				else if (file_name.find(".js", file_name.length() - 3) != std::string::npos) 
-					tmp_icon = js_icon;
-				else if (file_name.find(".py", file_name.length() - 3) != std::string::npos) 
-					tmp_icon = py_icon;
-				html_content += "<div><a href=\"" + file_name + "\">" + tmp_icon + "<span class=\"file_name\">" + de->d_name + "</span></a><span class=\"flexible\"><span>" + tmp_s_time + "</span><span> " + ss.str() + " Bytes</span></span></div>";
+				size_t pos = file_name.find(".");
+				if (pos != std::string::npos) {
+					std::string file_type = file_name.substr(pos);
+					if (file_type == ".html") 
+						tmp_icon = icons["html"];
+					else if (file_type == ".css") 
+						tmp_icon = icons["css"];
+					else if (file_type == ".js") 
+						tmp_icon = icons["js"];
+					else if (file_type == ".py") 
+						tmp_icon = icons["py"];
+				}
+				html_content += "<div><a href=\"" + file_name + "\">" + tmp_icon + "<span class=\"file_name\">" + de->d_name
+					+ "</span></a><span class=\"flexible\"><span>"+ tmp_s_time + "</span><span> " + ss.str() + " Bytes</span></span></div>";
 			}
 			close (fd);
 	    }
@@ -332,23 +156,12 @@ const std::string Response::createAutoindexResponse() {
 
 const std::string Response::CGIResponse() {
 	std::string response;
-	std::stringstream ss;
-
-	ss << _status_code;
-	response += "HTTP/1.1 " + ss.str() + " " + _codeMessage[_status_code] + "\n";
-	response += "Date: " + _date;
-	response += "Server: " + _server_name + "\n";
-	response += "Access-Control-Allow-Origin: *\n";
-	response += "Connection: close\n";
-	ss.str(std::string());
 	size_t c_start = _content.find_first_of("\n");
 	if (c_start == std::string::npos)
 		c_start = 0;
 	std::string tmp = _content.substr(c_start);
 	tmp = strtrim(tmp);
-	ss << tmp.length();
-	response += "Content-Length: " + ss.str() + "\n";
-	response += _content;
+	response = _writeResponse(tmp.length(), _content, false);
 	return (response);
 }
 
@@ -444,23 +257,43 @@ const std::string Response::createResponse() {
 		}
 		if (!html_content.length()) {
 			_content_type = "text/html";
-			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
+			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " "
+			+ _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
 		}
 	}
-	response += "HTTP/1.1 " + so.str() + " " + _codeMessage[_status_code] + "\n";
-	response += "Date: " + _date;
-	response += "Server: " + _server_name + "\n";
-	response += "Accept-Charset: utf-8\n";
-	response += "Content-Type: " + _content_type + "\n";
-	so.str(std::string());
-	so << html_content.length();
-	response += "Content-Length: " + so.str() + "\n";
-	response += "Connection: keep-alive\n";
-	response += "\r\n";
-	response += html_content;
+	response = _writeResponse(html_content.length(), html_content, true);
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Server Response:" << std::endl << CYAN << response.substr(0, 500) << YELLOW << (response.size() >= 500 ? (" [...] \n(Showing 500 bytes max)") : "") << ENDC << std::endl;
 	return (response);
+}
+
+bool Response::_defineLocMimeType(std::string location) {
+	std::ifstream	file;
+	file.open(location.c_str(), std::ifstream::binary);
+	if (file.is_open() && !isDirectory(location)) {
+		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << GREEN << "[founded] " << location << ENDC << std::endl;;
+		readFileStream(file, _content);
+		_status_code = 200;
+		setMimeType(location);
+		return (true);
+	}
+	file.close();
+	return (false);
+}
+
+std::string Response::_writeResponse(size_t content_length, std::string& content, bool keep_alive) {
+	std::stringstream ss;
+	ss	<< "HTTP/1.1 " << _status_code << " " <<  _codeMessage[_status_code] << "\n"
+		<< "Date: " << _date
+		<< "Server: " << _server_name << "\n"
+		<< "Accept-Charset: utf-8\n"
+		<< "Content-Type: " << _content_type << "\n"
+		<< "Content-Length: " << content_length << "\n"
+		<< "Connection: " << ( keep_alive ? "keep_alive" : "closed" ) << "\n"
+		<<  "\r\n"
+		<< content;
+	return (ss.str());
 }
 
 bool Response::getKeepAlive(void) const {
