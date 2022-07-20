@@ -84,47 +84,43 @@ static const std::map<std::string, std::string> insert_to_mime_map() {
 std::map<int, std::string> Response::_codeMessage = insert_to_error_map();
 std::map<std::string, std::string> Response::_mime_types = insert_to_mime_map();
 
-Response::Response(Request const & request, Config::ServerConfig const & sc): _keep_alive(true),  _autoindex(false), _cgi_response(false), _req(request), _server_config(sc) {
-	std::string		location;
-	std::ifstream	file;
-	std::vector<std::string>::iterator	i_it;
+Response::Response(Request const & request, Config::ServerConfig const & sc):
+	_keep_alive(true),  _autoindex(false), _cgi_response(false), _req(request), _server_config(sc) {
+	std::string							location;
+	std::ifstream						file;
 	
 	_status_code = _req.getErrorCode();
 	_date = get_local_time();
 	_server_name = "Breno_Tony_Pulga";
-	if (_req.isTargetRedirect()) {
+	if (_req.isTargetRedirect() && _req._loc) {
 		_status_code = _req._loc->_redirect_status;
-	} else if (_status_code == 0 && _req._loc) {
+	} else if (_req.getErrorCode() == 0 && _req._loc) {
 		_status_code = 404;
 		if (_req.isTargetCGI()) {
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << YELLOW << "CGI location " << _req.getCGIFile() << std::endl;
-			location = _req.getCGIFile();
-			file.open(location.c_str(), std::ifstream::binary);
-			if (file.is_open() && !isDirectory(location)) {
-				_status_code = execCGI();
+			if (isDirectory(_req._loc->_cgi_bin)) {
+				_status_code = execCGI(); // implement what breno suggested, create cgi object
 				if (_status_code <= 0)
 					_status_code = 500;
 			}
+			else if (CONSTRUCTORS_DESTRUCTORS_DEBUG || DEBUG_MSG){
+				std::cout << RED << "CGI Failed because the cgi-bin [" << _req._loc->_cgi_bin << "] is not a valid directory!" << ENDC << std::endl;
+			}
 		} else if (_req.isTargetDir()) {
-			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-				std::cout << WHITE << "Try Index: ";
-			for(i_it = _req._loc->_indexes.begin(); i_it != _req._loc->_indexes.end(); ++i_it) {
-				location = _req.getFinalPath() + *i_it;
+			location = _req.getIndex();
+			if (isFile(location)) {
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-    				std::cout << *i_it << " ";
+					std::cout << GREEN << "[founded]" << ENDC << std::endl;
 				file.open(location.c_str(), std::ifstream::binary);
-				if (file.is_open() && !isDirectory(location)) {
-    				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
-						std::cout << GREEN << "[founded]" << ENDC << std::endl;;
+				if(file.is_open()) {
 					readFileStream(file, _content);
 					_status_code = 200;
 					setMimeType(location);
-					break ;
+				} else {
+					_status_code = 403;
 				}
-			}
-				// try server indexes
-			if (_status_code != 200) {
+			} else {
 				if (_req._loc->_autoindex) {
 					_status_code = 200;
 					_autoindex = true;
@@ -135,7 +131,7 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 		} else {
 			location = _req.getFinalPath();
 			file.open(location.c_str(), std::ifstream::binary);
-			if(file.is_open() && !isDirectory(location)) {
+			if(file.is_open() && isFile(location)) {
 				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 					std::cout << GREEN << "[founded] " << location << ENDC << std::endl;;
 				readFileStream(file, _content);
@@ -143,8 +139,8 @@ Response::Response(Request const & request, Config::ServerConfig const & sc): _k
 				setMimeType(location);
 			}
 		}
+		file.close();
 	}
-	file.close();
     if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Response Created " << ENDC << std::endl;
 }
@@ -167,7 +163,7 @@ void Response::setMimeType(std::string const & file_name) {
 			_content_type = "text/html";
 	    }
 	} else {
-		_content_type = "application/octet-stream"; // default for binary files. It means unknown binary file
+		_content_type = "application/octet-stream";
 	}
 }
 
@@ -228,7 +224,9 @@ int Response::execCGI() {
 	if (pid == 0) {
 		dup2(tmp_fd_in, STDIN_FILENO);
 		dup2(tmp_fd_out, STDOUT_FILENO);
-		execve(_req.getCGIFile().c_str(), &arg[0], &env[0]);
+		if (chdir(_req._loc->_cgi_bin.c_str()) != -1) {
+			execve(_req.getCGIFile().c_str(), &arg[0], &env[0]);
+		}
 		exit(EXIT_FAILURE);
     }
     int child_status;
@@ -278,20 +276,9 @@ const std::string Response::createAutoindexResponse() {
 	readFileString("utils/py_file.svg", py_icon);
     dr = opendir(_req.getFinalPath().c_str());
 	if (dr == NULL) {
-		_status_code = 403;
+		_status_code = 404;
 	} else {
-		html_content = "<html>\n<head><meta content=\"text/html;charset=utf-8\" http-equiv=\"Content-Type\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><meta content=\"utf-8\" http-equiv=\"encoding\"><title>HTTP Autoindex</title><style> \
-			div {display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 80%; padding: 0.25rem; border-radius: 0.75rem;} div:hover {background-color: rgba(0, 0, 0, 0.25);} \
-			svg {display: inline-block; width: 25px; height: 25px; margin-right: 0.25rem;} a {position: relative; display: inline; vertical-align: top;} .file_name {top: 0; left: 30px; white-space: nowrap;} \
-			.flexible {display: flex; flex-direction: row; justify-content: space-around; gap: 1rem;} a:hover .folder .folder-front {transform: translate(0px, 230px) rotateX(60deg);} \
-			a:hover .default-file .pencil { display: block; transform: translate(-20px, -35px); animation: 5s draw ease-in infinite; } @keyframes draw { \
-			0% {transform: translate(-25px, -30px);} 5% {transform: translate(-20px, -35px);} 10% {transform: translate(-15px, -30px);} 15% {transform: translate(-10px, -35px);} 20% {transform: translate(-5px, -30px);} \
-			25% {transform: translate(-0px, -30px);} 30% {transform: translate(-25px, -20px);} 35% {transform: translate(-18px, -25px);} 40% {transform: translate(-11px, -21px);} 45% {transform: translate(-5px, -25px);} \
-			50% {transform: translate(-0px, -22px);} 55% {transform: translate(-24px, -15px);} 60% {transform: translate(-21px, -18px);} 65% {transform: translate(-12px, -12px);} 70% {transform: translate(-7px, -17px);} \
-			75% {transform: translate(-0px, -12px);} 80% {transform: translate(-5px, -23px);} 90% {transform: translate(-25px, -30px);} 100% {transform: translate(-25px, -30px);} } \
-			a:hover .file .top-bar {animation: 2s shrink ease-out;} a:hover .html-file .html-tag {animation: 2s flick ease-out infinite;} \
-			@keyframes flick {to {opacity: 0;}} @keyframes shrink {0% {transform: rotateY(25deg) translate(0px,0px);} 70% {transform: rotateY(65deg) translate(40px,0px);} 90% {transform: rotateY(80deg) translate(150px,0px);} 100% {transform: rotateY(85deg) translate(285px,0px);}} \
-			</style></head>\n<body>\n<h3>Autoindex for " + _req.getFinalPath() + "</h3><hr>";
+		html_content = autoindex_header(_req.getFinalPath());
 		while ((de = readdir(dr)) != NULL) {
 			if (*de->d_name == 0 || (*de->d_name == '.' && *(de->d_name + 1) == 0))
 				continue ;
@@ -389,10 +376,12 @@ const std::string Response::createResponse() {
 	}
 	so << _status_code;
 	if (_status_code != 200) {
-		_keep_alive = false;
+		//_keep_alive = false;
 		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 			std::cout << RED << "Render Error => Looking inside error maps for custom error..." << ENDC << std::endl;
 		if (_req._loc) {
+			/* FIND LOCATION ERROR MAP 					*/
+			/* FIND THE ERROR ON THE LOCATION ERRORS MAP*/
 			std::map<std::string, std::vector<int> >::iterator l_it;
 			for (l_it = _req._loc->_location_errors_map.begin(); l_it != _req._loc->_location_errors_map.end() && html_content.empty(); ++l_it) {
 				std::vector<int>::iterator e_it;
@@ -418,6 +407,8 @@ const std::string Response::createResponse() {
 				}
 			}
 		}
+		/* FIND SERVER ERROR MAP 					*/
+		/* FIND THE ERROR ON THE SERVER ERRORS MAP  */
 		std::map<std::string, std::vector<int> >::const_iterator l_it;
 		for (l_it = _server_config._server_errors_map.begin(); l_it != _server_config._server_errors_map.end() && html_content.empty(); ++l_it) {
 			std::vector<int>::const_iterator e_it;
@@ -443,6 +434,7 @@ const std::string Response::createResponse() {
 			}
 		}
 		if (!html_content.length()) {
+			/* DEFAULT ERROR (NO CUSTOM ERROR FOUNDED)*/
 			_content_type = "text/html";
 			html_content = "<html>\n<head><title>" + so.str() + "</title></head>\n<body bgcolor=\"gray\">\n<center><h1>" + so.str() + " " + _codeMessage[_status_code] + "</h1></center>\n<hr><center>brtopu/1.0</center>\n</body>\n</html>\n";
 		}

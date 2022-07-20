@@ -7,7 +7,7 @@ server {
 	index					index.html index.htm
 
 	location /page1 {
-	
+		limit_methods	GET
 	}
 
 	location /page2/ {

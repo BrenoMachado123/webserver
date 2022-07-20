@@ -44,7 +44,7 @@ void Client::handleRequest() {
 			break ;
 		std::string tmp(buffer, valread);
 		buf += tmp;
-	} while (valread == 30000);
+	} while (valread == 30000); // CHECK FOR EOF...
 	if (buf.length() > 0) { // perhaps don't check this? return 408 if response is empty...?	
 		_time_to_die = ms_s + TIME_TO_DIE;
 		Request req(buf, _socket.getServerConfig());
@@ -59,7 +59,7 @@ void Client::handleRequest() {
 		}
 	} else {
 		// RESPONSE 408!!!
-		//_keep_alive = false;
+		_keep_alive = false;
 	}
 }
 

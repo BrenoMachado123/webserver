@@ -112,15 +112,10 @@ int HTTPServer::numSockets() const {
 	return (_sockets.size());
 }
 
-void HTTPServer::run() {
-	int												n;
-	int												nfds;
-	struct epoll_event								events[MAX_EVENTS];
-	std::vector<Socket>::iterator					it;
-	std::vector<Client>::iterator					v_it;
+void HTTPServer::initMsg() {
+	std::vector<Socket>::iterator	it;
 	std::map<int, std::vector<Client> >::iterator	m_it;
 
-	signal(SIGINT, exit_webserv);
 	std::cout << CYAN << "=> Booting webserv" << std::endl;
 	std::cout << "=> HTTP server starting" << std::endl;
 	std::cout << "=> Run `./webserv server --help` for more startup options" << std::endl;
@@ -129,8 +124,19 @@ void HTTPServer::run() {
 	std::cout << "*          PID: " << getpid() << std::endl;
 	for (it = _sockets.begin(), m_it = _clients.begin(); it != _sockets.end() && m_it != _clients.end(); it++, ++m_it)
 		std::cout << CYAN << "* Listening on " << *it << " " << PURPLE << m_it->first << " => #Clients: " << m_it->second.size() << ENDC << std::endl;
-	timestamp_in_ms();
 	std::cout << WHITE << "Use Ctrl-C to stop" << std::endl;
+}
+
+void HTTPServer::run() {
+	int												n;
+	int												nfds;
+	struct epoll_event								events[MAX_EVENTS];
+	std::vector<Client>::iterator					v_it;
+	std::map<int, std::vector<Client> >::iterator	m_it;
+
+	signal(SIGINT, exit_webserv);
+	initMsg();
+	timestamp_in_ms();
 	while (true) {
 		nfds = epoll_wait(_epollfd, events, MAX_EVENTS, 2000);
 		if (!webserv_run)

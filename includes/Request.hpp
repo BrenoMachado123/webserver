@@ -39,6 +39,7 @@ class Request {
 		std::string const & getQuery() const;
 		std::string const & getMethod() const;
 		std::string const & getUriTarget() const;
+		const std::string getIndex() const;
 		const std::string getCGIBinPath() const; 
 		const std::string getCGIFile() const;
 		const std::string getContentType() const;

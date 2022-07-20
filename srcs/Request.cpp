@@ -136,6 +136,30 @@ std::string const & Request::getFinalPath() const {
 	return (_final_path);
 }
 
+const std::string Request::getIndex() const {
+	std::string									location;
+	std::vector<std::string>::iterator			i_it;
+	std::vector<std::string>::const_iterator	c_it;
+
+	if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+		std::cout << WHITE << "Try Indexes: ";
+	for(i_it = _loc->_indexes.begin(); i_it != _loc->_indexes.end(); ++i_it) {
+		location = getFinalPath() + *i_it;
+		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << *i_it << " ";
+		if (isFile(location))
+			return (location);
+	}
+	for(c_it = _server_config._indexes.begin(); c_it != _server_config._indexes.end(); ++c_it) {
+		location = getFinalPath() + *c_it;
+		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << *c_it << " ";
+		if (isFile(location))
+			return (location);
+	}
+	return ("");
+}
+
 const std::string Request::getCGIBinPath() const {
 	if (_loc)
 		if (!_loc->_cgi_bin.empty())

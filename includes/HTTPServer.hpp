@@ -67,6 +67,7 @@ class HTTPServer {
 		Config								_config;
 		void	acceptConnectionAt(int) throw (std::exception); 
 		bool	isSocketFd(int);
+		void	initMsg(void);
 		HTTPServer(const HTTPServer &);
 };
 std::ostream &	operator<<(std::ostream &, const HTTPServer&);

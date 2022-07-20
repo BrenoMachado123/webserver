@@ -160,3 +160,58 @@ body .container .title h1 {
 	border-radius: 0.25rem;
 	background-color: rgba(0, 0, 0, 0.25);
 }
+
+body .container #query-box {
+	
+}
+
+body .container #query-box h3 {
+	text-align: center;
+	padding: 0;
+	margin: 0;
+	border-bottom: 1px lightgray solid;
+	color: rgb(100, 66, 225);
+}
+
+body .container #query-box .result-num {
+	font-size: 80%;
+	text-decoration: underline;
+	font-style: italic;
+}
+
+body .container #query-box .query {
+	font-size: 90%;
+	color: black;
+}
+
+body .container #query-box .result {
+	margin: 0.5rem 0;
+	border-bottom: 1px lightgray solid;
+}
+
+body .container #query-box .result:hover {
+	background-color: rgba(0, 0, 0, 0.25);
+}
+
+body .container #query-box .result * {
+	padding: 0;
+	margin: 0;
+}
+
+body .container #query-box .result .result-legend {
+	font-size: 80%;
+	color: gray;
+}
+body .container #query-box .results-container {
+	overflow-y: scroll;
+	height: 100%;
+}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}
+body .container #query-box {}

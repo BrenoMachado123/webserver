@@ -21,6 +21,7 @@ const int Config::ServerConfig::ErrorCodePage::_allErrorCodes[ALL_ERROR_CODES] =
 	400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418,
 	421, 422, 423, 424, 425, 426, 428, 429, 431, 451, 500, 501, 502, 503, 504, 505, 506, 507, 508, 510, 511
 };
+
 std::map<int, std::string> Config::ServerConfig::Redirect::_redirect_status_codes = genRedirectStatusCodes();
 
 const char * Config::InvalidConfigurationFileException::what() const throw() {return ("Invalid File, make sure you have permissions, that the file exists and the extension is .conf");}
@@ -66,7 +67,7 @@ Config::Config(std::string const & file_str) throw(std::exception) {
         if (!line.length() || line[0] == '#')
             continue;
         directive = line.substr(0, line.find_first_of(SEPARATORS));
-        directive = strtrim(directive); //DIRECTIVE TRIMED
+        directive = strtrim(directive);
         if (line.find_first_of(SEPARATORS) == std::string::npos) {
             directive_content = "";
         } else {
@@ -152,7 +153,7 @@ Config::~Config() {
  *  Set's all default values on construction.
  *  It can be setted up accordingly with the directives.
  */
-Config::ServerConfig::ServerConfig() : _autoindex(false), _max_body_size(0), _ip("127.0.0.1"), _port(80), _root_path("www") {
+Config::ServerConfig::ServerConfig() : _autoindex(false), _max_body_size(0), _ip("127.0.0.1"), _port(80), _root_path("www/") {
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 	   std::cout << WHITE << "ServerConfig created" << ENDC << std::endl;
 }
@@ -390,7 +391,7 @@ Config::ServerConfig::Listen::~Listen() {
  *  Takes a string terminated by '{', the previous content of the string is the route of the location.
  */
 Config::ServerConfig::Location::Location(std::string const & content) throw (std::exception):
-    Directive(LOCATION), _target(content), _max_body_size(-1), _redirect_status(0), _autoindex(false) {
+    Directive(LOCATION), _target(content), _max_body_size(0), _redirect_status(0), _autoindex(false) {
     if (content.empty() || content[content.length() - 1] != '{')
         throw WrongSyntaxException();
     _target = _target.substr(0, content.length() - 1);
@@ -531,7 +532,7 @@ void Config::ServerConfig::setDefaults() {
     loc._max_body_size = _max_body_size;
     loc._root_path = _root_path;
     loc._indexes = _indexes;
-    loc._location_errors_map = _server_errors_map;
+    //loc._location_errors_map = _server_errors_map;
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
         std::cout << "Setted Defaults" << std::endl;
 }
