@@ -11,7 +11,28 @@ server {
 	}
 
 	location /page2/ {
-
+		limit_methods	POST
 	}	
 
+}
+
+server {
+	listen	localhost:4200
+	server_name		example.mz
+	autoindex	on
+
+	location /index {
+		root	www/
+		limit_methods	GET
+	}
+}
+
+server {
+	listen localhost:4200
+	server_name	another_example
+
+	location /go {
+		redirect 308 https://www.google.com
+		limit_methods	GET
+	}
 }

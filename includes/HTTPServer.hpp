@@ -65,6 +65,7 @@ class HTTPServer {
 		std::vector<Socket>					_sockets;
 		std::map<int, std::vector<Client> >	_clients;
 		Config								_config;
+		Socket &	getOrCreateSocket(std::string const &, int);
 		void	acceptConnectionAt(int) throw (std::exception); 
 		bool	isSocketFd(int);
 		void	initMsg(void);

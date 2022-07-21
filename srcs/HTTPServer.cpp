@@ -23,11 +23,9 @@ HTTPServer::HTTPServer(std::string const & file) throw (std::exception) : _confi
 	if (_epollfd == -1)
 	   throw EpollCreateException();
 	for (it = servers.begin(); it != servers.end(); ++it) {
+		(void)(*it);
 		try {
-			Socket s(it->getIp(), it->getPort(), *it);
-			addSocket(s);
-			std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
-			_clients.insert(p);
+			getOrCreateSocket(it->getIp(), it->getPort()).addServerConf(*it);
     		if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << std::endl << *it;
 		} catch (std::exception & e) {
@@ -37,6 +35,20 @@ HTTPServer::HTTPServer(std::string const & file) throw (std::exception) : _confi
 	}
     if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "HTTPServer created" << ENDC << std::endl;
+}
+
+Socket & HTTPServer::getOrCreateSocket(std::string const & ip, int port) {
+	std::vector<Socket>::iterator it;
+
+	for (it = _sockets.begin(); it != _sockets.end(); it++) {
+		if (it->getPort() == port && ip == it->getIpAddress())
+			return (*it);
+	}
+	Socket s(ip, port);
+	addSocket(s);
+	std::pair<int, std::vector<Client> > p(s.getSocketFd(), std::vector<Client>());
+	_clients.insert(p);
+	return (_sockets.back());
 }
 
 HTTPServer::~HTTPServer() {
@@ -102,7 +114,7 @@ bool HTTPServer::isSocketFd(int fd) {
 	std::vector<Socket>::iterator it;
 	std::vector<Socket>::iterator end = _sockets.end();
 	for (it = _sockets.begin(); it != end; it++) {
-		if ((*it).getSocketFd() == fd)
+		if (it->getSocketFd() == fd)
 			return (true);
 	}
 	return (false);

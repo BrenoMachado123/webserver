@@ -44,11 +44,12 @@ void Client::handleRequest() {
 			break ;
 		std::string tmp(buffer, valread);
 		buf += tmp;
-	} while (valread == 30000); // CHECK FOR EOF...
+	} while (valread == 30000); // CHECK FOR EOF... // READ BY CHUNCKS???
 	if (buf.length() > 0) { // perhaps don't check this? return 408 if response is empty...?	
 		_time_to_die = ms_s + TIME_TO_DIE;
-		Request req(buf, _socket.getServerConfig());
-		Response res(req, _socket.getServerConfig());
+		std::string line(buf.substr(0, buf.find_first_of("\n\r")));
+		Request req(buf, _socket.getServerConfig(line));
+		Response res(req, _socket.getServerConfig(line));
 		std::string response_content(res.createResponse());
 		write(_fd, response_content.c_str(), response_content.length());
 		_keep_alive = res.getKeepAlive();
