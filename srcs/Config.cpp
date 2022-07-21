@@ -557,6 +557,18 @@ Config::ServerConfig::Location * Config::ServerConfig::findLocation(std::string 
     return (new Location(*tmp_it));
 }
 
+bool Config::ServerConfig::checkMaxBody(int len) const {
+    if (len > _max_body_size && _max_body_size > 0)
+        return (false);
+    return (true);
+}
+
+bool Config::ServerConfig::Location::checkMaxBody(int len) const {
+    if (len > _max_body_size && _max_body_size > 0)
+        return (false);
+    return (true);
+}
+
 int Config::ServerConfig::Directive::getId() const {return (_id);}
 
 bool Config::ServerConfig::ErrorCodePage::loadErrorCodes(const std::string &content) {

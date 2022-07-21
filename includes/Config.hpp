@@ -164,6 +164,7 @@ class Config {
                     	virtual ~Location();
 	                    virtual void	setDirective(ServerConfig &, int) const;
 						bool findMethod(std::string const &) const;
+						bool checkMaxBody(int) const;
 						std::vector<std::string>	_methods;
 						std::string					_root_path;
 						std::string					_target;
@@ -220,6 +221,7 @@ class Config {
 				Location *			findLocation(std::string const &) const;
 				void				setDefaults(void);
 				int					getPort() const;
+				bool				checkMaxBody(int) const;
 				std::string const &	getIp() const;
 				// std::string & getRoot();
 				// std::vector<int> & getErrorCodes();

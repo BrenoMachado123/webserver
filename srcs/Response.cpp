@@ -6,8 +6,10 @@ static void push_back_env(std::vector<char *> & vec, std::string const & name, s
 	if (!name.empty() && !value.empty()) {
 		std::string tmp(value);
 		tmp = name + "=" + strtrim(tmp);
-		if (tmp.length() < 8000)
-			vec.push_back(strdup(tmp.c_str()));
+		if (tmp.length() < 8000){
+			char *str = strdup(tmp.c_str());
+			vec.push_back(str);
+		}
 	}
 }
 
@@ -169,6 +171,7 @@ void Response::setMimeType(std::string const & file_name) {
 
 int Response::execCGI() {
 	std::vector<char *> env;
+	std::vector<char *>::iterator it;
 	std::vector<char *> arg;
 	std::stringstream ss;
 
@@ -202,6 +205,8 @@ int Response::execCGI() {
 	push_back_env(env, "SERVER_PORT", ss.str());
 	push_back_env(env, "SERVER_PROTOCOL", "HTTP/1.1");
 	push_back_env(env, "SERVER_SOFTWARE", "Webserv42.0 (Linux)");
+	if (!_req.getCookies().empty())
+		push_back_env(env, "HTTP_COOKIE", _req.getCookies());
 	env.push_back(NULL);
 	arg.push_back(strdup(_req.getCGIFile().c_str()));
 	arg.push_back(NULL);
@@ -229,11 +234,18 @@ int Response::execCGI() {
 		}
 		exit(EXIT_FAILURE);
     }
+    //free env & arg
+    for (it = env.begin(); it != env.end(); ++it)
+    	if (*it)
+    		free (*it);
+    for (it = arg.begin(); it != arg.end(); ++it)
+    	if (*it)
+    		free (*it);
     int child_status;
 	waitpid(pid, &child_status, 0);
     close(tmp_fd_in);
     rewind(tmp_file_out);
-    if (child_status != 0){
+    if (child_status != 0) {
     	_content = "ERROR!!!";
     	return (500);
     }
@@ -242,7 +254,7 @@ int Response::execCGI() {
 	    int valread = -1;
 	    while(valread != 0) {
 	    	bzero(buff, 1024);
-			valread = read(tmp_fd_out, buff, 1024);
+			valread = read(tmp_fd_out, buff, 1023);
 			if (valread < 0)
 				return (-1);
 			_content += buff;

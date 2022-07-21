@@ -77,6 +77,10 @@ Request::Request(std::string const & request, Config::ServerConfig const & sc):
 				_error_code = 400;
 		}
 	}
+	//it's a bit stuped to process all the request and in the end check the lenght.... but why not... XD
+	if (!_server_config.checkMaxBody(request.length()) &&
+		(_loc && !_loc->checkMaxBody(request.length())))
+		_error_code = 413;
 	if (CONSTRUCTORS_DESTRUCTORS_DEBUG)
 		std::cout << WHITE << "Request Created " << _error_code << ENDC << std::endl;
 }
@@ -176,7 +180,12 @@ const std::string Request::getCGIFile() const {
 		std::string file_no_ext(_uri_target.substr(0, pos));
 		if (_loc->_cgi_map.find(ext) != _loc->_cgi_map.end()) {
 			for (v_it = _loc->_cgi_map[ext].begin(); v_it != _loc->_cgi_map[ext].end(); v_it++) {
-				if (v_it->find(file_no_ext) != std::string::npos)
+				size_t v_pos(v_it->find_last_of('.'));
+				std::string v_it_no_ext(*v_it);
+				if (pos != std::string::npos)
+					v_it_no_ext = v_it_no_ext.substr(0, v_pos);
+				if (v_it_no_ext.find(file_no_ext) != std::string::npos 
+					|| file_no_ext.find(v_it_no_ext) != std::string::npos)
 					return (*v_it);
 			}
 			return (_loc->_cgi_map.find(ext)->second.front());
@@ -200,6 +209,12 @@ const std::string Request::getUserAgent() const {
 const std::string Request::getContentType() const {
 	if (_headers.find("content-type") != _headers.end())
 		return(_headers.find("content-type")->second);
+	return ("");
+}
+
+const std::string Request::getCookies() const {
+	if (_headers.find("cookie") != _headers.end())
+		return(_headers.find("cookie")->second);
 	return ("");
 }
 

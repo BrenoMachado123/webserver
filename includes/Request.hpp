@@ -45,7 +45,8 @@ class Request {
 		const std::string getContentType() const;
 		const std::string getUserAgent() const;
 		const std::string getAcceptedEncoding() const;
-
+		const std::string getCookies() const;
+		
 		Config::ServerConfig::Location * _loc;
 
 };

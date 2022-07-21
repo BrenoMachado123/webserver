@@ -33,7 +33,7 @@ if form.getvalue('query'):
 		print ("<span class=\"result-legend\">webserv: {}</span>".format(os.fspath(result)))
 		result_path = os.fspath(result)
 		if (result.is_dir()):
-			print ("<p class=\"directory\"><a href=\"" + os.fspath(result) + "\">" + result.name + "/</a></p>")
+			print ("<p class=\"directory\"><a href=\"" + os.fspath(result) + "/\">" + result.name + "/</a></p>")
 		else:
 			print ("<p class=\"file\"><a href=\"" + os.fspath(result) + "\">" + result.name + "</a></p>")
 		print ("</div>")

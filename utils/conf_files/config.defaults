@@ -3,10 +3,11 @@ server {
 	server_name				defaults www.defaults.com
 	root					www/
 	autoindex				on
-	client_max_body_size	128
+	client_max_body_size	1028
 	index					index.html index.htm
 
 	location /page1 {
+		client_max_body_size	128
 		limit_methods	GET
 	}
 
