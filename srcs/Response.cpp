@@ -102,6 +102,8 @@ Response::Response(Request const & request, Config::ServerConfig const & sc):
 			if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 				std::cout << YELLOW << "CGI location " << _req.getCGIFile() << std::endl;
 			if (isDirectory(_req._loc->_cgi_bin)) {
+				if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+					std::cout << YELLOW << "Executing CGI... " << std::endl;
 				_status_code = execCGI(); // implement what breno suggested, create cgi object
 				if (_status_code <= 0)
 					_status_code = 500;
@@ -180,7 +182,7 @@ int Response::execCGI() {
 	//push_back_env(env, "AUTH_TYPE", "");
 	push_back_env(env, "CONTENT_LENGTH", ss.str());
 	push_back_env(env, "CONTENT_TYPE", "application/x-www-form-urlencoded"); //+ _req.getContentType());
-	push_back_env(env, "DOCUMENT_ROOT", _req.getCGIBinPath());
+	push_back_env(env, "DOCUMENT_ROOT", _req._loc->_upload_path); // UPLOAD PATH HERE!!!!!!
 	push_back_env(env, "GATEWAY_INTERFACE", "CGI/1.1");
 	push_back_env(env, "HTTP_ACCEPT", "application/x-www-form-urlencoded,text/xml,application/xml,application/xhtml+xml,text/html,text/plain,charset=utf-8;");
 	//push_back_env(env, "HTTP_COOKIE", "");
@@ -245,21 +247,23 @@ int Response::execCGI() {
 	waitpid(pid, &child_status, 0);
     close(tmp_fd_in);
     rewind(tmp_file_out);
+    char buff[1024];
+    int valread = -1;
+    while(valread != 0) {
+    	bzero(buff, 1024);
+		valread = read(tmp_fd_out, buff, 1023);
+		if (valread < 0)
+			return (-1);
+		_content += buff;
+    }
+    /*
     if (child_status != 0) {
+		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
+			std::cout << RED << "CGI Failed: " << std::endl << YELLOW << _content << ENDC << std::endl;
     	_content = "ERROR!!!";
     	return (500);
     }
-    else {
-	    char buff[1024];
-	    int valread = -1;
-	    while(valread != 0) {
-	    	bzero(buff, 1024);
-			valread = read(tmp_fd_out, buff, 1023);
-			if (valread < 0)
-				return (-1);
-			_content += buff;
-	    }
-	}
+    */
     close(tmp_fd_out);
     dup2(restore_input, STDIN_FILENO);
     dup2(restore_output, STDOUT_FILENO);
