@@ -255,15 +255,13 @@ int Response::execCGI() {
 		if (valread < 0)
 			return (-1);
 		_content += buff;
-    }
-    /*
+    }    
     if (child_status != 0) {
 		if(CONSTRUCTORS_DESTRUCTORS_DEBUG)
 			std::cout << RED << "CGI Failed: " << std::endl << YELLOW << _content << ENDC << std::endl;
     	_content = "ERROR!!!";
     	return (500);
     }
-    */
     close(tmp_fd_out);
     dup2(restore_input, STDIN_FILENO);
     dup2(restore_output, STDOUT_FILENO);
@@ -336,6 +334,7 @@ const std::string Response::createAutoindexResponse() {
 const std::string Response::CGIResponse() {
 	std::string response;
 	std::stringstream ss;
+	std::stringstream ss2;
 
 	ss << _status_code;
 	response += "HTTP/1.1 " + ss.str() + " " + _codeMessage[_status_code] + "\n";
@@ -344,12 +343,16 @@ const std::string Response::CGIResponse() {
 	response += "Access-Control-Allow-Origin: *\n";
 	response += "Connection: close\n";
 	ss.str(std::string());
-	size_t c_start = _content.find_first_of("\n");
-	if (c_start == std::string::npos)
-		c_start = 0;
-	std::string tmp = _content.substr(c_start);
-	tmp = strtrim(tmp);
-	ss << tmp.length();
+	ss2 << _content;
+	std::string line;
+	int	content_len(0);
+	while (getline(ss2, line)) {
+		if (line.empty())
+			break;
+	}
+	while (getline(ss2, line))
+		content_len += line.length();
+	ss << content_len;
 	response += "Content-Length: " + ss.str() + "\n";
 	response += _content;
 	return (response);
