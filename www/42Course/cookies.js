@@ -21,8 +21,31 @@ function sendForm(event) {
 
 document.addEventListener("DOMContentLoaded", () => {
 	const form = document.getElementById("session-form");
-	
-	form.addEventListener("submit", function (event) {
-		sendForm(event);
-	});
+	const list = document.getElementsByClassName("delete-session-form");
+	for (var i = 0; i < list.length; ++i) {
+		let action = list[i].action;
+		list[i].addEventListener("submit", function (event) {
+			event.preventDefault();
+			req = new Request (action, {method: 'DELETE'});
+			console.log("Sending req...");
+			fetch(req)
+			.then(data => {
+				const reader = data.body.getReader();
+				let charsReceived = 0;
+				console.log(reader);
+				reader.read().then(function processText({ done, value }) {
+					charsReceived += value.length;
+					let content = new TextDecoder().decode(value); 
+				    console.log(content);
+				    document.getElementById("notice").innerHTML = content;
+				});
+			});
+		});
+	}
+
+	if (form) {
+		form.addEventListener("submit", function (event) {
+			sendForm(event);
+		});
+	}
 });

@@ -2,7 +2,6 @@
 # define __RESPONSE_HPP__
 
 #include <iostream>
-
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -57,8 +56,9 @@ class Response {
 		//static std::string _mime_type_detector(std::string const & file_name);
 		int execCGI(void);
 		void setMimeType(std::string const &);
-		const std::string	createAutoindexResponse(void);
 		const std::string	createRedirectionResponse(void);
+		const std::string	createAutoindexResponse(void);
+		const std::string	deleteResponse(void);
 		const std::string	CGIResponse(void);
 };
 

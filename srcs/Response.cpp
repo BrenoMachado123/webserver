@@ -111,6 +111,10 @@ Response::Response(Request const & request, Config::ServerConfig const & sc):
 			else if (CONSTRUCTORS_DESTRUCTORS_DEBUG || DEBUG_MSG){
 				std::cout << RED << "CGI Failed because the cgi-bin [" << _req._loc->_cgi_bin << "] is not a valid directory!" << ENDC << std::endl;
 			}
+		} else if (_req.getMethod() == "DELETE") {
+			location = _req.getFinalPath();
+			if (isFile(location) && !isDirectory(location))
+				_status_code = 200;
 		} else if (_req.isTargetDir()) {
 			location = _req.getIndex();
 			if (isFile(location)) {
@@ -373,6 +377,26 @@ const std::string Response::createRedirectionResponse() {
 	return (response_content);
 }
 
+const std::string Response::deleteResponse() {
+	std::string response_content;
+	std::stringstream ss;
+	std::string html_content;
+
+	html_content = "<html><body>""<h1>File Deleted: ";
+	html_content += _req.getFinalPath();
+	html_content += "</h1></body></html>";
+	response_content += "HTTP/1.1 200 " + _codeMessage[200] + "\n";
+	response_content += "Date:" + _date;
+	response_content += "Server: Breno_Tony_Pulga\n";
+	ss << html_content.length();
+	response_content += "Content-Length: " + ss.str() + "\n";
+	response_content += "Connection: close\n";
+	response_content += "\r\n";
+	response_content += html_content;
+	_keep_alive = false;
+	return (response_content);	
+}
+
 const std::string Response::createResponse() {
 	std::string response;
 	std::string html_content;
@@ -385,6 +409,11 @@ const std::string Response::createResponse() {
 	if (_cgi_response && _status_code == 200) {
 		_keep_alive = false;
 		return (CGIResponse());
+	}
+	if (_req.getMethod() == "DELETE" && _status_code == 200) {
+		if(remove(_req.getFinalPath().c_str()) != 0)
+			_status_code = 404;
+		return (deleteResponse());
 	}
 	if (_status_code == 200 && _req._loc) {
 		if (_content.length() > 0) {
