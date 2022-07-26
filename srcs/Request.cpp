@@ -162,21 +162,15 @@ const std::string Request::getCGIFile() const {
 } 
 
 const std::string Request::getAcceptedEncoding() const {
-	if (_headers.find("accept-encoding") != _headers.end())
-		return (_headers.find("accept-encoding")->second);
-	return ("");
+	return (_headers.count("accept-encoding") ? _headers.find("accept-encoding")->second : "");
 }
 
 const std::string Request::getUserAgent() const {
-	if (_headers.find("user-agent") != _headers.end())
-		return(_headers.find("user-agent")->second);
-	return ("");
+	return (_headers.count("user-agent") ? _headers.find("user-agent")->second : "");
 }
 
 const std::string Request::getContentType() const {
-	if (_headers.find("content-type") != _headers.end())
-		return(_headers.find("content-type")->second);
-	return ("");
+	return (_headers.count("content-type") ? _headers.find("content-type")->second : "");
 }
 
 std::ostream &	operator<<(std::ostream & ss, const Request & req) {

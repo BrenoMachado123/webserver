@@ -1,16 +1,11 @@
 #include "Config.hpp"
 #include "utils.hpp"
+#include "populate_utils.hpp"
 
 static const std::map<int, std::string> genRedirectStatusCodes() {
     std::map<int, std::string> map;
 
-    map[300] = "Multiple Choice";
-    map[301] = "Moved Permanently";
-    map[302] = "Found";
-    map[303] = "See Other";
-    map[304] = "Not Modified";
-    map[307] = "Temporary Redirect";
-    map[308] = "Permanent Redirect";
+    generate_redir_status_code(map);
     return (map);
 }
 

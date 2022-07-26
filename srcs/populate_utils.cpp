@@ -87,3 +87,13 @@ void populate_icons_map(std::map<std::string, std::string>& target) {
 	readFileString("utils/css_file.svg", target["css"]);
 	readFileString("utils/py_file.svg", target["py"]);
 }
+
+void generate_redir_status_code(std::map<int, std::string>& target) {
+	target[300] = "Multiple Choice";
+    target[301] = "Moved Permanently";
+    target[302] = "Found";
+    target[303] = "See Other";
+    target[304] = "Not Modified";
+    target[307] = "Temporary Redirect";
+    target[308] = "Permanent Redirect";
+}
