@@ -101,7 +101,7 @@ server {
   - File Upload
   - Limit Body Size
   - PUT & DELETE actions
-  - Coockies
+  - Cookies
 
 ### BUGS
   - Autoindex is on
